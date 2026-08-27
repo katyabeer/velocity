@@ -6,6 +6,7 @@ expo-env.d.ts
 .expo/
 # @end expo-cli
 node_modules
+dist/
 
 # macOS
 .DS_Store

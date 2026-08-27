@@ -15,6 +15,10 @@
       "package": "com.frame23.stylinggame",
       "edgeToEdgeEnabled": true
     },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
     "plugins": ["expo-router", "expo-font"],
     "experiments": {
       "typedRoutes": true
