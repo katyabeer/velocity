@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "Styling Game",
+    "slug": "styling-game",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "stylinggame",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.frame23.stylinggame"
+    },
+    "android": {
+      "package": "com.frame23.stylinggame",
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": ["expo-router", "expo-font"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

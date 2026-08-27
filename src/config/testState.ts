@@ -1,0 +1,82 @@
+/**
+ * ════════════════════════════════════════════════════════════════════════
+ *  THE ONE CONSTANT YOU EDIT TO CHANGE WHICH TEST STATE THE APP BOOTS IN
+ * ════════════════════════════════════════════════════════════════════════
+ *
+ * The HTML prototype had a HUD side panel with Day 1 / Day 2 / Established
+ * buttons. That was deliberately NOT ported: it sat next to the prototype and a
+ * participant would read it (open question E). Here the seed state is a build
+ * constant instead.
+ *
+ * Change ACTIVE_DAY, save, and Fast Refresh reboots the app into that state.
+ *
+ *   1  brand new       onboarding from slide 1, 8 pieces, no result act at all
+ *   2  returning       skips onboarding, first result in, 11 pieces, 2 tokens
+ *   3  established     skips onboarding, 96 pieces, 9 looks, all five You sections
+ *
+ * If you want in-session switching back for a moderated session, add it as a
+ * dev-only overlay gated on __DEV__ — not as a panel beside the phone.
+ */
+
+export type TestDay = 1 | 2 | 3;
+
+export const ACTIVE_DAY: TestDay = 1;
+
+/** What each day seeds. Mirrors the table in HANDOVER-v2.md §11 exactly. */
+export const DAY_CONFIG = {
+  1: {
+    dayName: 'Wednesday',
+    subtitle: 'Your first job is open',
+    profileMeta: 'katya.b · day one · nothing entered yet',
+    startingTokens: 0,
+    overnightTokens: 0,
+    /** Day 1 only. See DAY_ONE_ENTRY_GRANT in domain/economy.ts — unresolved. */
+    entryGrant: 3,
+    onboarding: true,
+    /** ABSENT ENTIRELY, not an empty state. Do not add a placeholder. */
+    yesterday: 'none',
+    wardrobeCount: 8,
+    /** Hidden — a zero here would be a lie. */
+    showOvernightRoundel: false,
+    /** Hidden — a nudge drawn from eight things you can already see is noise. */
+    showTryTheseRail: false,
+    /** Day 1 is six unearned milestones and nothing else. A sentence needs
+     *  looks, a strength needs three results, and inventing either is what that
+     *  page exists not to do. */
+    youSections: ['milestones'],
+    milestonesEarned: 0,
+  },
+  2: {
+    dayName: 'Thursday',
+    subtitle: 'Your first result is in',
+    profileMeta: 'katya.b · day two · 1 look',
+    startingTokens: 2,
+    overnightTokens: 2,
+    entryGrant: 0,
+    onboarding: false,
+    yesterday: 'entered',
+    wardrobeCount: 11,
+    showOvernightRoundel: true,
+    showTryTheseRail: true,
+    youSections: ['posts', 'stats', 'milestones'],
+    milestonesEarned: 1,
+  },
+  3: {
+    dayName: 'Thursday',
+    subtitle: 'The room settled overnight',
+    profileMeta: 'katya.b · four months · 118 looks',
+    startingTokens: 2,
+    overnightTokens: 2,
+    entryGrant: 0,
+    onboarding: false,
+    yesterday: 'entered',
+    wardrobeCount: 96,
+    showOvernightRoundel: true,
+    showTryTheseRail: true,
+    youSections: ['sentence', 'justForYou', 'posts', 'stats', 'milestones'],
+    milestonesEarned: 3,
+  },
+} as const;
+
+export type DayConfig = (typeof DAY_CONFIG)[TestDay];
+export const dayConfig = (day: TestDay): DayConfig => DAY_CONFIG[day];
