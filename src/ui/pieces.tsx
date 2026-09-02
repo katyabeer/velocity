@@ -10,8 +10,8 @@
  * APPEARS HERE. Neither of those is an oversight — see domain/entry.ts.
  */
 
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import { palette, border, space } from '@/theme/tokens';
+import { Image, Pressable, StyleSheet, Text, View, type ImageSourcePropType, type ViewStyle } from 'react-native';
+import { palette, border, radius, space } from '@/theme/tokens';
 import type { Slot } from '@/domain/garments';
 
 /** `.pc` — the small square tile used in the slot strip and the sheet grid. */
@@ -135,41 +135,68 @@ export function FlatLay({
   );
 }
 
-/** A wardrobe inventory tile, with history. Only ever shown in the wardrobe and
- *  on the result screen — never in the builder. */
+/**
+ * A wardrobe inventory tile. Only ever shown in the wardrobe and on the
+ * result screen — never in the builder.
+ *
+ * `history` is optional and Pieces-view no longer passes it — the Saved
+ * view still does, for its starred-status caption ("yours now" / "★ saved
+ * · costs a token"), which is unrelated to worn-history despite sharing the
+ * prop. `image` is optional too, real photos only for the Day 1 review
+ * pieces so far (see INVENTORY_DAY_ONE_REVIEW) — everything else falls back
+ * to the text placeholder, same as before.
+ */
 export function InventoryTile({
   name,
   history,
   provenance,
   isNew,
+  image,
   onPress,
   onDrop,
 }: {
   name: string;
-  history: string;
+  history?: string;
   provenance: string;
   isNew?: boolean;
+  image?: ImageSourcePropType;
   onPress?: () => void;
   onDrop?: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={[s.invTile, isNew && { borderColor: palette.accentEdge }]}>
-      <View style={s.invThumb}>
-        <Text style={s.invThumbLabel}>{name.split(' ')[0]}</Text>
-      </View>
-      <View style={[s.invMeta, isNew && { backgroundColor: palette.accent }]}>
-        <Text style={s.invName}>{name}</Text>
-        <Text style={s.invHistory}>{history}</Text>
-        <View style={s.invFoot}>
-          <Text style={s.invProvenance}>{isNew ? 'new today' : provenance}</Text>
-          {onDrop ? (
-            <Text onPress={onDrop} style={s.dropBtn} accessibilityRole="button">
-              drop
-            </Text>
+    <View style={s.invWrap}>
+      <Pressable onPress={onPress} style={s.invCard}>
+        <View style={s.invPhoto}>
+          {image ? (
+            <Image source={image} style={s.invImage} resizeMode="contain" />
+          ) : (
+            <View style={s.invThumb}>
+              <Text style={s.invThumbLabel}>{name.split(' ')[0]}</Text>
+            </View>
+          )}
+          {isNew ? (
+            <View style={s.newBadge}>
+              <Text style={s.newBadgeLabel}>New</Text>
+            </View>
           ) : null}
         </View>
-      </View>
-    </Pressable>
+        <View style={s.invMeta}>
+          <Text style={s.invName}>{name}</Text>
+          {history ? <Text style={s.invHistory}>{history}</Text> : null}
+          <Text style={s.invProvenance}>{provenance}</Text>
+        </View>
+      </Pressable>
+      {onDrop ? (
+        <Pressable
+          onPress={onDrop}
+          style={s.dropCircle}
+          accessibilityRole="button"
+          accessibilityLabel="Drop"
+        >
+          <Text style={s.dropCircleLabel}>×</Text>
+        </Pressable>
+      ) : null}
+    </View>
   );
 }
 
@@ -283,18 +310,50 @@ const s = StyleSheet.create({
     textTransform: 'uppercase',
     color: palette.disabledInk,
   },
-  invTile: {
-    width: '31.5%',
+  /** Plain, unclipped wrapper so the drop circle can overlap invCard's
+   *  rounded corner without being cut off by its overflow: hidden. */
+  invWrap: { width: '31.5%', position: 'relative' },
+  /** The LookPlate treatment (src/ui/LookPlate.tsx `s.plate`) — one
+   *  continuous rounded card, image and caption both inside it. */
+  invCard: {
     borderWidth: border.hair,
     borderColor: palette.rule,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+  },
+  invPhoto: {
+    height: 96,
     backgroundColor: palette.creamSunk,
   },
-  invThumb: { height: 62, alignItems: 'center', justifyContent: 'center' },
+  invImage: { width: '100%', height: '100%' },
+  invThumb: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   invThumbLabel: {
     fontFamily: 'BigShouldersDisplay_900Black',
     fontSize: 19,
     textTransform: 'uppercase',
     color: 'rgba(18,17,16,0.15)',
+  },
+  /** Non-interactive, decorative tilt — matches the app's existing
+   *  static-rotation convention on feed/pair imagery (tokens.ts rotation.r2). */
+  newBadge: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    borderWidth: border.hair,
+    borderColor: palette.accentEdge,
+    backgroundColor: palette.accent,
+    borderRadius: radius.sm,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    transform: [{ rotate: '-3deg' }],
+  },
+  newBadgeLabel: {
+    fontFamily: 'Archivo_700Bold',
+    fontSize: 8,
+    lineHeight: 9,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: palette.ink,
   },
   invMeta: {
     backgroundColor: palette.cream,
@@ -311,22 +370,32 @@ const s = StyleSheet.create({
     color: palette.greyMute,
     marginTop: 3,
   },
-  invFoot: {
-    flexDirection: 'row',
-    marginTop: 6,
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  invProvenance: {
+    fontFamily: 'Archivo_400Regular',
+    fontSize: 8,
+    color: palette.greyMute,
+    marginTop: 3,
   },
-  invProvenance: { fontFamily: 'Archivo_400Regular', fontSize: 8, color: palette.greyMute },
-  dropBtn: {
-    borderWidth: border.hair,
+  /** No circular icon-button existed anywhere in the app before this — see
+   *  the plan's flag on it being a new pattern, not a reused one. Sits on
+   *  invWrap (unclipped), overlapping invCard's rounded top-right corner. */
+  dropCircle: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    width: 24,
+    height: 24,
+    borderRadius: 999,
+    borderWidth: border.mid,
     borderColor: palette.ink,
-    color: palette.ink,
-    paddingHorizontal: 5,
-    paddingVertical: 3,
+    backgroundColor: palette.cream,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dropCircleLabel: {
     fontFamily: 'Archivo_700Bold',
-    fontSize: 7,
-    letterSpacing: 0.84,
-    textTransform: 'uppercase',
+    fontSize: 13,
+    lineHeight: 13,
+    color: palette.ink,
   },
 });

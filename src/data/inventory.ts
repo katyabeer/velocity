@@ -12,6 +12,7 @@
  *  · Looks and Saved carry real empty states
  */
 
+import type { ImageSourcePropType } from 'react-native';
 import { categoryOf, slotOf, type Category } from '../domain/garments';
 import { capsuleByKey, type CapsuleKey } from './capsules';
 
@@ -28,6 +29,13 @@ export type OwnedPiece = {
   provenance: Provenance;
   /** Arrived today — gets the Klein outline. */
   isNew?: boolean;
+  /** Real photo, Day 1 review pieces only for now — see
+   *  data/inventoryReview.ts's INVENTORY_DAY_ONE_REVIEW (a separate file,
+   *  same reason data/looks.ts is separate: its require()'d images aren't
+   *  loadable under the plain-Node test runner, so nothing tested imports
+   *  it). Optional, same pattern as Look.image in data/looks.ts:
+   *  InventoryTile falls back to a text placeholder when it's absent. */
+  image?: ImageSourcePropType;
 };
 
 /** Day 1 — the capsule you chose at signup, nothing worn. */
@@ -113,7 +121,7 @@ export const INVENTORY_ESTABLISHED: readonly OwnedPiece[] = [
   { name: 'mule', category: 'Shoes', worn: 0, best: null, provenance: 'taken', isNew: true },
   { name: 'red bag', category: 'Extras', worn: 5, best: 'Top of the room', provenance: 'taken' },
   { name: 'leather glove', category: 'Extras', worn: 2, best: 'Upper half', provenance: 'piece-brief' },
-  { name: 'silk scarf', category: 'Extras', worn: 1, best: null, provenance: 'starter' },
+  { name: 'silk scarf', category: 'Accessories', worn: 1, best: null, provenance: 'starter' },
   { name: 'tote', category: 'Extras', worn: 3, best: 'Upper half', provenance: 'taken' },
   { name: 'beret', category: 'Extras', worn: 0, best: null, provenance: 'taken', isNew: true },
 ];

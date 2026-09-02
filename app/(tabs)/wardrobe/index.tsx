@@ -26,7 +26,7 @@ import { palette, border, space } from '@/theme/tokens';
 import { CATEGORIES, type Category } from '@/domain/garments';
 import { WARDROBE_CAP } from '@/domain/economy';
 import { dayConfig } from '@/config/testState';
-import { groupByCategory, useWardrobe, wornLabel, type WardrobeView } from '@/state/wardrobe';
+import { groupByCategory, useWardrobe, type WardrobeView } from '@/state/wardrobe';
 import { useEconomy } from '@/state/economy';
 import { useSession } from '@/state/session';
 
@@ -40,10 +40,11 @@ export default function Wardrobe() {
   const toggleStar = useEconomy((s) => s.toggleStar);
 
   const groups = groupByCategory(w.pieces, w.filter);
+  const populatedCategories = CATEGORIES.filter((c) => w.pieces.some((p) => p.category === c));
 
   return (
     <Screen>
-      <LogoBlock title="Wardrobe" subtitle={`${w.count} pieces · nothing ever leaves`} />
+      <LogoBlock title="Wardrobe" subtitle={`${w.count} pieces`} />
 
       <Scroll>
         <Segmented
@@ -85,7 +86,7 @@ export default function Wardrobe() {
 
             <View style={{ marginTop: 12 }}>
               <ChipRow
-                items={['All', ...CATEGORIES]}
+                items={['All', ...populatedCategories]}
                 value={w.filter}
                 onChange={(v) => w.setFilter(v as Category | 'All')}
               />
@@ -94,7 +95,7 @@ export default function Wardrobe() {
             {/* Hidden on Day 1 — a nudge from eight visible things is noise. */}
             {cfg.showTryTheseRail ? (
               <>
-                <SectionHead title="Try these" note="shuffled daily" />
+                <SectionHead title="Try these" />
                 <View style={s.rail}>
                   {w.pieces.slice(0, 5).map((p) => (
                     <View key={p.name} style={s.railCard}>
@@ -105,30 +106,28 @@ export default function Wardrobe() {
                     </View>
                   ))}
                 </View>
-                <Tiny style={{ marginTop: 6 }}>
-                  A nudge, not a reshuffle — the grid below stays where you left it, so you can
-                  actually find things.
-                </Tiny>
               </>
             ) : null}
 
-            {groups.map((g) => (
-              <View key={g.category}>
-                <SectionHead title={g.category} note={`${g.items.length} pieces`} />
-                <View style={s.inv}>
-                  {g.items.map((p) => (
-                    <InventoryTile
-                      key={p.name}
-                      name={p.name}
-                      history={wornLabel(p)}
-                      provenance={p.provenance}
-                      isNew={p.isNew}
-                      onDrop={() => w.remove(p.name)}
-                    />
-                  ))}
+            {groups
+              .filter((g) => g.items.length > 0)
+              .map((g) => (
+                <View key={g.category}>
+                  <SectionHead title={g.category} />
+                  <View style={s.inv}>
+                    {g.items.map((p) => (
+                      <InventoryTile
+                        key={p.name}
+                        name={p.name}
+                        provenance={p.provenance}
+                        isNew={p.isNew}
+                        image={p.image}
+                        onDrop={() => w.remove(p.name)}
+                      />
+                    ))}
+                  </View>
                 </View>
-              </View>
-            ))}
+              ))}
           </>
         ) : null}
 

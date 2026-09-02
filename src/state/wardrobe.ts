@@ -16,11 +16,11 @@ import {
   ARCHIVE_DAY_TWO,
   ARCHIVE_ESTABLISHED,
   INVENTORY_ESTABLISHED,
-  inventoryDayOne,
   inventoryDayTwo,
   type ArchiveEntry,
   type OwnedPiece,
 } from '@/data/inventory';
+import { INVENTORY_DAY_ONE_REVIEW } from '@/data/inventoryReview';
 import type { CapsuleKey } from '@/data/capsules';
 
 export type WardrobeView = 'pieces' | 'looks' | 'saved';
@@ -51,7 +51,7 @@ type WardrobeState = {
 const seed = (day: TestDay, capsule: CapsuleKey) => {
   const cfg = dayConfig(day);
   const pieces =
-    day === 1 ? inventoryDayOne(capsule) : day === 2 ? inventoryDayTwo(capsule) : [...INVENTORY_ESTABLISHED];
+    day === 1 ? [...INVENTORY_DAY_ONE_REVIEW] : day === 2 ? inventoryDayTwo(capsule) : [...INVENTORY_ESTABLISHED];
   const archive =
     day === 1 ? ARCHIVE_DAY_ONE : day === 2 ? ARCHIVE_DAY_TWO : ARCHIVE_ESTABLISHED;
   return {
@@ -101,7 +101,7 @@ export function groupByCategory(
   pieces: readonly OwnedPiece[],
   filter: Category | 'All',
 ): { category: Category; items: OwnedPiece[] }[] {
-  const cats: Category[] = ['Outerwear', 'Tops', 'Bottoms', 'Shoes', 'Extras'];
+  const cats: Category[] = ['Outerwear', 'Tops', 'Dresses', 'Bottoms', 'Shoes', 'Extras', 'Accessories'];
   return cats
     .filter((c) => filter === 'All' || filter === c)
     .map((category) => ({ category, items: pieces.filter((p) => p.category === category) }));
