@@ -23,6 +23,7 @@ import { Button } from '@/ui/controls';
 import { BandLadder, Card, Stat } from '@/ui/cards';
 import { LookPlate } from '@/ui/LookPlate';
 import { palette } from '@/theme/tokens';
+import { JUDGING_QUOTA } from '@/domain/economy';
 import { useSession } from '@/state/session';
 
 export default function Result() {
@@ -78,7 +79,7 @@ export default function Result() {
               was red, yours was the tote.
             </Body>
             <Tiny
-              color={palette.klein}
+              color={palette.link}
               style={{ marginTop: 8, fontFamily: 'Archivo_700Bold' }}
               onPress={() => router.push('/(tabs)/magazine')}
             >
@@ -90,9 +91,9 @@ export default function Result() {
         <Kick style={{ marginTop: 17 }}>your calls</Kick>
         <Card style={{ marginTop: 8 }}>
           <View style={{ flexDirection: 'row', gap: 12, alignItems: 'baseline' }}>
-            <Num size={38}>6</Num>
+            <Num size={38}>{Math.min(3, JUDGING_QUOTA)}</Num>
             <Body style={{ flex: 1 }}>
-              of the 10 pairs you judged, you picked the look that finished ahead.
+              of the {JUDGING_QUOTA} pairs you judged, you picked the look that finished ahead.
             </Body>
           </View>
           <View style={{ marginTop: 10 }}>

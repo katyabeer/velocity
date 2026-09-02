@@ -69,7 +69,7 @@ export function RenderStage({
             {GARMENT_SHAPES.slice(0, placed).map((shape, i) =>
               i === GARMENT_SHAPES.length - 1
                 ? // the highlighted accessory
-                  <G key="hi" fill="#C3CBF6" stroke={palette.klein}>
+                  <G key="hi" fill={palette.accent} stroke={palette.accentEdge}>
                     {shape}
                   </G>
                 : shape,
@@ -89,7 +89,7 @@ export function RenderStage({
           return (
             <View key={p} style={[s.listRow, i === pieces.length - 1 && { borderBottomWidth: 0 }]}>
               <Text style={[s.listName, done && { color: palette.ink }]}>{p}</Text>
-              <Text style={[s.listState, done && { color: palette.klein }]}>
+              <Text style={[s.listState, done && { color: palette.ink }]}>
                 {done ? 'placed' : 'waiting'}
               </Text>
             </View>
@@ -111,7 +111,7 @@ export function RenderedFigure({ height = 330 }: { height?: number }) {
           <Path d="M110 178h100l-4 22h-92z" />
           <Rect x={126} y={292} width={30} height={22} rx={3} />
           <Rect x={164} y={292} width={30} height={22} rx={3} />
-          <G fill="#C3CBF6" stroke={palette.klein}>
+          <G fill={palette.accent} stroke={palette.accentEdge}>
             <Path d="M212 128c14 4 24 12 24 22s-10 17-24 17" />
           </G>
         </G>
@@ -127,8 +127,8 @@ export function RenderedFigure({ height = 330 }: { height?: number }) {
 const s = StyleSheet.create({
   stage: {
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.fill,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamSunk,
     overflow: 'hidden',
   },
   caption: {
@@ -136,9 +136,9 @@ const s = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: palette.paper,
+    backgroundColor: palette.cream,
     borderTopWidth: border.hair,
-    borderTopColor: palette.line,
+    borderTopColor: palette.rule,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
@@ -153,8 +153,8 @@ const s = StyleSheet.create({
   list: {
     marginTop: 14,
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.card,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamRaised,
   },
   listRow: {
     flexDirection: 'row',
@@ -163,14 +163,14 @@ const s = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 9,
     borderBottomWidth: border.hair,
-    borderBottomColor: palette.line,
+    borderBottomColor: palette.rule,
   },
-  listName: { fontFamily: 'Archivo_500Medium', fontSize: 11.5, color: palette.faint },
+  listName: { fontFamily: 'Archivo_500Medium', fontSize: 11.5, color: palette.greyMute },
   listState: {
     fontFamily: 'Archivo_700Bold',
     fontSize: 9,
     letterSpacing: 1.26,
     textTransform: 'uppercase',
-    color: palette.faint,
+    color: palette.greyMute,
   },
 });

@@ -1,103 +1,144 @@
 /**
- * o1 · o2 · o3 — the three teaching slides.
+ * o1–o5 — the 5-slide marketing carousel, replacing the previous 3-slide
+ * teaching sequence. Copy sourced from Katya's onboarding.pdf (2 Sep 2026),
+ * confirmed: Next through slide 4, "Get started" only on slide 5, Skip
+ * always jumps straight to sign-up regardless of slide.
  *
- * o1 leads with an ACTUAL JOB, not a value proposition. That is deliberate: the
- * product is one brief a day, so the first thing you see is a brief.
- * o2 teaches that the room decides, and that the only question anyone is asked
- *    is *which one works*.
- * o3 teaches copy-minting — "See it. Keep it."
+ * This carousel is self-contained (its own 5-dot progress, via
+ * `totalDots`), separate from the 6-step dots on sign-up/handle/capsule —
+ * see OnboardingFrame.
  *
- * ⚠ FLAGGED GAP, NOT A DECISION (open question D):
- * ONBOARDING NO LONGER TEACHES THE CLOCK OR THE COUPLING. The old slide 3 was
- * "Judging pays. Ten calls earns you three tokens." The current one teaches
- * copy-minting instead, and neither o2 nor o3 mentions the 8pm close or that
- * judging is how clothes arrive. Since "no judging, no clothes" is the
- * load-bearing rule of the whole economy, A NEW USER IS CURRENTLY NEVER TOLD IT.
- *
- * Either restore it or accept that a new user discovers the rule by hitting it.
- * Katya's call. If it is restored, this is the file — add a slide and bump
- * ONBOARDING_SLIDES.
+ * ⚠ OPEN QUESTION D, STILL FLAGGED, NOT RESOLVED: the previous version of
+ * this file taught "no judging, no clothes" implicitly through a specific
+ * job/room/copy-minting narrative. This version doesn't teach that
+ * explicitly either — but slide 02 ("enter before 8pm to earn tokens, then
+ * the voting begins") and slide 03 ("every fit gets judged... earn your
+ * tokens") now at least surface the token/judging relationship, which the
+ * previous version didn't. Still Katya's call whether that's enough.
  */
 
-import { View } from 'react-native';
+import { Image, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { OnboardingFrame } from '@/ui/OnboardingFrame';
 import { LookPlate } from '@/ui/LookPlate';
 import { PieceTile } from '@/ui/pieces';
-import { Big, Body, H2, Kick } from '@/ui/text';
+import { Hero, Lede, Kick } from '@/ui/text';
+
+const TOTAL = 5;
 
 const SLIDES = [
   {
     n: '01',
-    heading: 'Drinks with your ex.\nAnd their new partner.',
-    headingSize: 37,
-    lede: "That's tonight's job. Five pieces, and you have until eight.",
-    body: 'A new one every day. Everyone gets the same one.',
+    heading: 'Be a stylist',
+    body: '5 garments make an outfit. Pick 5. Create a look. Share. Get judged.',
     cta: 'Next',
   },
   {
     n: '02',
-    heading: 'Then the room\ndecides.',
-    headingSize: 40,
-    lede: 'Which one works?',
-    body: "That's the only question anyone gets asked about your look. No scores, no comments — there's nowhere to type.",
+    heading: 'Daily challenges',
+    body: 'Enter before 8pm to earn tokens, then the voting begins.',
     cta: 'Next',
   },
   {
     n: '03',
-    heading: 'See it.\nKeep it.',
-    headingSize: 40,
-    lede: 'Take any piece off anyone’s look. It’s a copy — they lose nothing and never find out.',
-    body: 'Yours for good. Nothing is bought or sold here, and your wardrobe only ever grows.',
+    heading: 'Vote, learn, earn',
+    body: 'Every fit gets judged. Vote on looks, earn your tokens.',
+    cta: 'Next',
+  },
+  {
+    n: '04',
+    heading: 'The community',
+    body: 'Share your looks in the magazine to inspire others.',
+    cta: 'Next',
+  },
+  {
+    n: '05',
+    heading: 'Hunt for items',
+    body: 'Spend your tokens to shop the garments in any look.',
     cta: 'Get started',
   },
 ] as const;
 
 export default function Intro() {
   const { step } = useLocalSearchParams<{ step: string }>();
-  const index = Math.min(Math.max(Number(step) || 1, 1), 3) - 1;
+  const index = Math.min(Math.max(Number(step) || 1, 1), TOTAL) - 1;
   const slide = SLIDES[index]!;
 
   const next = () =>
-    index === 2 ? router.push('/onboarding/sign-up') : router.push(`/onboarding/intro/${index + 2}`);
+    index === TOTAL - 1
+      ? router.push('/onboarding/sign-up')
+      : router.push(`/onboarding/intro/${index + 2}`);
 
   return (
     <OnboardingFrame
       index={index}
+      totalDots={TOTAL}
+      onBack={index > 0 ? () => router.push(`/onboarding/intro/${index}`) : undefined}
       onSkip={() => router.push('/onboarding/sign-up')}
       cta={slide.cta}
       onCta={next}
+      ctaVariant="onboarding"
     >
+      {/* Order is deliberate and the same on every slide: eyebrow, heading,
+          sub-heading, THEN the image — per Katya's reference layout. Don't
+          put an image block before the Lede again. */}
       <Kick tone="muted">{slide.n}</Kick>
-      <H2 size={slide.headingSize} style={{ marginTop: 8 }}>
+      <Hero size={44} style={{ marginTop: 10 }}>
         {slide.heading}
-      </H2>
-      <Big style={{ marginTop: 16 }}>{slide.lede}</Big>
+      </Hero>
+      <Lede style={{ marginTop: 12 }}>{slide.body}</Lede>
 
-      {/* o2 · the pair, so "which one works" has something to point at */}
-      {index === 1 ? (
-        <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-          <View style={{ flex: 1 }}>
-            <LookPlate tint="t1" occasion="Airport" pieces="parka · tee · jean" height={150} label="Look A" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <LookPlate tint="t3" occasion="Airport" pieces="coat · knit · trouser" height={150} label="Look B" />
-          </View>
+      {/* Slides 2, 4, 5 are still placeholders — real imagery pending.
+          Reusing the app's existing tinted-box/PieceTile "stand-in, not a
+          design" vocabulary rather than a one-off gray box. Slides 1 and 3
+          have real assets, so they're the exceptions. */}
+      {index === 0 ? (
+        <View style={{ marginTop: 20, alignItems: 'center' }}>
+          <Image
+            source={require('../../../assets/onboarding/onboarding-screen-1.png')}
+            style={{ width: '100%', height: 260 }}
+            resizeMode="contain"
+          />
         </View>
       ) : null}
 
-      {/* o3 · two of four pieces already taken, so the tick means something */}
-      {index === 2 ? (
-        <View style={{ flexDirection: 'row', gap: 5, marginTop: 16 }}>
-          {(['coat', 'knit', 'boot', 'bag'] as const).map((n, i) => (
+      {index === 1 ? (
+        <View style={{ flexDirection: 'row', gap: 6, marginTop: 20 }}>
+          {(['dress', 'sweater', 'boot', 'bag'] as const).map((n) => (
             <View key={n} style={{ flex: 1 }}>
-              <PieceTile name={n} state={i % 2 === 0 ? 'held' : 'default'} />
+              <PieceTile name={n} />
             </View>
           ))}
         </View>
       ) : null}
 
-      <Body style={{ marginTop: index === 0 ? 18 : 16 }}>{slide.body}</Body>
+      {index === 2 ? (
+        <View style={{ marginTop: 20, alignItems: 'center' }}>
+          <Image
+            source={require('../../../assets/onboarding/vote-learn-earn.png')}
+            style={{ width: '100%', height: 260 }}
+            resizeMode="contain"
+          />
+        </View>
+      ) : null}
+
+      {index === 3 ? (
+        <View style={{ marginTop: 20 }}>
+          <LookPlate tint="t4" occasion="Magazine" height={210} showCaption={false} />
+        </View>
+      ) : null}
+
+      {index === 4 ? (
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 20 }}>
+          <View style={{ flex: 2 }}>
+            <LookPlate tint="t2" occasion="Look" height={180} />
+          </View>
+          <View style={{ flex: 1, gap: 6 }}>
+            <PieceTile name="boot" />
+            <PieceTile name="bag" />
+          </View>
+        </View>
+      ) : null}
     </OnboardingFrame>
   );
 }

@@ -33,27 +33,38 @@ const make =
     <RNText {...rest} style={[scaled(base, size), color ? { color } : null, style]} />
   );
 
-export const PageTitle = make(T.pageTitle!);
-export const H2 = make(T.h2!);
-export const H3 = make(T.h3!);
-export const SigHead = make(T.sigHead!);
-export const Hero = make(T.hero!);
+/** PageTitle is the section name — the top-left label on every tab screen.
+ *  Archivo Black 22 (T.sectionName), not the display face — Katya's
+ *  explicit correction. H2/Hero keep the display face for in-page
+ *  headlines (call sites keep their own `size` overrides, so that's a
+ *  font/weight change only, not a layout one). */
+export const PageTitle = make(T.sectionName!);
+export const H2 = make(T.display!);
+export const Hero = make(T.display!);
+/** v3: SigHead (section heads — "Your posts", "Milestones") demotes from
+ *  the display face to quintets.css's `.qt-screen-title` (Archivo Black) —
+ *  the display face is no longer used for in-app section chrome. */
+export const SigHead = make(T.screenTitle!);
+/** v3: Lede and Big converge — quintets.css has one "lede" voice (italic
+ *  Archivo, 23px), not two Bodoni sizes. */
 export const Lede = make(T.lede!);
-export const Big = make(T.big!);
+export const Big = make(T.lede!);
 export const Body = make(T.body!);
 export const Tiny = make(T.tiny!);
 export const Meta = make(T.meta!);
 export const Num = make(T.num!);
 
-/** The all-caps eyebrow. `tone` maps to the three CSS variants: .kick (klein),
- *  .kick.m (muted) and .kick.s (shock). */
+/** The all-caps eyebrow (quintets.css `.qt-eyebrow`). `tone` used to pick
+ *  between klein/shock as TEXT color; both retire to `link` (accent is
+ *  illegible as text on cream — see tokens.ts) and `ink` (no alert hue
+ *  survives the v3 collapse — see tokens.ts palette comment). */
 export function Kick({
   tone = 'accent',
   ...rest
 }: Props & { tone?: 'accent' | 'muted' | 'alert' }) {
   const color =
-    tone === 'muted' ? palette.faint : tone === 'alert' ? palette.shock : palette.klein;
-  return <RNText {...rest} style={[T.kick, { color }, rest.style]} />;
+    tone === 'muted' ? palette.greyMute : tone === 'alert' ? palette.ink : palette.link;
+  return <RNText {...rest} style={[T.eyebrow, { color }, rest.style]} />;
 }
 
 /** Inline bold inside a Body / Tiny run. RN has no <b>, so this is how the

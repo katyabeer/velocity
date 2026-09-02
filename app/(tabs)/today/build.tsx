@@ -158,10 +158,10 @@ export default function Build() {
           />
 
           {/* ── the two loaners ── */}
-          <View style={{ marginTop: 18, paddingTop: 14, borderTopWidth: border.hair, borderTopColor: palette.shock }}>
+          <View style={{ marginTop: 18, paddingTop: 14, borderTopWidth: border.hair, borderTopColor: palette.ink }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <Kick tone="alert">new — unlocked for tonight</Kick>
-              <Tiny color={palette.shock}>{loansLeft}</Tiny>
+              <Tiny color={palette.ink}>{loansLeft}</Tiny>
             </View>
             <Tiny style={{ marginTop: 6 }}>
               Two pieces you don&apos;t own, yours to use for this job only. They go back at close.

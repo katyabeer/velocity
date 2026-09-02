@@ -14,42 +14,74 @@
  * cheapest mechanic to cut, so test it rather than defend it.
  *
  * TO TAKE A GARMENT: tap the look → bottom sheet. That is the only route.
+ *
+ * v3 restyle (a5 · Magazine — the feed.pdf, 2 Sep 2026): feed images now tilt
+ * and round per quintets.css's rotation/radius tokens; the old "N pieces →"
+ * corner chip is now the `.qt-cta-pieces` "Save pieces" tag; the always-open
+ * five-reaction row collapses behind a "Rate look" button (tap to reveal) so
+ * the card matches the PDF's cleaner default state — REACTIONS THEMSELVES
+ * ARE UNCHANGED, still five words, still display-only, never ranking. The
+ * PDF's "Follow" button on non-house cards is NOT implemented — onboarding's
+ * handle screen says explicitly "no followers, there's nowhere to put them,"
+ * and there's no follow relationship anywhere in state. Flagging the
+ * contradiction rather than quietly building a feature with nothing behind
+ * it — Katya's call whether followers are actually coming back.
  */
 
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { palette, border, tintFor } from '@/theme/tokens';
-import { REACTIONS, splitVerdict } from '@/domain/magazine';
+import { useState } from 'react';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { palette, border, radius, rotation, tintFor, useReducedMotion } from '@/theme/tokens';
+import { REACTIONS, shareForTierGap, splitVerdict } from '@/domain/magazine';
 import { LookPlate, SplitBar } from './LookPlate';
+import { Button } from './controls';
 import { Hero, Tiny } from './text';
 import type { FeedLook } from '@/data/looks';
-import { JUDGING_LOOKS, SPREAD_SPLITS } from '@/data/looks';
+import { JUDGING_LOOKS } from '@/data/looks';
 
-/** A full-bleed look card: plate, tags, five reaction words. */
+/** A look card: a tilted, rounded plate; tags; five reaction words behind
+ *  "Rate look". No longer literally edge-to-edge — quintets.css's rounded
+ *  feed-image treatment needs an inset to actually read as rounded. */
 export function LookCard({
   look,
+  index,
   activeReaction,
   onOpenSheet,
   onReact,
   onTag,
 }: {
   look: FeedLook;
+  /** Feed position — alternates the image tilt direction, left/right. */
+  index: number;
   activeReaction?: number;
   onOpenSheet: () => void;
   onReact: (i: number) => void;
   onTag: (tag: string) => void;
 }) {
+  const [rating, setRating] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const tilt = reducedMotion ? 0 : index % 2 === 0 ? -rotation.r1 : rotation.r1;
+
   return (
     <View style={s.card}>
       <View style={s.head}>
-        <Text style={s.headKick}>{look.house ? 'ours' : look.by}</Text>
+        <Text style={s.handle}>{look.house ? '@house' : look.by}</Text>
         <Text style={s.headMeta}>{look.house ? 'editorial' : 'from the room'}</Text>
       </View>
 
       <Pressable onPress={onOpenSheet} accessibilityRole="button">
-        <View style={[s.bleedPlate, { backgroundColor: tintFor(look.tint) }]}>
-          <Text style={s.bleedGhost}>{look.tags[0]?.replace(' ', '\n')}</Text>
-          <View style={s.tapme}>
-            <Text style={s.tapmeLabel}>{look.pieces.length} pieces →</Text>
+        <View
+          style={[s.bleedPlate, { backgroundColor: tintFor(look.tint), transform: [{ rotate: `${tilt}deg` }] }]}
+        >
+          {look.image ? (
+            <Image source={look.image} style={s.bleedPhoto} resizeMode="cover" />
+          ) : (
+            <Text style={s.bleedGhost}>{look.tags[0]?.replace(' ', '\n')}</Text>
+          )}
+          <View style={s.savePieces}>
+            <Text style={s.savePiecesLabel}>Save pieces</Text>
+            <View style={s.savePiecesCount}>
+              <Text style={s.savePiecesCountLabel}>{look.pieces.length}</Text>
+            </View>
           </View>
         </View>
       </Pressable>
@@ -62,23 +94,29 @@ export function LookCard({
         ))}
       </View>
 
-      <View style={s.reactRow}>
-        {REACTIONS.map((r, j) => {
-          const on = activeReaction === j;
-          return (
-            <Pressable
-              key={r}
-              onPress={() => onReact(j)}
-              style={[s.react, on && s.reactOn]}
-              accessibilityRole="button"
-              accessibilityState={{ selected: on }}
-            >
-              <Text style={[s.reactLabel, on && { color: palette.ink }]}>{r}</Text>
-              <Text style={s.reactCount}>{(look.reactionCounts[j] ?? 0) + (on ? 1 : 0)}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      {rating ? (
+        <View style={s.reactRow}>
+          {REACTIONS.map((r, j) => {
+            const on = activeReaction === j;
+            return (
+              <Pressable
+                key={r}
+                onPress={() => onReact(j)}
+                style={[s.react, on && s.reactOn]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+              >
+                <Text style={[s.reactLabel, on && { color: palette.ink }]}>{r}</Text>
+                <Text style={s.reactCount}>{(look.reactionCounts[j] ?? 0) + (on ? 1 : 0)}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : (
+        <View style={{ paddingHorizontal: 22, paddingTop: 11 }}>
+          <Button label="Rate look" variant="ghost" onPress={() => setRating(true)} />
+        </View>
+      )}
     </View>
   );
 }
@@ -101,40 +139,61 @@ export function SpreadCard({
   revealed: boolean;
   onCall: () => void;
 }) {
-  const split = SPREAD_SPLITS[spreadNumber % SPREAD_SPLITS.length]!;
+  const reducedMotion = useReducedMotion();
   const left = JUDGING_LOOKS[(index * 2) % JUDGING_LOOKS.length]!;
   const right = JUDGING_LOOKS[(index * 2 + 1) % JUDGING_LOOKS.length]!;
+  /** Stand-in for a real per-look settled split (Jack's open question 5) —
+   *  see shareForTierGap's doc comment in domain/magazine.ts. */
+  const share = shareForTierGap(left.tier ?? 'mid', right.tier ?? 'mid');
+  const tilt = reducedMotion ? 0 : rotation.r2;
 
   return (
     <View style={s.spread}>
-      <View style={s.head}>
-        <Text style={s.headKick}>train your eye · {spreadNumber + 1} of 6</Text>
-        <Text style={s.headMeta}>{split.occasion}</Text>
+      <View style={s.spreadHead}>
+        <Text style={s.spreadTitle}>Train your eye</Text>
+        <Text style={s.spreadSub}>which one works better?</Text>
       </View>
 
       <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 12 }}>
-        <View style={{ flex: 1 }}>
-          <LookPlate {...left} height={210} onPress={revealed ? undefined : onCall} />
+        <View style={{ flex: 1, transform: [{ rotate: `${-tilt}deg` }] }}>
+          <LookPlate {...left} height={300} onPress={revealed ? undefined : onCall} />
+          {!revealed ? (
+            <View style={s.votePill}>
+              <Text style={s.votePillLabel}>Vote A</Text>
+            </View>
+          ) : null}
         </View>
-        <View style={{ flex: 1 }}>
-          <LookPlate {...right} height={210} onPress={revealed ? undefined : onCall} />
+        <View style={{ flex: 1, transform: [{ rotate: `${tilt}deg` }] }}>
+          <LookPlate {...right} height={300} onPress={revealed ? undefined : onCall} />
+          {!revealed ? (
+            <View style={s.votePill}>
+              <Text style={s.votePillLabel}>Vote B</Text>
+            </View>
+          ) : null}
         </View>
       </View>
 
       {!revealed ? (
-        <Tiny style={{ paddingHorizontal: 22, paddingTop: 11 }}>
-          Which one works? Tap it — the room has already voted.
-        </Tiny>
+        <View style={{ paddingHorizontal: 22, paddingTop: 14 }}>
+          <Text style={s.briefLabel}>Brief: {left.occasion}</Text>
+          <Tiny style={{ marginTop: 8 }}>
+            Which one works? Tap it — the room has already voted.
+          </Tiny>
+        </View>
       ) : (
         <View style={{ paddingHorizontal: 22, paddingTop: 14 }}>
-          <Hero size={44} color={split.share >= 50 ? palette.klein : palette.ink}>
-            {split.share}%
+          {/* Used to go klein when share >= 50 — no accent-as-text option
+              survives the v3 collapse (accent is illegible on cream), so
+              this majority cue is gone unless Katya wants it back some
+              other way (bold weight, an icon). */}
+          <Hero size={44} color={palette.ink}>
+            {share}%
           </Hero>
           <Text style={s.spreadLine}>of people picked the same one.</Text>
           <View style={{ marginTop: 12 }}>
-            <SplitBar share={split.share} />
+            <SplitBar share={share} />
           </View>
-          <Tiny style={{ marginTop: 9 }}>{splitVerdict(split.share)}</Tiny>
+          <Tiny style={{ marginTop: 9 }}>{splitVerdict(share)}</Tiny>
         </View>
       )}
     </View>
@@ -145,9 +204,9 @@ export function SpreadCard({
 export function SpreadCapped() {
   return (
     <View style={s.spread}>
-      <View style={s.head}>
-        <Text style={[s.headKick, { color: palette.shock }]}>that&apos;s your six</Text>
-        <Text style={s.headMeta}>spreads</Text>
+      <View style={s.spreadHead}>
+        <Text style={s.spreadTitle}>Train your eye</Text>
+        <Text style={s.spreadSub}>that&apos;s your six for today</Text>
       </View>
       <Hero size={38} style={{ paddingHorizontal: 22 }}>
         {'Come back\ntomorrow.'}
@@ -164,10 +223,10 @@ const s = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 22,
     borderBottomWidth: border.hair,
-    borderBottomColor: palette.line,
+    borderBottomColor: palette.rule,
   },
   spread: {
-    backgroundColor: palette.fill,
+    backgroundColor: palette.creamSunk,
     paddingTop: 20,
     paddingBottom: 22,
     borderTopWidth: border.mid,
@@ -175,27 +234,55 @@ const s = StyleSheet.create({
     borderColor: palette.ink,
   },
   head: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
     paddingHorizontal: 22,
     marginBottom: 9,
   },
-  headKick: {
+  handle: {
     fontFamily: 'Archivo_700Bold',
-    fontSize: 8.5,
-    letterSpacing: 1.7,
-    textTransform: 'uppercase',
-    color: palette.klein,
+    fontSize: 13,
+    lineHeight: 15.6,
+    color: palette.ink,
   },
   headMeta: {
-    fontFamily: 'DMMono_500Medium',
+    fontFamily: 'Archivo_700Bold',
     fontSize: 8.5,
-    letterSpacing: 1.02,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: palette.faint,
+    color: palette.greyMute,
+    marginTop: 2,
   },
-  bleedPlate: { height: 296, alignItems: 'center', justifyContent: 'center' },
+  spreadHead: { paddingHorizontal: 22, marginBottom: 12 },
+  spreadTitle: {
+    fontFamily: 'Archivo_700Bold',
+    fontSize: 14,
+    lineHeight: 16.8,
+    color: palette.ink,
+  },
+  spreadSub: {
+    fontFamily: 'Archivo_700Bold',
+    fontSize: 9,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: palette.greyMute,
+    marginTop: 3,
+  },
+  briefLabel: {
+    fontFamily: 'Archivo_700Bold',
+    fontSize: 14,
+    lineHeight: 16.8,
+    color: palette.ink,
+  },
+  /** `.qt-img-feed` — rounded, tilted. Overflow hidden so the ghost watermark
+   *  and tag both clip to the rounded corners even under rotation. */
+  bleedPlate: {
+    height: 560,
+    marginHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+  },
+  bleedPhoto: { width: '100%', height: '100%' },
   bleedGhost: {
     fontFamily: 'BigShouldersDisplay_900Black',
     fontSize: 30,
@@ -204,17 +291,49 @@ const s = StyleSheet.create({
     color: 'rgba(18,17,16,0.16)',
     textAlign: 'center',
   },
-  tapme: {
+  /** `.qt-cta-pieces` — accent fill, ink text, ground-colored keyline, a
+   *  small ink count badge. Replaces the old "N pieces →" corner chip. */
+  savePieces: {
     position: 'absolute',
     right: 12,
     bottom: 12,
-    backgroundColor: palette.paper,
-    borderWidth: border.mid,
-    borderColor: palette.ink,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: palette.accent,
+    borderWidth: border.key,
+    borderColor: palette.cream,
+    borderRadius: radius.sm,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 9,
   },
-  tapmeLabel: {
+  savePiecesLabel: {
+    fontFamily: 'Archivo_700Bold',
+    fontSize: 9,
+    letterSpacing: 1.26,
+    textTransform: 'uppercase',
+    color: palette.ink,
+  },
+  savePiecesCount: {
+    width: 15,
+    height: 15,
+    borderRadius: radius.xs,
+    backgroundColor: palette.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  savePiecesCountLabel: { fontFamily: 'Archivo_700Bold', fontSize: 9, color: palette.cream },
+  /** `.qt-pill` — the Vote A / Vote B overlay on the spread pair. */
+  votePill: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: palette.accent,
+    borderRadius: radius.xs,
+    paddingHorizontal: 5,
+    paddingVertical: 3,
+  },
+  votePillLabel: {
     fontFamily: 'Archivo_700Bold',
     fontSize: 9,
     letterSpacing: 1.26,
@@ -222,28 +341,29 @@ const s = StyleSheet.create({
     color: palette.ink,
   },
   tagRow: { flexDirection: 'row', gap: 11, flexWrap: 'wrap', paddingHorizontal: 22, paddingTop: 11 },
-  tag: { fontFamily: 'Archivo_600SemiBold', fontSize: 12, lineHeight: 14.4, color: palette.klein },
+  /** `.qt-tag` — hashtags are interactive text, link-green. */
+  tag: { fontFamily: 'Archivo_600SemiBold', fontSize: 12, lineHeight: 14.4, color: palette.link },
   reactRow: { flexDirection: 'row', gap: 5, paddingHorizontal: 22, paddingTop: 11 },
   react: {
     flex: 1,
     height: 40,
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.paper,
+    borderColor: palette.rule,
+    backgroundColor: palette.cream,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 4,
   },
-  reactOn: { borderWidth: border.mid, borderColor: palette.ink, backgroundColor: palette.fill },
+  reactOn: { borderWidth: border.mid, borderColor: palette.ink, backgroundColor: palette.creamSunk },
   reactLabel: {
     fontFamily: 'Archivo_700Bold',
     fontSize: 9,
     letterSpacing: 0.9,
     textTransform: 'uppercase',
-    color: palette.soft,
+    color: palette.grey,
   },
-  reactCount: { fontFamily: 'Archivo_400Regular', fontSize: 8, color: palette.faint },
+  reactCount: { fontFamily: 'Archivo_400Regular', fontSize: 8, color: palette.greyMute },
   spreadLine: {
     fontFamily: 'Archivo_600SemiBold',
     fontSize: 14,

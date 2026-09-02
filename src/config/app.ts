@@ -1,27 +1,18 @@
 /**
- * ════════════════════════════════════════════════════════════════════════
- *  THE NAME IS LIVE AND UNRESOLVED. It lives here, once.
- * ════════════════════════════════════════════════════════════════════════
+ * THE NAME. It lives here, once.
  *
- * The client has rejected *Velocity*. Diagnosis: it is a word about SPEED, and
- * nothing here is about speed — it is about a DEADLINE, which is the opposite.
- *
- * Shortlist, three registers:
- *   Bias         bias cut + the room is biased — the smart pick
- *   Best Dressed accessible, real editorial heritage
- *   The Read     how a look reads / to read someone / a publication
- *
- * Earlier candidates: Dresser, Tearsheet, Plus One, Notes, Eight, Gloss, Flash,
- * Dress Code, Overdressed.
- *
- * NO AVAILABILITY CHECKS HAVE BEEN RUN ON ANY NAME. Do that before a client
- * shortlist.
+ * Resolved to "quintets." per Katya's v3 token export (quintets.css,
+ * 2 Sep 2026), which supersedes the earlier *Velocity* rejection and the
+ * Bias / Best Dressed / The Read shortlist. `app.json`'s `expo.name`
+ * ("Styling Game") is the separate native/build-facing string — not
+ * changed here, since that's a lower-stakes internal working title, not
+ * user-facing copy.
  *
  * Every screen imports APP_NAME from here. Renaming the product is this one
- * line plus app.json. Do not hard-code the name in a component.
+ * line. Do not hard-code the name in a component.
  */
 
-export const APP_NAME = 'Velocity';
+export const APP_NAME = 'quintets.';
 
 /** 18+. The minors privacy clause in scope §5.2 is dead scope given this —
  *  remove it in scope v1.5. */

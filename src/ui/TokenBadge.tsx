@@ -1,8 +1,8 @@
 /**
  * The token counter.
  *
- * `zero` is greyed and dimmed, any positive balance goes Klein — the counter
- * only lights up when there is something to do with it.
+ * `zero` is greyed and dimmed, any positive balance goes ink-on-accent — the
+ * counter only lights up when there is something to do with it.
  *
  * REVERSED, DO NOT RE-PROPOSE: displaying a remaining quota as "pinches
  * earned". It framed depletion as gain.
@@ -12,8 +12,24 @@
  */
 
 import { StyleSheet, Text, View } from 'react-native';
-import { palette, border } from '@/theme/tokens';
+import Svg, { Path } from 'react-native-svg';
+import { palette, border, rotation } from '@/theme/tokens';
 import { useEconomy } from '@/state/economy';
+
+/** `.qt-coins > svg` — decorative only, rotation.glyph (18°). */
+function TokenGlyph() {
+  return (
+    <Svg
+      width={14}
+      height={14}
+      viewBox="0 0 24 24"
+      fill={palette.ink}
+      style={{ transform: [{ rotate: `${rotation.glyph}deg` }] }}
+    >
+      <Path d="M12 2l2.9 6.9L22 9.8l-5.5 4.9L18 22l-6-3.6L6 22l1.5-7.3L2 9.8l7.1-.9z" />
+    </Svg>
+  );
+}
 
 export function TokenBadge({ count }: { count?: number }) {
   const balance = useEconomy((s) => s.balance);
@@ -24,7 +40,8 @@ export function TokenBadge({ count }: { count?: number }) {
       style={[s.wrap, hot ? s.hot : s.zero]}
       accessibilityLabel={`${n} token${n === 1 ? '' : 's'}`}
     >
-      <Text style={[s.num, hot && { color: palette.klein }]}>{n}</Text>
+      <TokenGlyph />
+      <Text style={s.num}>{n}</Text>
       <Text style={s.label}>token{n === 1 ? '' : 's'}</Text>
     </View>
   );
@@ -36,14 +53,16 @@ const s = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderWidth: border.mid,
-    backgroundColor: palette.paper,
+    backgroundColor: palette.cream,
     paddingLeft: 7,
     paddingRight: 9,
     paddingVertical: 4,
     alignSelf: 'flex-start',
   },
-  zero: { borderColor: palette.line, opacity: 0.6 },
-  hot: { borderColor: palette.klein },
+  zero: { borderColor: palette.rule, opacity: 0.6 },
+  /** `.qt-coins` — full accent fill when there's a balance, not just a
+   *  border tint. */
+  hot: { borderColor: palette.accentEdge, backgroundColor: palette.accent },
   num: {
     fontFamily: 'BigShouldersDisplay_900Black',
     fontSize: 17,
@@ -56,6 +75,6 @@ const s = StyleSheet.create({
     lineHeight: 9,
     letterSpacing: 1.12,
     textTransform: 'uppercase',
-    color: palette.soft,
+    color: palette.grey,
   },
 });

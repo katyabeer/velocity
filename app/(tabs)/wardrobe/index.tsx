@@ -22,7 +22,6 @@ import { Kick, Tiny, B } from '@/ui/text';
 import { Button, ChipRow, Segmented } from '@/ui/controls';
 import { EmptyState, FirstRun, NewBox } from '@/ui/cards';
 import { InventoryTile } from '@/ui/pieces';
-import { TokenBadge } from '@/ui/TokenBadge';
 import { palette, border, space } from '@/theme/tokens';
 import { CATEGORIES, type Category } from '@/domain/garments';
 import { WARDROBE_CAP } from '@/domain/economy';
@@ -47,11 +46,7 @@ export default function Wardrobe() {
 
   return (
     <Screen>
-      <LogoBlock
-        title="Wardrobe"
-        subtitle={`${w.count} pieces · nothing ever leaves`}
-        right={<TokenBadge />}
-      />
+      <LogoBlock title="Wardrobe" subtitle={`${w.count} pieces · nothing ever leaves`} />
 
       <Scroll>
         <Segmented
@@ -91,7 +86,7 @@ export default function Wardrobe() {
               <View style={s.full}>
                 <Kick tone="alert">wardrobe full · {WARDROBE_CAP} of {WARDROBE_CAP}</Kick>
                 <Text style={s.fullTitle}>Drop something before you take anything else.</Text>
-                <Tiny color={palette.shockMid} style={{ marginTop: 6 }}>
+                <Tiny color={palette.grey} style={{ marginTop: 6 }}>
                   Nothing is lost for good — a dropped piece can be taken again with a token.
                 </Tiny>
               </View>
@@ -184,7 +179,7 @@ export default function Wardrobe() {
                         {a.when} · {a.note}
                       </Text>
                     </View>
-                    <Text style={[s.archBand, a.band === 'flat' && { color: palette.faint }]}>
+                    <Text style={[s.archBand, a.band === 'flat' && { color: palette.greyMute }]}>
                       {a.band === 'flat' ? 'not rendered' : a.band}
                     </Text>
                   </View>
@@ -249,11 +244,12 @@ export default function Wardrobe() {
 }
 
 const s = StyleSheet.create({
+  /** No alert hue survives the v3 collapse — ink border, sunk ground. */
   full: {
     marginTop: 12,
     borderWidth: border.mid,
-    borderColor: palette.shock,
-    backgroundColor: palette.shockTint,
+    borderColor: palette.ink,
+    backgroundColor: palette.creamSunk,
     paddingHorizontal: 13,
     paddingVertical: 12,
   },
@@ -261,7 +257,7 @@ const s = StyleSheet.create({
     fontFamily: 'Archivo_600SemiBold',
     fontSize: 13,
     lineHeight: 17.5,
-    color: palette.shockInk,
+    color: palette.ink,
     marginTop: 6,
   },
   inv: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
@@ -269,8 +265,8 @@ const s = StyleSheet.create({
   railCard: {
     width: 96,
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.fill,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamSunk,
   },
   railThumb: { height: 52, alignItems: 'center', justifyContent: 'center' },
   railThumbLabel: {
@@ -280,9 +276,9 @@ const s = StyleSheet.create({
     color: 'rgba(18,17,16,0.15)',
   },
   railName: {
-    backgroundColor: palette.paper,
+    backgroundColor: palette.cream,
     borderTopWidth: border.hair,
-    borderTopColor: palette.line,
+    borderTopColor: palette.rule,
     paddingHorizontal: 6,
     paddingVertical: 5,
     fontFamily: 'Archivo_600SemiBold',
@@ -290,7 +286,7 @@ const s = StyleSheet.create({
     lineHeight: 9.8,
     color: palette.ink,
   },
-  arch: { borderWidth: border.hair, borderColor: palette.line, backgroundColor: palette.card },
+  arch: { borderWidth: border.hair, borderColor: palette.rule, backgroundColor: palette.creamRaised },
   archRow: {
     flexDirection: 'row',
     gap: 11,
@@ -298,30 +294,31 @@ const s = StyleSheet.create({
     paddingHorizontal: 11,
     paddingVertical: 10,
     borderBottomWidth: border.hair,
-    borderBottomColor: palette.line,
+    borderBottomColor: palette.rule,
   },
   archPlate: {
     width: 42,
     height: 52,
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.fill,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamSunk,
   },
   archJob: { fontFamily: 'Archivo_600SemiBold', fontSize: 12, lineHeight: 14.4, color: palette.ink },
   archNote: {
     fontFamily: 'Archivo_400Regular',
     fontSize: 9.5,
     lineHeight: 12.4,
-    color: palette.faint,
+    color: palette.greyMute,
     marginTop: 3,
   },
+  /** disp800 retired — see cards.tsx statValue for the same call. */
   archBand: {
     maxWidth: 74,
     textAlign: 'right',
-    fontFamily: 'BigShouldersDisplay_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     fontSize: 12,
     lineHeight: 12.6,
     textTransform: 'uppercase',
-    color: palette.klein,
+    color: palette.ink,
   },
 });

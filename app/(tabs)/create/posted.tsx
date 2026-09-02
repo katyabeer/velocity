@@ -76,7 +76,7 @@ export default function Posted() {
         ) : null}
 
         <Tiny
-          color={palette.klein}
+          color={palette.link}
           style={{ marginTop: 14, textAlign: 'center', fontFamily: 'Archivo_700Bold' }}
           onPress={() => {
             startAgain();

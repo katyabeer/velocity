@@ -22,7 +22,6 @@ import { Button, Chip } from '@/ui/controls';
 import { Card } from '@/ui/cards';
 import { LookPlate } from '@/ui/LookPlate';
 import { SaveIcon } from '@/ui/TabIcon';
-import { TokenBadge } from '@/ui/TokenBadge';
 import { palette, border } from '@/theme/tokens';
 import { canTake } from '@/domain/economy';
 import { useMagazine } from '@/state/magazine';
@@ -62,7 +61,7 @@ export default function Piece() {
 
   return (
     <Screen>
-      <Header onBack={() => router.back()} title="A piece" right={<TokenBadge />} />
+      <Header onBack={() => router.back()} title="A piece" />
 
       <Scroll>
         <View style={{ position: 'relative' }}>
@@ -90,10 +89,11 @@ export default function Piece() {
 
         {held ? (
           <View style={s.owned}>
-            <Num size={26} color={palette.klein}>
+            {/* Sits on the accent-filled panel — text-on-accent is ink. */}
+            <Num size={26} color={palette.ink}>
               ✓
             </Num>
-            <Tiny color={palette.kleinInk} style={{ fontFamily: 'Archivo_600SemiBold', fontSize: 12 }}>
+            <Tiny color={palette.ink} style={{ fontFamily: 'Archivo_600SemiBold', fontSize: 12 }}>
               Yours.
             </Tiny>
           </View>
@@ -133,7 +133,7 @@ const s = StyleSheet.create({
     height: 30,
     borderWidth: border.mid,
     borderColor: palette.ink,
-    backgroundColor: palette.paper,
+    backgroundColor: palette.cream,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -143,8 +143,8 @@ const s = StyleSheet.create({
     alignItems: 'baseline',
     gap: 9,
     borderWidth: border.hair,
-    borderColor: palette.klein,
-    backgroundColor: palette.kleinTint,
+    borderColor: palette.accentEdge,
+    backgroundColor: palette.accent,
     paddingHorizontal: 12,
     paddingVertical: 11,
   },

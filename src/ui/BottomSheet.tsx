@@ -71,8 +71,7 @@ export function BottomSheet({
                   <Text
                     style={[
                       s.actionLabel,
-                      r.held && { color: palette.klein },
-                      disabled && { color: palette.faint },
+                      disabled && { color: palette.greyMute },
                     ]}
                   >
                     {label}
@@ -95,7 +94,7 @@ const s = StyleSheet.create({
     right: 0,
     bottom: 0,
     maxHeight: '76%',
-    backgroundColor: palette.paper,
+    backgroundColor: palette.cream,
     borderTopWidth: border.heavy,
     borderTopColor: palette.ink,
     paddingHorizontal: space.gutter,
@@ -110,25 +109,25 @@ const s = StyleSheet.create({
     gap: 12,
     paddingVertical: 11,
     borderBottomWidth: border.hair,
-    borderBottomColor: palette.fill,
+    borderBottomColor: palette.creamSunk,
   },
   thumb: {
     width: 44,
     height: 54,
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.fill,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamSunk,
   },
   name: { fontFamily: 'Archivo_600SemiBold', fontSize: 13, lineHeight: 16, color: palette.ink },
-  sub: { fontFamily: 'Archivo_400Regular', fontSize: 10, lineHeight: 13, color: palette.faint, marginTop: 3 },
+  sub: { fontFamily: 'Archivo_400Regular', fontSize: 10, lineHeight: 13, color: palette.greyMute, marginTop: 3 },
   action: {
     borderWidth: border.mid,
     borderColor: palette.ink,
     paddingHorizontal: 11,
     paddingVertical: 7,
   },
-  actionOwn: { borderColor: palette.klein, backgroundColor: palette.kleinTint },
-  actionOff: { borderWidth: border.hair, borderColor: palette.line },
+  actionOwn: { borderColor: palette.accentEdge, backgroundColor: palette.accent },
+  actionOff: { borderWidth: border.hair, borderColor: palette.rule },
   actionLabel: {
     fontFamily: 'Archivo_700Bold',
     fontSize: 9,

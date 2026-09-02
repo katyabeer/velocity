@@ -22,7 +22,6 @@ import { Big, Body, Kick, Tiny, B } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { Card, EarnedRow, Tip } from '@/ui/cards';
 import { StepRibbon, type Step } from '@/ui/StepRibbon';
-import { TokenBadge } from '@/ui/TokenBadge';
 import { ResultCard } from '@/ui/ResultCard';
 import { palette } from '@/theme/tokens';
 import { dayConfig } from '@/config/testState';
@@ -82,7 +81,7 @@ export default function Today() {
 
   return (
     <Screen>
-      <LogoBlock title={cfg.dayName} subtitle={cfg.subtitle} right={<TokenBadge />} />
+      <LogoBlock title="Today's challenge" subtitle={cfg.subtitle} />
 
       <Scroll>
         {/* ── ACT 1 · yesterday. Absent entirely on day one. ── */}
@@ -140,10 +139,10 @@ export default function Today() {
           style={{ marginTop: 14 }}
           accessibilityRole="link"
         >
-          <Tiny color={palette.klein} style={{ fontFamily: 'Archivo_700Bold' }}>
+          <Tiny color={palette.link} style={{ fontFamily: 'Archivo_700Bold' }}>
             See the other eleven jobs coming this month →
           </Tiny>
-          <Tiny color={palette.soft}>
+          <Tiny color={palette.grey}>
             You won&apos;t know when each lands, so it&apos;s worth knowing what&apos;s in the pile.
           </Tiny>
         </Pressable>

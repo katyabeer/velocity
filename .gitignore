@@ -12,4 +12,9 @@ dist/
 .DS_Store
 
 # Claude Code local settings
-.claude/settings.local.json
+.claude/
+.px/
+
+# Raw asset delivery — source-of-truth for the team, not needed to build the
+# app. Processed/resized copies the app actually bundles live in assets/.
+assets-source/

@@ -42,7 +42,7 @@ export default function Challenges() {
                 <LockIcon open={!!c.open} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[s.name, c.open && { color: palette.klein }]}>{c.name}</Text>
+                <Text style={[s.name, c.open && { color: palette.link }]}>{c.name}</Text>
                 <Text style={s.note}>{c.note}</Text>
               </View>
               {c.open ? <Text style={s.tag}>open</Text> : <View style={{ width: 24 }} />}
@@ -78,7 +78,7 @@ const s = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: 13,
     borderBottomWidth: border.hair,
-    borderBottomColor: palette.fill,
+    borderBottomColor: palette.creamSunk,
   },
   icon: { width: 18, paddingTop: 2 },
   name: { fontFamily: 'Archivo_600SemiBold', fontSize: 14, lineHeight: 16.8, color: palette.ink },
@@ -86,7 +86,7 @@ const s = StyleSheet.create({
     fontFamily: 'Archivo_400Regular',
     fontSize: 11.5,
     lineHeight: 16.7,
-    color: palette.soft,
+    color: palette.grey,
     marginTop: 4,
   },
   tag: {
@@ -94,13 +94,13 @@ const s = StyleSheet.create({
     fontSize: 7.5,
     letterSpacing: 1.05,
     textTransform: 'uppercase',
-    color: palette.klein,
+    color: palette.link,
     paddingTop: 4,
   },
   hint: {
     marginTop: 16,
     paddingTop: 13,
     borderTopWidth: border.hair,
-    borderTopColor: palette.line,
+    borderTopColor: palette.rule,
   },
 });

@@ -21,15 +21,13 @@
 import { useEffect } from 'react';
 import { FlatList, View } from 'react-native';
 import { router } from 'expo-router';
-import { Header, Screen } from '@/ui/layout';
+import { LogoBlock, Screen } from '@/ui/layout';
 import { Tiny } from '@/ui/text';
-import { Chip } from '@/ui/controls';
+import { FilterTab } from '@/ui/controls';
 import { Tip } from '@/ui/cards';
-import { TokenBadge } from '@/ui/TokenBadge';
 import { BottomSheet } from '@/ui/BottomSheet';
 import { LookCard, SpreadCapped, SpreadCard } from '@/ui/FeedCards';
 import { palette, border, space } from '@/theme/tokens';
-import { FILTERS } from '@/domain/magazine';
 import { canTake } from '@/domain/economy';
 import { FEED_LOOKS } from '@/data/looks';
 import { cards, spreadIsCapped, FIRST_PAGE, NEXT_PAGE, useMagazine } from '@/state/magazine';
@@ -93,27 +91,37 @@ export default function Magazine() {
 
   return (
     <Screen>
-      <Header title="The magazine" right={<TokenBadge />} />
+      <LogoBlock title="Magazine" />
 
-      {/* The filter rail. See the warning at the top of this file. */}
-      <View style={{ paddingHorizontal: space.gutter, paddingVertical: 9, borderBottomWidth: border.hair, borderBottomColor: palette.line }}>
-        <FlatList
-          horizontal
-          data={FILTERS}
-          keyExtractor={(f) => f}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 7 }}
-          renderItem={({ item }) => (
-            <Chip
-              label={item}
-              tone={item === filter ? 'on' : 'default'}
-              onPress={() => {
-                setFilter(item);
-                extend(FIRST_PAGE);
-              }}
-            />
-          )}
+      {/* The filter rail. See the warning at the top of this file — "Filter"
+          is a static entry point only, not wired to the fuller FILTERS list
+          (data/magazine.ts documents the whole rail as visual-only for MVP). */}
+      <View
+        style={{
+          flexDirection: 'row',
+          paddingHorizontal: space.gutter - 9,
+          paddingVertical: 3,
+          borderBottomWidth: border.hair,
+          borderBottomColor: palette.rule,
+        }}
+      >
+        <FilterTab
+          label="All"
+          on={filter === 'All'}
+          onPress={() => {
+            setFilter('All');
+            extend(FIRST_PAGE);
+          }}
         />
+        <FilterTab
+          label="From the room"
+          on={filter === 'From the room'}
+          onPress={() => {
+            setFilter('From the room');
+            extend(FIRST_PAGE);
+          }}
+        />
+        <FilterTab label="Filter" />
       </View>
 
       <FlatList
@@ -155,6 +163,7 @@ export default function Magazine() {
           return (
             <LookCard
               look={look}
+              index={item.index}
               activeReaction={reactions[item.index]}
               onOpenSheet={() => openSheet(item.index)}
               onReact={(j) => react(item.index, j)}

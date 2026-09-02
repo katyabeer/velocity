@@ -4,7 +4,7 @@
  *   07:00          yesterday's result lands
  *   07:00–20:00    job open — you build and enter
  *   20:00          job shuts. Nothing more can be entered
- *   20:00 →        everyone judges what came in (10 paired calls)
+ *   20:00 →        everyone judges what came in (paired calls, JUDGING_QUOTA)
  *   overnight      settlement
  *   07:00          result
  *

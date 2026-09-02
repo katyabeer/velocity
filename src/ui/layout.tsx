@@ -16,6 +16,7 @@ import { View, ScrollView, StyleSheet, type ViewProps, type ViewStyle } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { palette, space, border } from '@/theme/tokens';
 import { Kick, Meta, PageTitle, Tiny } from './text';
+import { TokenBadge } from './TokenBadge';
 import { type as T } from '@/theme/type';
 import { Text } from 'react-native';
 
@@ -85,8 +86,9 @@ export const Gap = ({ h = space.lg }: { h?: number }) => <View style={{ height: 
 export const Rule = ({ style }: { style?: ViewStyle }) => <View style={[s.rule, style]} />;
 
 /**
- * The `.lg` block — the page's name, in the display face, under a heavy rule.
- * `right` takes the token badge.
+ * The `.lg` block — the section name, in the section-title face, under a
+ * heavy rule. The token badge is ALWAYS shown here (top right, every
+ * screen) — `right` is for a screen-specific extra, shown above it.
  */
 export function LogoBlock({
   title,
@@ -102,15 +104,22 @@ export function LogoBlock({
       <View style={s.logoRow}>
         <View style={{ flex: 1 }}>
           <PageTitle>{title}</PageTitle>
-          {subtitle ? <Tiny style={{ marginTop: 8, color: palette.soft }}>{subtitle}</Tiny> : null}
+          {subtitle ? <Tiny style={{ marginTop: 8, color: palette.grey }}>{subtitle}</Tiny> : null}
         </View>
-        {right ? <View style={{ marginTop: 6 }}>{right}</View> : null}
+        <View style={{ marginTop: 6, alignItems: 'flex-end', gap: 6 }}>
+          {right}
+          <TokenBadge />
+        </View>
       </View>
     </View>
   );
 }
 
-/** The `.hdr` bar — a back chevron, a mono label, and something on the right. */
+/**
+ * The `.hdr` bar — a back chevron, a mono label, and something on the
+ * right. The token badge is ALWAYS shown here too (see LogoBlock) —
+ * `right` is a screen-specific extra shown alongside it, not instead of it.
+ */
 export function Header({
   onBack,
   title,
@@ -130,15 +139,18 @@ export function Header({
         <View style={{ width: 10 }} />
       )}
       {title ? <Meta>{title}</Meta> : <View />}
-      {right ?? <View style={{ width: 10 }} />}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        {right}
+        <TokenBadge />
+      </View>
     </View>
   );
 }
 
 /**
- * The inverted context strip. Ink background, Klein-tinted kicker. Used where
- * the app needs to state a fact about the round that is not up for negotiation
- * ("entry closed 8pm").
+ * The inverted context strip. Ink background, accent-tinted kicker. Used
+ * where the app needs to state a fact about the round that is not up for
+ * negotiation ("entry closed 8pm").
  */
 export function Strip({
   kick,
@@ -196,7 +208,7 @@ export function Labelled({
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: palette.paper },
+  screen: { flex: 1, backgroundColor: palette.cream },
   scroll: { flex: 1, minHeight: 0 },
   scrollPad: { paddingHorizontal: space.gutter, paddingTop: space.lg, paddingBottom: space.xl },
   scrollPadBleed: { paddingTop: 10, paddingBottom: space.xl },
@@ -206,10 +218,10 @@ const s = StyleSheet.create({
     paddingTop: 11,
     paddingBottom: 12,
     borderBottomWidth: border.hair,
-    borderBottomColor: palette.line,
-    backgroundColor: palette.paper,
+    borderBottomColor: palette.rule,
+    backgroundColor: palette.cream,
   },
-  rule: { height: border.hair, backgroundColor: palette.line },
+  rule: { height: border.hair, backgroundColor: palette.rule },
   logo: {
     paddingHorizontal: space.gutter,
     paddingTop: 10,
@@ -227,7 +239,7 @@ const s = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 10,
     borderBottomWidth: border.hair,
-    borderBottomColor: palette.line,
+    borderBottomColor: palette.rule,
   },
   back: { fontSize: 19, lineHeight: 22, color: palette.ink },
   strip: {
@@ -241,8 +253,10 @@ const s = StyleSheet.create({
     gap: 12,
   },
   stripKick: {
-    ...T.kick,
-    color: '#8E9BF5',
+    ...T.eyebrow,
+    /** Light accent pops fine against the dark ink strip — the "illegible
+     *  on cream" contrast problem only applies to accent-on-light. */
+    color: palette.accent,
     letterSpacing: 1.44,
   },
   stripValue: {
@@ -253,10 +267,10 @@ const s = StyleSheet.create({
     marginTop: 4,
   },
   stripRight: {
-    fontFamily: 'BigShouldersDisplay_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     fontSize: 22,
     lineHeight: 22,
-    color: palette.paper,
+    color: palette.cream,
   },
   sectHead: {
     flexDirection: 'row',
@@ -266,11 +280,11 @@ const s = StyleSheet.create({
     marginBottom: 8,
   },
   sectHeadTitle: {
-    fontFamily: 'BigShouldersDisplay_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     fontSize: 17,
     lineHeight: 18,
     textTransform: 'uppercase',
     color: palette.ink,
   },
-  sig: { paddingVertical: 17, borderBottomWidth: border.hair, borderBottomColor: palette.fill },
+  sig: { paddingVertical: 17, borderBottomWidth: border.hair, borderBottomColor: palette.creamSunk },
 });

@@ -50,7 +50,7 @@ export default function Rendering() {
       <Header
         title="Entered · rendering"
         right={
-          <Tiny color={palette.klein} onPress={done} style={{ fontFamily: 'Archivo_700Bold' }}>
+          <Tiny color={palette.link} onPress={done} style={{ fontFamily: 'Archivo_700Bold' }}>
             Skip →
           </Tiny>
         }

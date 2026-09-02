@@ -164,7 +164,7 @@ export default function Create() {
             ))}
           </Wrap>
 
-          <View style={{ marginTop: 22, paddingTop: 16, borderTopWidth: border.hair, borderTopColor: palette.line }}>
+          <View style={{ marginTop: 22, paddingTop: 16, borderTopWidth: border.hair, borderTopColor: palette.rule }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <Kick>your own words</Kick>
               <Tiny>optional</Tiny>

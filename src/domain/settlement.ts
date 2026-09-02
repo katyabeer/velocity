@@ -7,17 +7,24 @@
  * not the test.
  */
 
-/** A look settles at 20 comparisons from 12 distinct raters. */
+/** A look settles at 20 comparisons from 12 distinct raters. LOCKED — these
+ *  are room-wide "how much evidence does a look need" thresholds, not a
+ *  function of any one person's round size. NOT touched by QUOTA below. */
 export const COMPARISONS_TO_SETTLE = 20;
 export const DISTINCT_RATERS_TO_SETTLE = 12;
 
-/** One paired call produces a comparison for BOTH looks, so a ten-call round
- *  supplies 20 comparison-slots. This factor of 2 is the whole reason the quota
- *  is 10 and not 20. */
+/** One paired call produces a comparison for BOTH looks. This factor of 2 is
+ *  independent of round size — it's a structural fact of paired voting. */
 export const COMPARISONS_PER_CALL = 2;
 
-/** The judging quota — calls per round. */
-export const QUOTA = 10;
+/** The judging quota — calls per round. Temporarily 5, not the documented
+ *  10, for test-scale sessions. NOTE: at QUOTA=10 a single completed round
+ *  happened to supply exactly COMPARISONS_TO_SETTLE (10 × 2 = 20) — one
+ *  person's round alone was enough to settle a look outright. At QUOTA=5
+ *  that's no longer true (5 × 2 = 10, half of 20): settling now requires
+ *  comparisons from more than one person's round. That's a real pacing
+ *  change, not just a smaller number — see tests/settlement.test.ts. */
+export const QUOTA = 5;
 
 /**
  * Loss factor for ties (counted at half weight) and sub-1.2s calls (one third).
@@ -113,9 +120,10 @@ export function schedulingPriority(a: LookProgress, b: LookProgress): number {
 }
 
 /**
- * Non-entrants can judge and are pure supply, which is why the quota is 10.
- * Had judging been restricted to entrants only it would have to be 15 — B's
- * toll arithmetic without B's gate.
+ * Non-entrants can judge and are pure supply, which is why the designed
+ * quota is 10 (temporarily overridden to 5 above, for test-scale sessions —
+ * see QUOTA's own comment). Had judging been restricted to entrants only it
+ * would have to be 15 — B's toll arithmetic without B's gate.
  *
  * REVERSED, DO NOT RE-PROPOSE: "15 is the lowest toll that settles" is wrong;
  * 14 gives 1.07×.

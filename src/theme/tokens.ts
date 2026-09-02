@@ -1,42 +1,69 @@
 /**
- * Design tokens — ported 1:1 from the CSS custom properties in
- * velocity-A-ritual.v2.html (`:root`).
+ * Design tokens — v3, ported from quintets.css (Katya's Figma export,
+ * 2 Sep 2026). Replaces the newsprint/klein-shock-green palette below.
  *
- * Newsprint palette. Klein blue is the system colour (state, progress, "yours"),
- * shocking pink is the exception colour (new / loaned / day-one), green is for
- * user-authored tags only (red tags were reversed — they read as aggressive).
+ * ONE accent (#DCE568) now does what klein blue (system state / progress /
+ * "yours"), shocking pink (exception / new / loaned / day-one) and green
+ * (user-authored tags) used to split between them — quintets.css's own
+ * drop-in override section confirms this is deliberate, not a gap. Two
+ * consequences worth knowing before you reach for a color:
  *
- * `day` / `night` live here for the proposed-but-unsigned-off "the interface
- * tells the time" move (naming-and-art-direction.md). Constraint from the
- * handover: if it happens, it switches ONLY the judging surface and the result
- * screen, never the whole app. Nothing consumes `night` yet.
+ *   - There is no distinct hue left for "alert/exception" states (wardrobe
+ *     full, loan warnings, the day-one notice). Those now read via ink +
+ *     border + copy, not color. If a screen genuinely needs to stand out
+ *     from a normal accent state, that needs a new token from Katya — don't
+ *     invent one here.
+ *   - `accent` is close to illegible as TEXT on `cream` (1.23:1 contrast —
+ *     quintets.css says so itself). Use `accent` for fills only, always
+ *     with `accentEdge` as the border/keyline. For colored, clickable TEXT
+ *     (the "→ see more" style rows, hashtags, handles), use `link`.
+ *
+ * ONE near-black (`ink`) — the old palette had seven; quintets.css collapses
+ * them to one, no exceptions.
+ *
+ * `day` / `night` still live here for the proposed-but-unsigned-off "the
+ * interface tells the time" move. Still nothing consumes `night`.
  */
 
+import { useEffect, useState } from 'react';
+import { AccessibilityInfo } from 'react-native';
+
 export const palette = {
-  paper: '#F5F4EF',
+  // grounds
+  cream: '#F7F3EA',
+  creamSunk: '#EAEAE1',
+  creamRaised: '#FDFCF8',
+  white: '#FFFFFF',
+
+  // ink — one value, no exceptions
   ink: '#121110',
-  soft: '#57544D',
-  faint: '#918C82',
-  line: '#D6D2C7',
-  fill: '#E8E5DB',
-  fill2: '#DEDACE',
-  klein: '#1B2FE8',
-  kleinTint: '#EDEFFE',
-  kleinInk: '#2C2F52',
-  kleinMid: '#4652C4',
-  kleinLine: '#B9C1F8',
-  shock: '#FF2E63',
-  shockTint: '#FFE7ED',
-  shockInk: '#7E2A40',
-  shockMid: '#8B3A52',
-  green: '#0F6B45',
-  greenTint: '#E6F2EC',
-  card: '#FCFBF8',
-  disabledFill: '#DEDACE',
-  disabledInk: '#8B857A',
+
+  // greys
+  grey: '#57544D',
+  /** AA-safe (4.64:1). Use for any MUTED TEXT — eyebrows, metadata labels. */
+  greyMute: '#736E61',
+  /** NON-TEXT only (3.12:1, fails AA at small sizes) — inactive dots, icon strokes. */
+  greyDecor: '#918C82',
+  rule: '#D6D2C7',
+
+  // accent — one value. Fills only; pair with accentEdge. Bare on photos.
+  accent: '#DCE568',
+  accentEdge: '#121110',
+
+  // interactive text
+  link: '#5A7000',
+  linkHover: '#445400',
+  /** Escape hatch, legal only at ≥18.66px bold or ≥24px regular (large-text AA). */
+  linkLg: '#6D8810',
+
+  /** Not in quintets.css — reasonable AA-safe defaults kept consistent with
+   *  its own contrast discipline, since disabled states aren't specced there. */
+  disabledFill: '#EAEAE1',
+  disabledInk: '#736E61',
 } as const;
 
-/** Look-plate tints t0–t5. The prototype uses these as stand-ins for imagery. */
+/** Look-plate tints t0–t5. Stand-ins for imagery — unrelated to the semantic
+ *  palette above, so untouched by the v3 token migration. */
 export const plateTints = ['#E8E5DB', '#DEDACE', '#E3E0D4', '#D9D5C8', '#ECEAE1', '#D2CEC1'] as const;
 export type PlateTint = `t${0 | 1 | 2 | 3 | 4 | 5}`;
 export const tintFor = (t: PlateTint): string => plateTints[Number(t.slice(1)) as 0 | 1 | 2 | 3 | 4 | 5];
@@ -50,6 +77,16 @@ export const space = {
   lg: 14,
   xl: 18,
   xxl: 22,
+  /** quintets.css's own step scale (s1–s6), for new work — kept alongside
+   *  the named steps above rather than replacing them, since those are
+   *  used throughout the existing screens and weren't part of the token
+   *  audit. */
+  s1: 4,
+  s2: 8,
+  s3: 12,
+  s4: 16,
+  s5: 22,
+  s6: 32,
 } as const;
 
 export const border = {
@@ -58,6 +95,37 @@ export const border = {
   mid: 1.5,
   /** 2 is a section rule: the logo block underline, the tab bar top. */
   heavy: 2,
+  /** 4px ink border for a selected card/rail — quintets.css's dedicated
+   *  selected-state token. Replaces the old thin kleinLine border. */
+  sel: 4,
+  /** 3px ground-colored keyline — separates an accent-filled tag from the
+   *  photo behind it (quintets.css's `.qt-cta-pieces` "save pieces" tag). */
+  key: 3,
+} as const;
+
+/** New in v3 — the app had no rounded corners anywhere before this. */
+export const radius = {
+  /** count boxes, vote pills */
+  xs: 4,
+  /** buttons, chips, pair images, save-pieces */
+  sm: 6,
+  /** feed images, sheets */
+  lg: 16,
+  /** onboarding CTA only */
+  pill: 999,
+} as const;
+
+/** New in v3 — static tilt on feed/pair imagery. Zero these under reduced
+ *  motion (see `useReducedMotion` below); it's decorative, not information. */
+export const rotation = {
+  /** large surfaces — feed images */
+  r1: 1,
+  /** small surfaces — pair images, coin chip */
+  r2: 2,
+  /** scattered items — onboarding garment stacks */
+  r3: 4,
+  /** decorative only — the coin star */
+  glyph: 18,
 } as const;
 
 export const layout = {
@@ -72,15 +140,15 @@ export const layout = {
  * The day/night switch, if signed off, swaps these two objects.
  */
 export const day = {
-  bg: palette.paper,
+  bg: palette.cream,
   text: palette.ink,
-  textSoft: palette.soft,
-  textFaint: palette.faint,
-  rule: palette.line,
-  accent: palette.klein,
-  accentTint: palette.kleinTint,
-  alert: palette.shock,
-  alertTint: palette.shockTint,
+  textSoft: palette.grey,
+  textFaint: palette.greyMute,
+  rule: palette.rule,
+  accent: palette.accent,
+  accentTint: palette.accent,
+  alert: palette.ink,
+  alertTint: palette.creamSunk,
 } as const;
 
 export const night = {
@@ -89,10 +157,27 @@ export const night = {
   textSoft: '#B8B2A8',
   textFaint: '#7E786F',
   rule: '#35332F',
-  accent: palette.shock,
-  accentTint: '#2A1420',
-  alert: palette.shock,
-  alertTint: '#2A1420',
+  accent: palette.accent,
+  accentTint: '#3A3A1E',
+  alert: palette.cream,
+  alertTint: '#2A2A20',
 } as const;
 
 export type Surface = typeof day;
+
+/** Zeroes `rotation` values for anyone who has reduced motion turned on —
+ *  the RN equivalent of quintets.css's `@media (prefers-reduced-motion)`
+ *  block. Use as: `const rot = useReducedMotion() ? 0 : rotation.r1`. */
+export function useReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    AccessibilityInfo.isReduceMotionEnabled().then((v) => mounted && setReduced(v));
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduced);
+    return () => {
+      mounted = false;
+      sub.remove();
+    };
+  }, []);
+  return reduced;
+}

@@ -1,9 +1,21 @@
 /**
- * The four typefaces, ported from the prototype's CSS vars:
- *   --disp   Big Shoulders Display   headlines, numbers, band names
- *   --voice  Bodoni Moda (italic)    the editorial voice — briefs, ledes
- *   --sans   Archivo                 UI, body, everything functional
- *   --mono   DM Mono                 metadata, timestamps, percentages
+ * The typefaces, ported from quintets.css (v3 token export). Down from four
+ * families to three:
+ *
+ *   --qt-font-display  Big Shoulders Display  the onboarding headline, AND
+ *                                              every button label — nothing
+ *                                              else uses this face anymore.
+ *   --qt-font-sans      Archivo                everything else: screen/section
+ *                                              titles, body, the editorial
+ *                                              "lede" voice (now italic
+ *                                              Archivo, not Bodoni), meta.
+ *   --qt-font-mono      DM Mono                metadata, timestamps, percentages.
+ *
+ * Bodoni Moda is retired. The old h2/sigHead screen-title treatment
+ * (Big Shoulders ExtraBold, condensed) also retires in favor of quintets.css's
+ * qt-screen-title/qt-section-title recipes, which are plain Archivo Black —
+ * the display face is now reserved for the one big onboarding moment and
+ * buttons, not general navigation chrome.
  *
  * Font family strings match the names @expo-google-fonts registers.
  * Loaded in app/_layout.tsx — do not reference a weight that isn't loaded there.
@@ -13,107 +25,159 @@ import { StyleSheet, type TextStyle } from 'react-native';
 import { palette } from './tokens';
 
 export const family = {
-  disp500: 'BigShouldersDisplay_500Medium',
-  disp700: 'BigShouldersDisplay_700Bold',
-  disp800: 'BigShouldersDisplay_800ExtraBold',
   disp900: 'BigShouldersDisplay_900Black',
-  voiceItalic: 'BodoniModa_500Medium_Italic',
-  voiceItalic400: 'BodoniModa_400Regular_Italic',
   sans400: 'Archivo_400Regular',
   sans500: 'Archivo_500Medium',
+  sans500Italic: 'Archivo_500Medium_Italic',
   sans600: 'Archivo_600SemiBold',
   sans700: 'Archivo_700Bold',
+  sans900: 'Archivo_900Black',
   mono400: 'DMMono_400Regular',
   mono500: 'DMMono_500Medium',
 } as const;
 
 /**
- * Named text styles. The CSS shorthand is unpacked, and `line-height` is
- * converted from a ratio to absolute px because React Native has no unitless
- * lineHeight.
+ * Named text styles, rebuilt from quintets.css's `.qt-*` component recipes.
+ * `line-height` is converted from a unitless ratio to absolute px because
+ * React Native has no unitless lineHeight (`display`'s .86 ratio at 44px is
+ * 44 * .86 ≈ 38).
  */
 export const type = StyleSheet.create({
-  /** .lg h1 — the page name. 50px/.84 uppercase. */
-  pageTitle: {
-    fontFamily: family.disp900,
-    fontSize: 50,
-    lineHeight: 42,
-    textTransform: 'uppercase',
-    letterSpacing: -0.25,
+  /** .qt-screen-title — in-page subsection labels (SigHead: "Your posts",
+   *  "Milestones"). Distinct from `sectionName` below, which is the
+   *  top-of-screen label — quintets.css's own recipe doesn't distinguish
+   *  these two roles, but they read at different sizes in the app. */
+  screenTitle: {
+    fontFamily: family.sans900,
+    fontSize: 18,
+    lineHeight: 18,
     color: palette.ink,
   },
-  /** h2 — screen headline, 31px/.9 */
-  h2: {
-    fontFamily: family.disp800,
-    fontSize: 31,
-    lineHeight: 28,
-    textTransform: 'uppercase',
-    color: palette.ink,
-  },
-  /** .hero — the big full-bleed display line */
-  hero: {
-    fontFamily: family.disp900,
-    fontSize: 34,
-    lineHeight: 29,
-    textTransform: 'uppercase',
-    color: palette.ink,
-  },
-  /** h3 — section head inside a scroll */
-  h3: { fontFamily: family.sans600, fontSize: 14.5, lineHeight: 18, color: palette.ink },
-  /** .sig h3 — the You-tab section head, display face */
-  sigHead: {
-    fontFamily: family.disp800,
-    fontSize: 23,
+  /** The section name — the big top-left label on every tab screen
+   *  (Today's challenge, Magazine, Wardrobe, You...). Archivo Black 22,
+   *  per Katya's explicit correction over the display face this used to
+   *  use (quintets.css's own `.qt-screen-title` recipe is unsized at 18px
+   *  and doesn't specify uppercase — this is a deliberate deviation from
+   *  that recipe, not a misread of it). */
+  sectionName: {
+    fontFamily: family.sans900,
+    fontSize: 22,
     lineHeight: 22,
     textTransform: 'uppercase',
     color: palette.ink,
   },
-  /** .kick — the all-caps eyebrow. Klein by default. */
-  kick: {
+  /** .qt-section-title */
+  sectionTitle: {
+    fontFamily: family.sans700,
+    fontSize: 14,
+    lineHeight: 16.8,
+    color: palette.ink,
+  },
+  /** .qt-display — the onboarding headline. The ONE place Big Shoulders
+   *  Display survives outside buttons. */
+  display: {
+    fontFamily: family.disp900,
+    fontSize: 44,
+    lineHeight: 38,
+    textTransform: 'uppercase',
+    color: palette.ink,
+  },
+  /** .qt-lede — italic Archivo, replaces the old Bodoni `lede` + `big`. */
+  lede: {
+    fontFamily: family.sans500Italic,
+    fontSize: 23,
+    lineHeight: 28.5,
+    color: palette.ink,
+  },
+  /** .qt-body */
+  body: {
+    fontFamily: family.sans400,
+    fontSize: 14,
+    lineHeight: 21.7,
+    color: palette.grey,
+  },
+  /** Not one of quintets.css's 8 named recipes — the old `.tiny` footnote
+   *  role (prose-like small print, not a label) doesn't map cleanly onto
+   *  "mini" (that's specifically the coin-unit label: uppercase, tracked).
+   *  Kept as its own style: same size/family as before, recolored to
+   *  greyMute per the AA fix (see tokens.ts palette comment). */
+  tiny: {
+    fontFamily: family.sans400,
+    fontSize: 10,
+    lineHeight: 15.5,
+    color: palette.greyMute,
+  },
+  /** .qt-eyebrow — the all-caps kicker, e.g. onboarding step numbers. */
+  eyebrow: {
     fontFamily: family.sans700,
     fontSize: 9,
     lineHeight: 11,
     letterSpacing: 1.8,
     textTransform: 'uppercase',
-    color: palette.klein,
+    color: palette.greyMute,
   },
-  /** .lede — Bodoni italic, the voice of the product */
-  lede: { fontFamily: family.voiceItalic, fontSize: 16, lineHeight: 22, color: palette.ink },
-  /** .big — the brief itself, and every line that has to feel written */
-  big: { fontFamily: family.voiceItalic, fontSize: 23, lineHeight: 28, color: palette.ink },
-  /** p.b — body copy */
-  body: { fontFamily: family.sans400, fontSize: 12.5, lineHeight: 20, color: palette.soft },
-  /** .tiny — the footnote weight. Does a lot of work in this product. */
-  tiny: { fontFamily: family.sans400, fontSize: 10, lineHeight: 15.5, color: palette.faint },
-  /** .num — the large numeral */
-  num: { fontFamily: family.disp900, fontSize: 52, lineHeight: 43, color: palette.ink },
-  /** .btn label */
-  button: {
-    fontFamily: family.sans700,
-    fontSize: 12,
-    lineHeight: 14,
-    letterSpacing: 1.92,
-    textTransform: 'uppercase',
-  },
-  /** .chip label */
-  chip: {
-    fontFamily: family.sans600,
-    fontSize: 9,
-    lineHeight: 11,
-    letterSpacing: 1.08,
-    textTransform: 'uppercase',
-    color: palette.soft,
-  },
-  /** .hdr .tiny — mono metadata in a header bar */
+  /** .qt-meta — DM Mono labels, metadata. */
   meta: {
     fontFamily: family.mono500,
+    fontSize: 12,
+    lineHeight: 14.4,
+    letterSpacing: 1.44,
+    textTransform: 'uppercase',
+    color: palette.greyMute,
+  },
+  /** .qt-handle / .qt-tag — interactive text (hashtags, handles, tags). */
+  handle: {
+    fontFamily: family.sans700,
+    fontSize: 14,
+    lineHeight: 16.8,
+    color: palette.link,
+  },
+  tag: {
+    fontFamily: family.sans600,
+    fontSize: 12,
+    lineHeight: 14.4,
+    color: palette.link,
+  },
+  /** .qt-filter */
+  filter: {
+    fontFamily: family.sans700,
+    fontSize: 14,
+    letterSpacing: 0.14,
+    lineHeight: 14,
+    color: palette.grey,
+  },
+  /** .qt-pill / .qt-cta-pieces micro-label */
+  micro: {
+    fontFamily: family.sans700,
     fontSize: 9,
-    lineHeight: 11,
+    lineHeight: 9,
     letterSpacing: 1.26,
     textTransform: 'uppercase',
-    color: palette.soft,
   },
-  /** .tabbar span */
+  /** .qt-coins > span — the coin unit label */
+  mini: {
+    fontFamily: family.sans700,
+    fontSize: 10,
+    lineHeight: 10,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+  },
+  /** .qt-btn label — every button in the app, now the display face. */
+  action: {
+    fontFamily: family.disp900,
+    fontSize: 20,
+    lineHeight: 20,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
+  /** the large numeral (coin count, milestone counters) */
+  num: {
+    fontFamily: family.disp900,
+    fontSize: 52,
+    lineHeight: 45,
+    color: palette.ink,
+  },
+  /** .tabbar span — not in quintets.css; kept small/functional, Archivo. */
   tab: {
     fontFamily: family.sans700,
     fontSize: 7.5,
@@ -125,8 +189,7 @@ export const type = StyleSheet.create({
 
 /** Every font asset the app needs. Imported by the root layout. */
 export const fontManifest = {
-  disp: ['500Medium', '700Bold', '800ExtraBold', '900Black'],
-  voice: ['400Regular_Italic', '500Medium_Italic'],
-  sans: ['400Regular', '500Medium', '600SemiBold', '700Bold'],
+  disp: ['900Black'],
+  sans: ['400Regular', '500Medium', '500Medium_Italic', '600SemiBold', '700Bold', '900Black'],
   mono: ['400Regular', '500Medium'],
 } as const;

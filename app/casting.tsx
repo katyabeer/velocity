@@ -60,7 +60,7 @@ export default function CastingScreen() {
         onBack={() => router.back()}
         title="Who wears it"
         right={
-          <Tiny color={palette.klein} onPress={go} style={{ fontFamily: 'Archivo_700Bold' }}>
+          <Tiny color={palette.link} onPress={go} style={{ fontFamily: 'Archivo_700Bold' }}>
             Same as last time →
           </Tiny>
         }
@@ -79,7 +79,7 @@ export default function CastingScreen() {
               style={{
                 paddingVertical: 13,
                 borderBottomWidth: i === GROUPS.length - 1 ? 0 : border.hair,
-                borderBottomColor: palette.fill,
+                borderBottomColor: palette.creamSunk,
               }}
             >
               <Kick tone="muted">{g.label}</Kick>

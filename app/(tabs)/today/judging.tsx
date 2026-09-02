@@ -1,8 +1,11 @@
 /**
- * a2 · JUDGING — ten paired calls.
+ * a2 · JUDGING — paired calls, one round (JUDGING_QUOTA — designed as 10,
+ * temporarily 5 for test-scale sessions, see domain/economy.ts).
  *
- * A ROUND IS 10 PAIRS, NOT 20 LOOKS. Looks recur; a 14-look pool gives ten pairs
- * with each look appearing ~1.4×. (Reversed and not to be re-proposed.)
+ * A ROUND IS PAIRS, NOT INDIVIDUAL LOOKS. Looks recur — the 14-look Day 1
+ * pool is walked two at a time by call index, so looks repeat across a
+ * round rather than each appearing once. (Reversed and not to be
+ * re-proposed: showing 2×quota distinct looks instead of a recurring pool.)
  *
  * NOTHING IS REVEALED WHILE YOU VOTE. No split, no running score, no "you and
  * 62% of the room". All of it is computed overnight, because showing it here
@@ -21,7 +24,6 @@ import { router } from 'expo-router';
 import { Foot, Header, Screen, Scroll, Strip } from '@/ui/layout';
 import { Bar, Button } from '@/ui/controls';
 import { LookPair } from '@/ui/LookPlate';
-import { TokenBadge } from '@/ui/TokenBadge';
 import { Tiny } from '@/ui/text';
 import { StyleSheet, Text } from 'react-native';
 import { palette } from '@/theme/tokens';
@@ -48,7 +50,6 @@ export default function Judging() {
       <Header
         onBack={() => router.back()}
         title={`Vote ${Math.min(callsCast + 1, quota)} of ${quota}`}
-        right={<TokenBadge />}
       />
 
       <Strip
@@ -64,8 +65,8 @@ export default function Judging() {
         </View>
 
         <LookPair
-          left={{ tint: left.tint, occasion: left.occasion, pieces: left.pieces }}
-          right={{ tint: right.tint, occasion: right.occasion, pieces: right.pieces }}
+          left={{ tint: left.tint, occasion: left.occasion, pieces: left.pieces, image: left.image }}
+          right={{ tint: right.tint, occasion: right.occasion, pieces: right.pieces, image: right.image }}
           onPick={cast}
         />
 
@@ -96,7 +97,8 @@ const s = StyleSheet.create({
     alignItems: 'baseline',
   },
   qTitle: {
-    fontFamily: 'BigShouldersDisplay_800ExtraBold',
+    /** disp800 retired — the display face is onboarding-headline + button only now. */
+    fontFamily: 'Archivo_900Black',
     fontSize: 24,
     textTransform: 'uppercase',
     color: palette.ink,

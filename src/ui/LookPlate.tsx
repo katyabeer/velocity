@@ -1,9 +1,11 @@
 /**
  * The look plate — the single most repeated object in the app.
  *
- * Right now it renders as a tinted panel with the occasion set large and faint
- * behind it. That is a STAND-IN, not a design: when Jack's renders arrive, add
- * an `image` prop and put an <Image> behind the caption. Nothing else changes.
+ * Real photos have started arriving (Day 1 magazine + judging pools first —
+ * see data/looks.ts). `image` is optional: when it's set, it renders behind
+ * the caption and the tinted ghost-text panel disappears entirely; when it
+ * isn't (Day 2/3, onboarding, still-unrendered fixtures), the tinted STAND-IN
+ * panel is exactly what it always was.
  *
  * One look, two presentations. THE FLAT LAY IS NOT A FALLBACK — it is the
  * unrendered state, and R-L6 says a failed generation still enters the pool as a
@@ -11,13 +13,14 @@
  * error screen.
  */
 
-import { StyleSheet, Text, View, Pressable, type ViewStyle } from 'react-native';
-import { palette, border, tintFor, type PlateTint } from '@/theme/tokens';
+import { Image, StyleSheet, Text, View, Pressable, type ImageSourcePropType, type ViewStyle } from 'react-native';
+import { palette, border, radius, tintFor, type PlateTint } from '@/theme/tokens';
 
 export function LookPlate({
   tint,
   occasion,
   pieces,
+  image,
   height,
   label,
   onPress,
@@ -27,6 +30,7 @@ export function LookPlate({
   tint: PlateTint;
   occasion: string;
   pieces?: string;
+  image?: ImageSourcePropType;
   height: number;
   /** What is set large and faint behind the plate. Defaults to the occasion. */
   label?: string;
@@ -36,9 +40,13 @@ export function LookPlate({
 }) {
   const body = (
     <View style={[s.plate, { height, backgroundColor: tintFor(tint) }, style]}>
-      <View style={s.image}>
-        <Text style={s.ghost}>{(label ?? occasion).replace(' ', '\n')}</Text>
-      </View>
+      {image ? (
+        <Image source={image} style={s.photo} resizeMode="cover" />
+      ) : (
+        <View style={s.image}>
+          <Text style={s.ghost}>{(label ?? occasion).replace(' ', '\n')}</Text>
+        </View>
+      )}
       {showCaption ? (
         <View style={s.caption}>
           <Text style={s.captionKick}>{occasion}</Text>
@@ -71,8 +79,8 @@ export function LookPair({
   height = 326,
   onPick,
 }: {
-  left: { tint: PlateTint; occasion: string; pieces: string };
-  right: { tint: PlateTint; occasion: string; pieces: string };
+  left: { tint: PlateTint; occasion: string; pieces: string; image?: ImageSourcePropType };
+  right: { tint: PlateTint; occasion: string; pieces: string; image?: ImageSourcePropType };
   height?: number;
   onPick?: (side: 'a' | 'b') => void;
 }) {
@@ -105,12 +113,16 @@ export function SplitBar({ share }: { share: number }) {
 }
 
 const s = StyleSheet.create({
+  /** quintets.css drop-in override: `.look, .plate img { border-radius:16px }` */
   plate: {
     borderWidth: border.hair,
-    borderColor: palette.line,
+    borderColor: palette.rule,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
     flexDirection: 'column',
   },
   image: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  photo: { flex: 1, width: '100%' },
   ghost: {
     fontFamily: 'BigShouldersDisplay_900Black',
     fontSize: 30,
@@ -122,8 +134,8 @@ const s = StyleSheet.create({
   },
   caption: {
     borderTopWidth: border.hair,
-    borderTopColor: palette.line,
-    backgroundColor: palette.paper,
+    borderTopColor: palette.rule,
+    backgroundColor: palette.cream,
     paddingHorizontal: 8,
     paddingVertical: 7,
   },
@@ -133,19 +145,19 @@ const s = StyleSheet.create({
     lineHeight: 8,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: palette.klein,
+    color: palette.link,
   },
   captionPieces: {
     fontFamily: 'Archivo_400Regular',
     fontSize: 9.5,
     lineHeight: 13,
-    color: palette.soft,
+    color: palette.grey,
     marginTop: 4,
   },
   pair: { flexDirection: 'row', gap: 10, paddingHorizontal: 12 },
   split: { flexDirection: 'row', height: 28, borderWidth: border.hair, borderColor: palette.ink },
-  splitA: { height: '100%', backgroundColor: palette.klein },
-  splitB: { height: '100%', backgroundColor: palette.fill2 },
+  splitA: { height: '100%', backgroundColor: palette.accent },
+  splitB: { height: '100%', backgroundColor: palette.creamSunk },
   splitLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
   splitLabel: {
     fontFamily: 'Archivo_700Bold',
@@ -153,6 +165,6 @@ const s = StyleSheet.create({
     lineHeight: 10,
     letterSpacing: 1.08,
     textTransform: 'uppercase',
-    color: palette.soft,
+    color: palette.grey,
   },
 });

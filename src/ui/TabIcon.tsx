@@ -33,7 +33,7 @@ export function TabIcon({ name, focused }: { name: TabKey; focused: boolean }) {
       height={21}
       viewBox="0 0 24 24"
       fill="none"
-      stroke={focused ? palette.ink : palette.faint}
+      stroke={focused ? palette.ink : palette.greyDecor}
       strokeWidth={focused ? 2.2 : 1.6}
     >
       {PATHS[name]}
@@ -44,7 +44,7 @@ export function TabIcon({ name, focused }: { name: TabKey; focused: boolean }) {
 /** The star / bookmark used on the magazine save button. */
 export function SaveIcon({ filled }: { filled: boolean }) {
   return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill={filled ? palette.paper : 'none'} stroke={filled ? palette.paper : palette.ink} strokeWidth={2}>
+    <Svg width={14} height={14} viewBox="0 0 24 24" fill={filled ? palette.cream : 'none'} stroke={filled ? palette.cream : palette.ink} strokeWidth={2}>
       <Path d="M6 4h12v17l-6-4-6 4z" />
     </Svg>
   );
@@ -53,7 +53,7 @@ export function SaveIcon({ filled }: { filled: boolean }) {
 /** Open / locked marks on the month-ahead list. */
 export function LockIcon({ open }: { open: boolean }) {
   return (
-    <Svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke={open ? palette.klein : palette.faint} strokeWidth={1.7}>
+    <Svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke={open ? palette.ink : palette.greyDecor} strokeWidth={1.7}>
       {open ? (
         <Path d="M5 12l5 5L19 8" />
       ) : (

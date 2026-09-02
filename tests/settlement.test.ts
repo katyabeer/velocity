@@ -29,8 +29,15 @@ import {
 const close = (a: number, b: number, tol = 0.01) =>
   assert.ok(Math.abs(a - b) <= tol, `${a} is not within ${tol} of ${b}`);
 
-test('a ten-call round supplies exactly 20 comparison-slots', () => {
-  assert.equal(QUOTA * COMPARISONS_PER_CALL, COMPARISONS_TO_SETTLE);
+test('at the temporary 5-call quota, a round no longer single-handedly settles a look', () => {
+  // At the designed QUOTA of 10, one round supplied exactly
+  // COMPARISONS_TO_SETTLE (10 * 2 = 20) — one person's round alone was
+  // enough. QUOTA is temporarily 5 for test-scale sessions, so this is now
+  // intentionally less than 20, not equal to it. COMPARISONS_TO_SETTLE
+  // itself is untouched — it's a room-wide threshold, not a function of any
+  // one person's round size (see settlement.ts).
+  assert.equal(QUOTA * COMPARISONS_PER_CALL, 10);
+  assert.ok(QUOTA * COMPARISONS_PER_CALL < COMPARISONS_TO_SETTLE);
 });
 
 test('the headroom table from the handover, entry rate → headroom', () => {

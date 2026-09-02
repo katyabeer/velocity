@@ -34,7 +34,6 @@ import { Gap, LogoBlock, Screen, Scroll, Sig } from '@/ui/layout';
 import { Lede, Tiny, Kick, SigHead, B } from '@/ui/text';
 import { Milestones, Reach, Stat, Roundel, Trend } from '@/ui/cards';
 import { LookPlate } from '@/ui/LookPlate';
-import { TokenBadge } from '@/ui/TokenBadge';
 import { palette } from '@/theme/tokens';
 import { dayConfig } from '@/config/testState';
 import { useSession } from '@/state/session';
@@ -53,7 +52,7 @@ export default function You() {
 
   return (
     <Screen>
-      <LogoBlock title="You" subtitle={cfg.profileMeta} right={<TokenBadge />} />
+      <LogoBlock title="You" subtitle={cfg.profileMeta} />
 
       <Scroll>
         {/* ══ You in a sentence — needs looks, so absent until Established ══ */}
@@ -129,7 +128,7 @@ export default function You() {
                   Your last nine jobs. Climbing since May, with a dip when you tried colour.
                 </Tiny>
                 <Tiny
-                  color={palette.klein}
+                  color={palette.link}
                   style={{ marginTop: 9, fontFamily: 'Archivo_700Bold' }}
                   onPress={() => router.push('/(tabs)/wardrobe')}
                 >
@@ -195,7 +194,7 @@ export default function You() {
 
             <Tiny style={{ marginTop: 8 }}>
               You own {count} pieces and wear {day >= 3 ? 'eleven' : 'five'} of them.{' '}
-              <Tiny color={palette.klein} style={{ fontFamily: 'Archivo_700Bold' }} onPress={() => router.push('/(tabs)/magazine')}>
+              <Tiny color={palette.link} style={{ fontFamily: 'Archivo_700Bold' }} onPress={() => router.push('/(tabs)/magazine')}>
                 Find something to go with the rest →
               </Tiny>
             </Tiny>

@@ -41,8 +41,8 @@ export function bandFor(percentile: number, cohortSize: number): Band | null {
 export const bandByKey = (key: BandKey): Band => BANDS.find((b) => b.key === key)!;
 
 /**
- * "Your calls" — of the 10 pairs you judged, how many went to the look that
- * finished ahead.
+ * "Your calls" — of the pairs you judged this round (JUDGING_QUOTA), how many
+ * went to the look that finished ahead.
  *
  * DIFFICULTY MATTERS: a pair that settled 90/10 is worth almost nothing, one
  * that settled 52/48 is worth a lot. Weight by how close the pair was.

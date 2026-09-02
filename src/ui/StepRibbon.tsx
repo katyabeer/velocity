@@ -36,7 +36,7 @@ export function StepRibbon({ steps, style }: { steps: readonly Step[]; style?: V
           <Text style={[s.label, st.state === 'now' && { color: palette.ink }]}>
             {i + 1} · {st.label}
           </Text>
-          <Text style={[s.hint, st.state === 'now' && { color: palette.soft }]}>{st.hint}</Text>
+          <Text style={[s.hint, st.state === 'now' && { color: palette.grey }]}>{st.hint}</Text>
         </View>
       ))}
     </View>
@@ -68,37 +68,37 @@ export function statesFor(
 }
 
 const s = StyleSheet.create({
-  ribbon: { flexDirection: 'row', borderTopWidth: border.hair, borderTopColor: palette.line },
+  ribbon: { flexDirection: 'row', borderTopWidth: border.hair, borderTopColor: palette.rule },
   cell: {
     flex: 1,
     paddingTop: 9,
     paddingHorizontal: 2,
     borderTopWidth: border.heavy,
-    borderTopColor: palette.line,
+    borderTopColor: palette.rule,
     marginTop: -1,
     opacity: 0.5,
   },
   cellNow: { opacity: 1, borderTopColor: palette.ink },
-  cellDone: { opacity: 0.75, borderTopColor: palette.faint },
+  cellDone: { opacity: 0.75, borderTopColor: palette.greyDecor },
   label: {
     fontFamily: 'Archivo_700Bold',
     fontSize: 8,
     lineHeight: 9,
     letterSpacing: 1.12,
     textTransform: 'uppercase',
-    color: palette.soft,
+    color: palette.grey,
   },
   hint: {
     fontFamily: 'Archivo_400Regular',
     fontSize: 9.5,
     lineHeight: 11.5,
     marginTop: 4,
-    color: palette.faint,
+    color: palette.greyMute,
   },
   bleed: {
     paddingHorizontal: space.gutter,
     paddingBottom: 11,
     borderBottomWidth: border.hair,
-    borderBottomColor: palette.line,
+    borderBottomColor: palette.rule,
   },
 });

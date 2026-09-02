@@ -64,11 +64,11 @@ export default function CapsulePicker() {
                 accessibilityState={{ selected: on }}
                 style={[s.opt, on && s.optOn]}
               >
-                <Text style={[s.optName, on && { color: palette.klein }]}>{c.name}</Text>
+                <Text style={s.optName}>{c.name}</Text>
                 <Text style={s.optChar}>{c.character}</Text>
                 <View style={s.pieces}>
                   {c.pieces.map((p) => (
-                    <Text key={p} style={[s.piece, on && { borderColor: palette.kleinLine }]}>
+                    <Text key={p} style={s.piece}>
                       {p}
                     </Text>
                   ))}
@@ -85,13 +85,15 @@ export default function CapsulePicker() {
 const s = StyleSheet.create({
   opt: {
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.card,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamRaised,
     padding: 12,
   },
-  optOn: { borderWidth: border.mid, borderColor: palette.klein, backgroundColor: palette.kleinTint },
+  /** quintets.css's dedicated selected-state token: a 4px ink border, no
+   *  color pairing (see tokens.ts border.sel). */
+  optOn: { borderWidth: border.sel, borderColor: palette.ink },
   optName: {
-    fontFamily: 'BigShouldersDisplay_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     fontSize: 19,
     lineHeight: 19,
     textTransform: 'uppercase',
@@ -101,7 +103,7 @@ const s = StyleSheet.create({
     fontFamily: 'Archivo_400Regular',
     fontSize: 11,
     lineHeight: 15.4,
-    color: palette.soft,
+    color: palette.grey,
     marginTop: 5,
   },
   pieces: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 9 },
@@ -111,10 +113,10 @@ const s = StyleSheet.create({
     lineHeight: 10,
     letterSpacing: 0.34,
     textTransform: 'uppercase',
-    color: palette.soft,
+    color: palette.grey,
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.paper,
+    borderColor: palette.rule,
+    backgroundColor: palette.cream,
     paddingHorizontal: 6,
     paddingVertical: 5,
   },

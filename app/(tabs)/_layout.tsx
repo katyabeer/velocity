@@ -39,9 +39,9 @@ export default function TabsLayout() {
         tabBarStyle: s.bar,
         tabBarLabelStyle: [T.tab, s.label],
         tabBarActiveTintColor: palette.ink,
-        tabBarInactiveTintColor: palette.faint,
+        tabBarInactiveTintColor: palette.greyDecor,
         tabBarItemStyle: { paddingTop: 8 },
-        sceneStyle: { backgroundColor: palette.paper },
+        sceneStyle: { backgroundColor: palette.cream },
       }}
     >
       {TABS.map((t) => (
@@ -60,7 +60,7 @@ export default function TabsLayout() {
 
 const s = StyleSheet.create({
   bar: {
-    backgroundColor: palette.paper,
+    backgroundColor: palette.cream,
     borderTopWidth: border.heavy,
     borderTopColor: palette.ink,
     /* The prototype's tab bar had no shadow and no translucency — it is a

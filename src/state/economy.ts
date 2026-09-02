@@ -16,7 +16,7 @@ import {
 } from '@/domain/economy';
 
 type EconomyState = Ledger & {
-  /** Calls cast in tonight's round, 0–10. */
+  /** Calls cast in tonight's round, 0–quota (JUDGING_QUOTA). */
   callsCast: number;
   quota: number;
   /** Tokens that landed overnight from other people taking your pieces. */
@@ -52,9 +52,10 @@ export const useEconomy = create<EconomyState>((set) => ({
   ...initial(ACTIVE_DAY),
 
   /**
-   * MARK-THEN-MINT: the balance only moves on the tenth call, never before.
-   * A tie or a sub-1.2s call still counts as a call for the quota — it is
-   * discounted in the settlement weighting, not refused. See domain/settlement.
+   * MARK-THEN-MINT: the balance only moves on the last call of the round
+   * (JUDGING_QUOTA), never before. A tie or a sub-1.2s call still counts as
+   * a call for the quota — it is discounted in the settlement weighting,
+   * not refused. See domain/settlement.
    */
   castCall: () =>
     set((s) => {

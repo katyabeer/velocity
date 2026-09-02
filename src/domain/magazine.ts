@@ -102,8 +102,22 @@ export type Mover = { name: string; direction: 1 | -1; change: string };
  * A spread's split is a STORED, SETTLED figure. Jack's open question 5:
  * per-look settled splits must be stored, and CANNOT BE BACKFILLED. If they are
  * not being written now, the spreads and the eye score have no data later.
+ *
+ * Until that exists, `shareForTierGap` stands in for it: real Day 1 photos
+ * carry a judging `tier` (strong/mid/weak — see data/looks.ts), so a
+ * spread's split can at least track the pair's tier gap instead of being a
+ * flat number unrelated to which two looks are shown.
  */
 export type SpreadSplit = { share: number };
+export type Tier = 'strong' | 'mid' | 'weak';
+
+const TIER_RANK: Record<Tier, number> = { weak: 0, mid: 1, strong: 2 };
+
+/** Bigger tier gap between the pair, more lopsided the revealed split. */
+export function shareForTierGap(a: Tier, b: Tier): number {
+  const gap = Math.abs(TIER_RANK[a] - TIER_RANK[b]);
+  return gap === 2 ? 74 : gap === 1 ? 61 : 52;
+}
 
 export function splitVerdict(share: number): string {
   if (share >= 65) return 'Comfortable. Everyone saw that one coming.';

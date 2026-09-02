@@ -35,8 +35,10 @@ export const TOKEN_COST_PER_TAKE = 1;
 export const WARDROBE_CAP = 99;
 export const WARDROBE_CAP_TEST_BUILD = 40;
 
-/** How many calls make a round. See settlement.ts for why it is 10 and not 15. */
-export const JUDGING_QUOTA = 10;
+/** How many calls make a round. Temporarily 5, not the documented 10 (see
+ *  settlement.ts) — a test-scale drop, not a re-derivation of the settlement
+ *  math itself; see settlement.ts's own comment on COMPARISONS_TO_SETTLE. */
+export const JUDGING_QUOTA = 5;
 
 export type LedgerReason =
   | 'judging-round-complete'
@@ -54,13 +56,14 @@ export type Ledger = {
 };
 
 /**
- * MARK-THEN-MINT. Tokens land only when you finish the ten.
+ * MARK-THEN-MINT. Tokens land only when you finish the round (currently 5
+ * calls — see JUDGING_QUOTA).
  *
  * Pinching used to mint on the spot, which meant you could cast one vote, take
- * three pieces and leave — 2 comparisons supplied for 3 pieces, against 20 for
- * the same 3 if you finished. Marking during the round and minting at the end
- * is the fix. `markDuringRound` is a UI affordance only; it must never move the
- * balance.
+ * three pieces and leave — 2 comparisons supplied for 3 pieces, against a full
+ * round's worth for the same 3 if you finished. Marking during the round and
+ * minting at the end is the fix. `markDuringRound` is a UI affordance only; it
+ * must never move the balance.
  */
 export function completeJudgingRound(ledger: Ledger): Ledger {
   if (ledger.roundComplete) return ledger;

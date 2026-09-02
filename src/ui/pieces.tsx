@@ -39,7 +39,7 @@ export function PieceTile({
     >
       {isLoan ? <Text style={s.loanFlag}>NEW</Text> : null}
       {state === 'held' ? <Text style={s.tick}>✓</Text> : null}
-      <Text style={[s.tileLabel, state === 'empty' && { color: palette.faint }]}>{name}</Text>
+      <Text style={[s.tileLabel, state === 'empty' && { color: palette.greyMute }]}>{name}</Text>
     </Pressable>
   );
 }
@@ -153,11 +153,11 @@ export function InventoryTile({
   onDrop?: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={[s.invTile, isNew && { borderColor: palette.klein }]}>
+    <Pressable onPress={onPress} style={[s.invTile, isNew && { borderColor: palette.accentEdge }]}>
       <View style={s.invThumb}>
         <Text style={s.invThumbLabel}>{name.split(' ')[0]}</Text>
       </View>
-      <View style={[s.invMeta, isNew && { backgroundColor: palette.kleinTint }]}>
+      <View style={[s.invMeta, isNew && { backgroundColor: palette.accent }]}>
         <Text style={s.invName}>{name}</Text>
         <Text style={s.invHistory}>{history}</Text>
         <View style={s.invFoot}>
@@ -176,21 +176,24 @@ export function InventoryTile({
 const s = StyleSheet.create({
   tile: {
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.fill,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamSunk,
     height: 82,
     alignItems: 'center',
     justifyContent: 'flex-end',
     paddingHorizontal: 4,
     paddingVertical: 6,
   },
-  tileHeld: { backgroundColor: palette.kleinTint, borderColor: palette.klein },
-  tileLoan: { borderColor: palette.shock, backgroundColor: palette.shockTint },
+  tileHeld: { backgroundColor: palette.accent, borderColor: palette.accentEdge },
+  /** No alert hue survives the v3 collapse — ink border on the sunk ground
+   *  is the only distinction left for "on loan". */
+  tileLoan: { borderColor: palette.ink, backgroundColor: palette.creamSunk },
   tick: {
     position: 'absolute',
     top: 5,
     right: 6,
-    color: palette.klein,
+    /** Sits on the accent-filled tile — text-on-accent is ink, not link. */
+    color: palette.ink,
     fontFamily: 'Archivo_700Bold',
     fontSize: 11,
   },
@@ -198,7 +201,7 @@ const s = StyleSheet.create({
     position: 'absolute',
     top: 5,
     left: 5,
-    color: palette.shock,
+    color: palette.ink,
     fontFamily: 'Archivo_700Bold',
     fontSize: 7,
     letterSpacing: 0.6,
@@ -209,7 +212,7 @@ const s = StyleSheet.create({
     lineHeight: 9,
     letterSpacing: 0.48,
     textTransform: 'uppercase',
-    color: palette.soft,
+    color: palette.grey,
     textAlign: 'center',
   },
   strip: { flexDirection: 'row', gap: 5 },
@@ -218,15 +221,16 @@ const s = StyleSheet.create({
     width: '31.5%',
     height: 100,
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.fill,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamSunk,
     justifyContent: 'flex-end',
     padding: 6,
   },
+  /** quintets.css's dedicated selected-state token: a 4px ink border, no
+   *  color pairing (see tokens.ts border.sel / flag 7 in the migration plan). */
   cellSelected: {
-    borderWidth: 2.5,
-    borderColor: palette.klein,
-    backgroundColor: palette.kleinTint,
+    borderWidth: border.sel,
+    borderColor: palette.ink,
   },
   cellLabel: {
     fontFamily: 'Archivo_600SemiBold',
@@ -234,12 +238,12 @@ const s = StyleSheet.create({
     lineHeight: 9.2,
     letterSpacing: 0.4,
     textTransform: 'uppercase',
-    color: palette.soft,
+    color: palette.grey,
   },
   stage: {
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.fill,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamSunk,
     overflow: 'hidden',
   },
   flat: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, padding: 12 },
@@ -247,8 +251,8 @@ const s = StyleSheet.create({
     width: '31%',
     height: 74,
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.paper,
+    borderColor: palette.rule,
+    backgroundColor: palette.cream,
     justifyContent: 'flex-end',
     padding: 6,
   },
@@ -258,16 +262,16 @@ const s = StyleSheet.create({
     lineHeight: 8.3,
     letterSpacing: 0.38,
     textTransform: 'uppercase',
-    color: palette.soft,
+    color: palette.grey,
   },
   stageCaption: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: palette.paper,
+    backgroundColor: palette.cream,
     borderTopWidth: border.hair,
-    borderTopColor: palette.line,
+    borderTopColor: palette.rule,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
@@ -282,8 +286,8 @@ const s = StyleSheet.create({
   invTile: {
     width: '31.5%',
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.fill,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamSunk,
   },
   invThumb: { height: 62, alignItems: 'center', justifyContent: 'center' },
   invThumbLabel: {
@@ -293,9 +297,9 @@ const s = StyleSheet.create({
     color: 'rgba(18,17,16,0.15)',
   },
   invMeta: {
-    backgroundColor: palette.paper,
+    backgroundColor: palette.cream,
     borderTopWidth: border.hair,
-    borderTopColor: palette.line,
+    borderTopColor: palette.rule,
     paddingHorizontal: 7,
     paddingVertical: 6,
   },
@@ -304,7 +308,7 @@ const s = StyleSheet.create({
     fontFamily: 'Archivo_400Regular',
     fontSize: 8,
     lineHeight: 10.4,
-    color: palette.faint,
+    color: palette.greyMute,
     marginTop: 3,
   },
   invFoot: {
@@ -313,11 +317,11 @@ const s = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  invProvenance: { fontFamily: 'Archivo_400Regular', fontSize: 8, color: palette.faint },
+  invProvenance: { fontFamily: 'Archivo_400Regular', fontSize: 8, color: palette.greyMute },
   dropBtn: {
     borderWidth: border.hair,
-    borderColor: palette.shock,
-    color: palette.shock,
+    borderColor: palette.ink,
+    color: palette.ink,
     paddingHorizontal: 5,
     paddingVertical: 3,
     fontFamily: 'Archivo_700Bold',

@@ -70,7 +70,7 @@ export default function Handle() {
               style={[s.cat, on && s.catOn]}
             >
               <Text style={s.catName}>{o.name}</Text>
-              <Text style={[s.catNote, on && { color: palette.kleinMid }]}>{o.note}</Text>
+              <Text style={s.catNote}>{o.note}</Text>
             </Pressable>
           );
         })}
@@ -88,8 +88,8 @@ const s = StyleSheet.create({
   field: {
     marginTop: 8,
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.card,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamRaised,
     padding: 13,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -101,21 +101,23 @@ const s = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 1.26,
     textTransform: 'uppercase',
-    color: palette.klein,
+    color: palette.link,
   },
   row: { flexDirection: 'row', gap: 7, marginTop: 9 },
   cat: {
     flex: 1,
     borderWidth: border.mid,
-    borderColor: palette.line,
-    backgroundColor: palette.card,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamRaised,
     paddingVertical: 13,
     paddingHorizontal: 9,
     alignItems: 'center',
   },
-  catOn: { borderColor: palette.klein, backgroundColor: palette.kleinTint },
+  /** quintets.css's dedicated selected-state token: a 4px ink border, no
+   *  color pairing (see tokens.ts border.sel). */
+  catOn: { borderWidth: border.sel, borderColor: palette.ink },
   catName: {
-    fontFamily: 'BigShouldersDisplay_800ExtraBold',
+    fontFamily: 'Archivo_900Black',
     fontSize: 17,
     textTransform: 'uppercase',
     color: palette.ink,
@@ -124,7 +126,7 @@ const s = StyleSheet.create({
     fontFamily: 'Archivo_400Regular',
     fontSize: 9,
     lineHeight: 11.7,
-    color: palette.faint,
+    color: palette.greyMute,
     marginTop: 5,
     textAlign: 'center',
   },

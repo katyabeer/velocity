@@ -52,7 +52,7 @@ const s = StyleSheet.create({
     gap: 11,
     borderWidth: border.mid,
     borderColor: palette.ink,
-    backgroundColor: palette.paper,
+    backgroundColor: palette.cream,
     paddingHorizontal: 14,
     height: 50,
     marginBottom: 8,
@@ -61,8 +61,8 @@ const s = StyleSheet.create({
     width: 22,
     height: 22,
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.fill,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamSunk,
   },
   ssoLabel: {
     fontFamily: 'Archivo_700Bold',
@@ -71,5 +71,5 @@ const s = StyleSheet.create({
     textTransform: 'uppercase',
     color: palette.ink,
   },
-  terms: { marginTop: 18, paddingTop: 14, borderTopWidth: border.hair, borderTopColor: palette.line },
+  terms: { marginTop: 18, paddingTop: 14, borderTopWidth: border.hair, borderTopColor: palette.rule },
 });

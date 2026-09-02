@@ -24,24 +24,17 @@ import { router } from 'expo-router';
 import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
 import { Big, Kick, Tiny } from '@/ui/text';
 import { Button } from '@/ui/controls';
-import { FirstRun } from '@/ui/cards';
 import { RenderedFigure } from '@/ui/RenderStage';
 import { FlatLay } from '@/ui/pieces';
 import { palette } from '@/theme/tokens';
 import { useEntry } from '@/state/entry';
 import { useSession } from '@/state/session';
-import { useEconomy } from '@/state/economy';
-import { DAY_ONE_ENTRY_GRANT, DAY_ONE_ENTRY_GRANT_ENABLED } from '@/domain/economy';
 
 export default function Entered() {
   const picks = useEntry((s) => s.picks);
   const mode = useSession((s) => s.renderMode);
   const setMode = useSession((s) => s.setRenderMode);
-  const day = useSession((s) => s.day);
   const setPhase = useSession((s) => s.setPhase);
-  const granted = useEconomy((s) => s.entryGrantTaken);
-
-  const showGrant = day === 1 && DAY_ONE_ENTRY_GRANT_ENABLED && granted;
 
   return (
     <Screen>
@@ -49,7 +42,7 @@ export default function Entered() {
         title="In · can't be changed"
         right={
           <Pressable onPress={() => setMode(mode === 'model' ? 'flat' : 'model')}>
-            <Tiny color={palette.klein} style={{ fontFamily: 'Archivo_700Bold' }}>
+            <Tiny color={palette.link} style={{ fontFamily: 'Archivo_700Bold' }}>
               {mode === 'model' ? 'On a model' : 'Flat lay'}
             </Tiny>
           </Pressable>
@@ -76,24 +69,6 @@ export default function Entered() {
             Nothing can be changed now. At 8pm you judge the field alongside everyone else, and the
             result lands at 7am.
           </Tiny>
-
-          {showGrant ? (
-            <View style={{ marginTop: 15 }}>
-              <FirstRun
-                kick={`day one only · ${DAY_ONE_ENTRY_GRANT} tokens`}
-                title="Something to spend before eight."
-                body="Clothes normally come out of judging. On your first day you get three anyway, so the magazine is worth opening now instead of at 8pm."
-              >
-                <View style={{ marginTop: 12 }}>
-                  <Button
-                    label="Go and spend them"
-                    variant="quiet"
-                    onPress={() => router.push('/(tabs)/magazine')}
-                  />
-                </View>
-              </FirstRun>
-            </View>
-          ) : null}
 
           <Gap />
         </View>

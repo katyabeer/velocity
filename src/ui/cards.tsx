@@ -48,19 +48,12 @@ export function Roundel({
       <View
         style={[
           s.roundelDisc,
-          tone === 'accent' && { borderColor: palette.klein, backgroundColor: palette.kleinTint },
-          tone === 'alert' && { borderColor: palette.shock, backgroundColor: palette.shockTint },
+          tone === 'accent' && { borderColor: palette.accentEdge, backgroundColor: palette.accent },
+          /** No alert hue survives the v3 collapse — ink border + sunk ground. */
+          tone === 'alert' && { borderColor: palette.ink, backgroundColor: palette.creamSunk },
         ]}
       >
-        <Text
-          style={[
-            s.roundelDiscLabel,
-            tone === 'accent' && { color: palette.klein },
-            tone === 'alert' && { color: palette.shock },
-          ]}
-        >
-          {label}
-        </Text>
+        <Text style={s.roundelDiscLabel}>{label}</Text>
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={s.roundelTitle}>{title}</Text>
@@ -100,8 +93,8 @@ export function BandLadder({ active }: { active: BandKey }) {
             key={b.key}
             style={[s.bandRow, on && { backgroundColor: palette.ink }, i === BANDS.length - 1 && { borderBottomWidth: 0 }]}
           >
-            <Text style={[s.bandName, on && { color: palette.paper }]}>{b.name}</Text>
-            <Text style={[s.bandRange, on && { color: palette.kleinLine }]}>{b.range}</Text>
+            <Text style={[s.bandName, on && { color: palette.cream }]}>{b.name}</Text>
+            <Text style={[s.bandRange, on && { color: palette.accent }]}>{b.range}</Text>
           </View>
         );
       })}
@@ -117,10 +110,10 @@ export function Milestones({ earned }: { earned: number }) {
         const got = i < earned;
         return (
           <View key={m.key} style={[s.mile, got && s.mileOn]}>
-            <Text style={[s.mileMark, got && { borderColor: palette.klein, color: palette.klein }]}>
+            <Text style={[s.mileMark, got && { borderColor: palette.accentEdge, color: palette.ink }]}>
               {got ? '✓' : '·'}
             </Text>
-            <Text style={[s.mileName, got && { color: palette.klein }]}>{m.name}</Text>
+            <Text style={[s.mileName, got && { color: palette.ink }]}>{m.name}</Text>
             <Text style={s.mileHint}>{m.hint}</Text>
           </View>
         );
@@ -211,7 +204,12 @@ export function Trend({ values }: { values: readonly number[] }) {
           style={[
             s.trendBar,
             { height: `${(v / max) * 100}%` },
-            i >= values.length - 4 && { backgroundColor: palette.klein },
+            /** accent fill needs its ink edge on a light ground — see tokens.ts */
+            i >= values.length - 4 && {
+              backgroundColor: palette.accent,
+              borderWidth: border.hair,
+              borderColor: palette.accentEdge,
+            },
           ]}
         />
       ))}
@@ -244,11 +242,11 @@ export function EmptyState({
 const s = StyleSheet.create({
   card: {
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.card,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamRaised,
     padding: 14,
   },
-  cardInk: { borderWidth: border.mid, borderColor: palette.ink, backgroundColor: palette.paper },
+  cardInk: { borderWidth: border.mid, borderColor: palette.ink, backgroundColor: palette.cream },
   stat: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -256,17 +254,19 @@ const s = StyleSheet.create({
     gap: 10,
     paddingVertical: 9,
     borderBottomWidth: border.hair,
-    borderBottomColor: palette.line,
+    borderBottomColor: palette.rule,
   },
   statLabel: {
     fontFamily: 'Archivo_400Regular',
     fontSize: 11.5,
     lineHeight: 15,
-    color: palette.soft,
+    color: palette.grey,
     flex: 1,
   },
   statValue: {
-    fontFamily: 'BigShouldersDisplay_700Bold',
+    /** disp700 retired — the display face is now onboarding-headline + button
+     *  only. Archivo Black is the new workhorse for emphasized values. */
+    fontFamily: 'Archivo_900Black',
     fontSize: 17,
     textTransform: 'uppercase',
     color: palette.ink,
@@ -297,7 +297,7 @@ const s = StyleSheet.create({
     fontFamily: 'Archivo_400Regular',
     fontSize: 11,
     lineHeight: 16,
-    color: palette.soft,
+    color: palette.grey,
     marginTop: 4,
   },
   earned: { flexDirection: 'row', alignItems: 'center', gap: 11 },
@@ -306,8 +306,8 @@ const s = StyleSheet.create({
     height: 42,
     borderRadius: 99,
     borderWidth: border.mid,
-    borderColor: palette.klein,
-    color: palette.klein,
+    borderColor: palette.accentEdge,
+    color: palette.ink,
     textAlign: 'center',
     lineHeight: 39,
     fontFamily: 'BigShouldersDisplay_900Black',
@@ -318,9 +318,9 @@ const s = StyleSheet.create({
     fontFamily: 'Archivo_400Regular',
     fontSize: 11.5,
     lineHeight: 16,
-    color: palette.soft,
+    color: palette.grey,
   },
-  bands: { borderWidth: border.hair, borderColor: palette.line, backgroundColor: palette.card },
+  bands: { borderWidth: border.hair, borderColor: palette.rule, backgroundColor: palette.creamRaised },
   bandRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -329,33 +329,33 @@ const s = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderBottomWidth: border.hair,
-    borderBottomColor: palette.line,
+    borderBottomColor: palette.rule,
   },
   bandName: { fontFamily: 'Archivo_600SemiBold', fontSize: 11.5, lineHeight: 15, color: palette.ink },
-  bandRange: { fontFamily: 'DMMono_400Regular', fontSize: 10, color: palette.faint },
+  bandRange: { fontFamily: 'DMMono_400Regular', fontSize: 10, color: palette.greyMute },
   miles: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   mile: {
     width: '31.5%',
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.card,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamRaised,
     paddingTop: 11,
     paddingBottom: 10,
     paddingHorizontal: 7,
     alignItems: 'center',
   },
-  mileOn: { borderColor: palette.klein, backgroundColor: palette.kleinTint },
+  mileOn: { borderColor: palette.accentEdge, backgroundColor: palette.accent },
   mileMark: {
     width: 28,
     height: 28,
     borderRadius: 99,
     borderWidth: border.mid,
-    borderColor: palette.line,
+    borderColor: palette.rule,
     textAlign: 'center',
     lineHeight: 25,
     fontFamily: 'Archivo_700Bold',
     fontSize: 12,
-    color: palette.faint,
+    color: palette.greyMute,
   },
   mileName: {
     fontFamily: 'Archivo_600SemiBold',
@@ -369,13 +369,16 @@ const s = StyleSheet.create({
     fontFamily: 'Archivo_400Regular',
     fontSize: 8.5,
     lineHeight: 11,
-    color: palette.faint,
+    color: palette.greyMute,
     marginTop: 3,
     textAlign: 'center',
   },
+  /** Accent-filled now, ink text (text-on-accent), not klein+white. */
   tip: {
     marginTop: 12,
-    backgroundColor: palette.klein,
+    backgroundColor: palette.accent,
+    borderWidth: border.hair,
+    borderColor: palette.accentEdge,
     paddingLeft: 14,
     paddingRight: 34,
     paddingTop: 12,
@@ -387,50 +390,56 @@ const s = StyleSheet.create({
     left: 26,
     width: 12,
     height: 12,
-    backgroundColor: palette.klein,
+    backgroundColor: palette.accent,
+    borderWidth: border.hair,
+    borderColor: palette.accentEdge,
     transform: [{ rotate: '45deg' }],
   },
-  tipText: { fontFamily: 'Archivo_400Regular', fontSize: 12, lineHeight: 18, color: '#FFFFFF' },
+  tipText: { fontFamily: 'Archivo_400Regular', fontSize: 12, lineHeight: 18, color: palette.ink },
   tipLead: { fontFamily: 'Archivo_700Bold' },
   tipClose: { position: 'absolute', top: 8, right: 9, width: 20, height: 20, alignItems: 'center' },
-  tipCloseLabel: { fontSize: 15, lineHeight: 18, color: palette.kleinLine },
-  newBox: { borderWidth: border.hair, borderColor: palette.klein, backgroundColor: palette.kleinTint, paddingHorizontal: 13, paddingVertical: 12 },
-  newBoxTitle: { fontFamily: 'Archivo_600SemiBold', fontSize: 13, lineHeight: 17.5, color: palette.kleinInk, marginTop: 5 },
-  newBoxBody: { fontFamily: 'Archivo_400Regular', fontSize: 10, lineHeight: 15.5, color: palette.kleinMid, marginTop: 6 },
-  firstRun: { borderWidth: border.mid, borderColor: palette.shock, backgroundColor: palette.shockTint, padding: 13 },
-  firstRunTitle: { fontFamily: 'Archivo_600SemiBold', fontSize: 13, lineHeight: 17.5, color: palette.shockInk, marginTop: 5 },
-  firstRunBody: { fontFamily: 'Archivo_400Regular', fontSize: 10, lineHeight: 15.5, color: palette.shockMid, marginTop: 6 },
+  tipCloseLabel: { fontSize: 15, lineHeight: 18, color: palette.ink },
+  newBox: { borderWidth: border.hair, borderColor: palette.accentEdge, backgroundColor: palette.accent, paddingHorizontal: 13, paddingVertical: 12 },
+  newBoxTitle: { fontFamily: 'Archivo_600SemiBold', fontSize: 13, lineHeight: 17.5, color: palette.ink, marginTop: 5 },
+  newBoxBody: { fontFamily: 'Archivo_400Regular', fontSize: 10, lineHeight: 15.5, color: palette.ink, marginTop: 6 },
+  /** No alert hue survives the v3 collapse (see tokens.ts) — ink border on
+   *  the sunk ground is the day-one notice's only distinction now. */
+  firstRun: { borderWidth: border.mid, borderColor: palette.ink, backgroundColor: palette.creamSunk, padding: 13 },
+  firstRunTitle: { fontFamily: 'Archivo_600SemiBold', fontSize: 13, lineHeight: 17.5, color: palette.ink, marginTop: 5 },
+  firstRunBody: { fontFamily: 'Archivo_400Regular', fontSize: 10, lineHeight: 15.5, color: palette.grey, marginTop: 6 },
   reach: { flexDirection: 'row', gap: space.sm },
   reachCell: {
     flex: 1,
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.card,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamRaised,
     paddingHorizontal: 7,
     paddingVertical: 9,
     alignItems: 'center',
   },
-  reachValue: { fontFamily: 'BigShouldersDisplay_900Black', fontSize: 24, lineHeight: 24, color: palette.klein },
+  /** Not interactive text, so `link` (reserved for tappable rows/tags) isn't
+   *  right here — a bare emphasis numeral just goes ink now. */
+  reachValue: { fontFamily: 'BigShouldersDisplay_900Black', fontSize: 24, lineHeight: 24, color: palette.ink },
   reachLabel: {
     fontFamily: 'Archivo_600SemiBold',
     fontSize: 8,
     lineHeight: 9.6,
     letterSpacing: 0.4,
     textTransform: 'uppercase',
-    color: palette.soft,
+    color: palette.grey,
     marginTop: 5,
     textAlign: 'center',
   },
   trend: {
     height: 78,
     borderWidth: border.hair,
-    borderColor: palette.line,
-    backgroundColor: palette.card,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamRaised,
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 4,
     padding: 9,
   },
-  trendBar: { flex: 1, backgroundColor: palette.fill2 },
-  emptyBody: { fontFamily: 'Archivo_400Regular', fontSize: 12.5, lineHeight: 20, color: palette.soft, marginTop: 5 },
+  trendBar: { flex: 1, backgroundColor: palette.creamSunk },
+  emptyBody: { fontFamily: 'Archivo_400Regular', fontSize: 12.5, lineHeight: 20, color: palette.grey, marginTop: 5 },
 });

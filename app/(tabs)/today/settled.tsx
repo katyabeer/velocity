@@ -30,15 +30,18 @@ export default function Settled() {
       <LogoBlock title="Settled" subtitle="Tonight's drinks are done. Sixty-one seconds." />
 
       <Scroll>
-        <View style={{ borderWidth: border.mid, borderColor: palette.shock, backgroundColor: palette.shockTint, padding: 16 }}>
+        {/* No alert hue survives the v3 collapse (see tokens.ts) — ink
+            border on the sunk ground is this unlock panel's only
+            distinction now. */}
+        <View style={{ borderWidth: border.mid, borderColor: palette.ink, backgroundColor: palette.creamSunk, padding: 16 }}>
           <Kick tone="alert">you unlocked</Kick>
           <View style={{ flexDirection: 'row', gap: 14, alignItems: 'baseline', marginTop: 9 }}>
-            <Num color={palette.shock}>+{TOKENS_PER_JUDGING_ROUND}</Num>
+            <Num color={palette.ink}>+{TOKENS_PER_JUDGING_ROUND}</Num>
             <View style={{ flex: 1 }}>
-              <Big size={20} color={palette.shockInk}>
+              <Big size={20} color={palette.ink}>
                 tokens
               </Big>
-              <Tiny color={palette.shockMid} style={{ marginTop: 5 }}>
+              <Tiny color={palette.grey} style={{ marginTop: 5 }}>
                 {tokenLabel(balance)} to spend
                 {overnight
                   ? ` — three for judging, ${overnight} from people taking your pieces.`
@@ -50,13 +53,13 @@ export default function Settled() {
 
         <Card style={{ marginTop: 16 }}>
           <Kick tone="muted">what happens now</Kick>
-          <Tiny style={{ marginTop: 5, fontSize: 12.5, lineHeight: 20, color: palette.soft }}>
+          <Tiny style={{ marginTop: 5, fontSize: 12.5, lineHeight: 20, color: palette.grey }}>
             Twenty people compare your look with someone else&apos;s. When enough have, it settles —
             and you hear at 7am, along with tomorrow&apos;s job.
           </Tiny>
         </Card>
 
-        <Tiny style={{ marginTop: 13, paddingTop: 12, borderTopWidth: border.hair, borderTopColor: palette.line }}>
+        <Tiny style={{ marginTop: 13, paddingTop: 12, borderTopWidth: border.hair, borderTopColor: palette.rule }}>
           Nothing else is asked of you tonight.
         </Tiny>
 
