@@ -6,6 +6,6 @@ import { palette } from '@/theme/tokens';
  *  the sense that it is all one drawer. */
 export default function WardrobeLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.cream } }} />
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.bg } }} />
   );
 }

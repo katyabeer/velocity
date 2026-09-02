@@ -20,12 +20,11 @@ import { router } from 'expo-router';
 import { Foot, Gap, LogoBlock, Screen, Scroll, SectionHead } from '@/ui/layout';
 import { Kick, Tiny, B } from '@/ui/text';
 import { Button, ChipRow, Segmented } from '@/ui/controls';
-import { EmptyState, FirstRun, NewBox } from '@/ui/cards';
+import { EmptyState, NewBox } from '@/ui/cards';
 import { InventoryTile } from '@/ui/pieces';
 import { palette, border, space } from '@/theme/tokens';
 import { CATEGORIES, type Category } from '@/domain/garments';
 import { WARDROBE_CAP } from '@/domain/economy';
-import { capsuleByKey } from '@/data/capsules';
 import { dayConfig } from '@/config/testState';
 import { groupByCategory, useWardrobe, wornLabel, type WardrobeView } from '@/state/wardrobe';
 import { useEconomy } from '@/state/economy';
@@ -33,7 +32,6 @@ import { useSession } from '@/state/session';
 
 export default function Wardrobe() {
   const day = useSession((s) => s.day);
-  const capsuleKey = useSession((s) => s.capsule);
   const cfg = dayConfig(day);
 
   const w = useWardrobe();
@@ -42,7 +40,6 @@ export default function Wardrobe() {
   const toggleStar = useEconomy((s) => s.toggleStar);
 
   const groups = groupByCategory(w.pieces, w.filter);
-  const capsuleName = capsuleKey ? capsuleByKey(capsuleKey).name.toLowerCase() : 'starter';
 
   return (
     <Screen>
@@ -62,16 +59,6 @@ export default function Wardrobe() {
         {/* ══ PIECES ══ */}
         {w.view === 'pieces' ? (
           <>
-            {day === 1 ? (
-              <View style={{ marginTop: 12 }}>
-                <FirstRun
-                  kick="brand new · nothing earned yet"
-                  title={`${w.count} pieces. That is the lot.`}
-                  body={`The ${capsuleName} capsule you picked, and nothing else. Enough to enter with, nowhere near enough to be good — the rest comes out of the magazine, and every piece in there is one somebody put in a look.`}
-                />
-              </View>
-            ) : null}
-
             {day === 2 ? (
               <View style={{ marginTop: 12 }}>
                 <NewBox

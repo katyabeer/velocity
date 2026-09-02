@@ -41,7 +41,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: palette.ink,
         tabBarInactiveTintColor: palette.greyDecor,
         tabBarItemStyle: { paddingTop: 8 },
-        sceneStyle: { backgroundColor: palette.cream },
+        sceneStyle: { backgroundColor: palette.bg },
       }}
     >
       {TABS.map((t) => (

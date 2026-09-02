@@ -3,6 +3,6 @@ import { palette } from '@/theme/tokens';
 
 export default function YouLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.cream } }} />
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.bg } }} />
   );
 }

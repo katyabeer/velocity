@@ -7,12 +7,25 @@
  *
  * STARRING IS FREE; TAKING COSTS A TOKEN. The distinction is the whole reason
  * the magazine can be appetite and shop at once.
+ *
+ * SCRIM FADE, not Modal's built-in `animationType`. The dim backdrop and the
+ * sheet are siblings inside one Modal — "slide" animates that whole tree as a
+ * single unit sliding up from off-screen, which drags the backdrop up into
+ * view with it instead of fading it in over the page. Driving the dim's
+ * opacity and the sheet's translateY separately (both native-driver, so no
+ * jank) is what makes the backdrop actually read as a fade. `animationType`
+ * stays "none"; `mounted` keeps the Modal alive for the close animation's
+ * duration since Modal itself has no exit-animation hook.
  */
 
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, Easing, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { palette, border, space } from '@/theme/tokens';
 import { Kick } from './text';
 import { TokenBadge } from './TokenBadge';
+
+const SCREEN_H = Dimensions.get('window').height;
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export type SheetRow = {
   name: string;
@@ -37,10 +50,42 @@ export function BottomSheet({
   onToggleTake: (name: string) => void;
   onOpenPiece: (name: string) => void;
 }) {
+  const [mounted, setMounted] = useState(visible);
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      setMounted(true);
+      Animated.timing(progress, {
+        toValue: 1,
+        duration: 260,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(progress, {
+        toValue: 0,
+        duration: 200,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) setMounted(false);
+      });
+    }
+  }, [visible]);
+
+  if (!mounted) return null;
+
+  const sheetTranslateY = progress.interpolate({ inputRange: [0, 1], outputRange: [SCREEN_H, 0] });
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={s.dim} onPress={onClose} accessibilityLabel="Close" />
-      <View style={s.sheet}>
+    <Modal visible transparent animationType="none" onRequestClose={onClose}>
+      <AnimatedPressable
+        style={[s.dim, { opacity: progress }]}
+        onPress={onClose}
+        accessibilityLabel="Close"
+      />
+      <Animated.View style={[s.sheet, { transform: [{ translateY: sheetTranslateY }] }]}>
         <View style={s.grab} />
         <View style={s.head}>
           <Kick>what&apos;s in it</Kick>
@@ -81,7 +126,7 @@ export function BottomSheet({
             );
           })}
         </ScrollView>
-      </View>
+      </Animated.View>
     </Modal>
   );
 }

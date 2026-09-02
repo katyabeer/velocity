@@ -74,7 +74,7 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: palette.cream },
+          contentStyle: { backgroundColor: palette.bg },
           /* The prototype's page transition was an 18ms fade-and-lift. A native
              push is closer to what a phone actually does, so we keep the default
              for stacks and only override the modal. */

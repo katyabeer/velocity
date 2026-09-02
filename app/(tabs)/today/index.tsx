@@ -81,7 +81,7 @@ export default function Today() {
 
   return (
     <Screen>
-      <LogoBlock title="Today's challenge" subtitle={cfg.subtitle} />
+      <LogoBlock title="Today's challenge" />
 
       <Scroll>
         {/* ── ACT 1 · yesterday. Absent entirely on day one. ── */}

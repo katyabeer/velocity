@@ -19,7 +19,7 @@ import { palette } from '@/theme/tokens';
 
 export default function TodayLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.cream } }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.bg } }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="result" />
       <Stack.Screen name="challenges" />

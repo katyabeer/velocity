@@ -23,6 +23,13 @@
  *
  * `day` / `night` still live here for the proposed-but-unsigned-off "the
  * interface tells the time" move. Still nothing consumes `night`.
+ *
+ * `bg` vs `cream`, added 2 Sep 2026 (Katya): the app background and "surface"
+ * are no longer the same color. `bg` (#FAFAF8) is the page itself. `cream`
+ * (#F7F3EA) now means SURFACE — chrome that sits on top of the page: the
+ * sticky header/logo block, the bottom tab bar, sheets/drawers. Anything that
+ * is "the page" uses `bg`; anything that reads as a raised or pinned strip
+ * uses `cream`.
  */
 
 import { useEffect, useState } from 'react';
@@ -30,6 +37,9 @@ import { AccessibilityInfo } from 'react-native';
 
 export const palette = {
   // grounds
+  /** The app background — the page itself. */
+  bg: '#FAFAF8',
+  /** Surface — chrome pinned above the page: header, tab bar, sheets. */
   cream: '#F7F3EA',
   creamSunk: '#EAEAE1',
   creamRaised: '#FDFCF8',
@@ -140,7 +150,7 @@ export const layout = {
  * The day/night switch, if signed off, swaps these two objects.
  */
 export const day = {
-  bg: palette.cream,
+  bg: palette.bg,
   text: palette.ink,
   textSoft: palette.grey,
   textFaint: palette.greyMute,

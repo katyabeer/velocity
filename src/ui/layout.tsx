@@ -208,7 +208,7 @@ export function Labelled({
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: palette.cream },
+  screen: { flex: 1, backgroundColor: palette.bg },
   scroll: { flex: 1, minHeight: 0 },
   scrollPad: { paddingHorizontal: space.gutter, paddingTop: space.lg, paddingBottom: space.xl },
   scrollPadBleed: { paddingTop: 10, paddingBottom: space.xl },
@@ -228,6 +228,7 @@ const s = StyleSheet.create({
     paddingBottom: 12,
     borderBottomWidth: border.heavy,
     borderBottomColor: palette.ink,
+    backgroundColor: palette.cream,
   },
   logoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   header: {
@@ -240,6 +241,7 @@ const s = StyleSheet.create({
     gap: 10,
     borderBottomWidth: border.hair,
     borderBottomColor: palette.rule,
+    backgroundColor: palette.cream,
   },
   back: { fontSize: 19, lineHeight: 22, color: palette.ink },
   strip: {
