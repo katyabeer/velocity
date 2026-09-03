@@ -26,7 +26,9 @@ import { router } from 'expo-router';
 import { Foot, Header, Screen, Scroll, Wrap, Gap } from '@/ui/layout';
 import { Hero, Kick, Tiny } from '@/ui/text';
 import { Button, Chip } from '@/ui/controls';
+import { StepRibbonBleed, statesFor } from '@/ui/StepRibbon';
 import { palette, border } from '@/theme/tokens';
+import { CREATE_STEPS, ENTRY_STEPS } from '@/domain/entry';
 import { useSession, type Casting } from '@/state/session';
 import { useCreate } from '@/state/create';
 
@@ -41,13 +43,13 @@ export default function CastingScreen() {
   const casting = useSession((s) => s.casting);
   const setCasting = useSession((s) => s.setCasting);
   const origin = useSession((s) => s.castingOrigin);
-  const useRender = useCreate((s) => s.useRender);
   const setCreateStep = useCreate((s) => s.setStep);
 
   const go = () => {
     if (origin === 'create') {
-      useRender();
-      setCreateStep(4);
+      // Picking a model doesn't itself spend today's render — that happens
+      // at the Render step's two buttons. This just returns you there.
+      setCreateStep(3);
       router.replace('/(tabs)/create');
     } else {
       router.replace('/(tabs)/today/rendering');
@@ -66,10 +68,26 @@ export default function CastingScreen() {
         }
       />
 
+      {/* Whichever flow opened this, its own ribbon, so the screen reads as a
+          step OF that journey rather than a flow it dropped out of. Create is
+          at Model (3 of 4); the brief has no Model step of its own, so it sits
+          at Render — which is what the next tap actually starts. */}
+      <StepRibbonBleed
+        steps={
+          origin === 'create'
+            ? statesFor(CREATE_STEPS.map((s) => ({ label: s.label, hint: s.hint })), 3)
+            : statesFor(ENTRY_STEPS.map((s) => ({ label: s.label, hint: s.hint })), 3, [
+                true,
+                true,
+              ])
+        }
+      />
+
       <Scroll>
         <Hero>{'Who’s\nwearing it?'}</Hero>
         <Tiny style={{ marginTop: 8 }}>
           Changes the render, not the clothes. Set it once and reuse it.
+          {origin === 'brief' ? ' The next tap enters your look — nothing can be changed after it.' : ''}
         </Tiny>
 
         <View style={{ marginTop: 16 }}>
@@ -101,7 +119,10 @@ export default function CastingScreen() {
       </Scroll>
 
       <Foot>
-        <Button label="Render it" onPress={go} />
+        {/* The brief's button has to say what it commits to. "Render it" is
+            true for Create, where nothing is entered into anything; here the
+            same tap is the point of no return (invariant 4). */}
+        <Button label={origin === 'brief' ? 'Build and submit' : 'Render it'} onPress={go} />
       </Foot>
     </Screen>
   );

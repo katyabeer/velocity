@@ -26,11 +26,13 @@
  */
 
 import { useEffect } from 'react';
+import { View } from 'react-native';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
+import { Toast } from '@/ui/Toast';
 
 import { BigShouldersDisplay_900Black } from '@expo-google-fonts/big-shoulders-display';
 import { BalooBhai2_700Bold } from '@expo-google-fonts/baloo-bhai-2';
@@ -71,23 +73,28 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: palette.bg },
-          /* The prototype's page transition was an 18ms fade-and-lift. A native
-             push is closer to what a phone actually does, so we keep the default
-             for stacks and only override the modal. */
-        }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="onboarding" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="casting"
-          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
-        />
-      </Stack>
+      <View style={{ flex: 1 }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: palette.bg },
+            /* The prototype's page transition was an 18ms fade-and-lift. A native
+               push is closer to what a phone actually does, so we keep the default
+               for stacks and only override the modal. */
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen
+            name="casting"
+            options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+          />
+        </Stack>
+        {/* Sibling of the Stack, not a screen — it has to float above
+            whatever's currently active and outlive navigation. */}
+        <Toast />
+      </View>
     </SafeAreaProvider>
   );
 }

@@ -1,10 +1,14 @@
 /**
- * Garment tiles, the slot strip, the builder grid, and the flat lay.
+ * Garment tiles, the slot strip, the builder grid, and the wardrobe tile.
  *
- * THE BUILDER OFFERS WHAT YOU ACTUALLY OWN. On days 1 and 2 the grid is
- * generated from your inventory — which on day one is the capsule you chose —
- * rather than a fixed list. Picking *Street and sport* at signup means the
- * builder offers a parka and a hoodie, not a wool coat.
+ * The flat lay used to live here as a labelled grid. It is now a real composed
+ * plate on the delivery's own template — see ui/ComposedFlatLay.tsx.
+ *
+ * WHAT THE BUILDER OFFERS, AND WHEN. On the FIRST run it offers the whole
+ * catalogue — that is the day-one wardrobe fix (Katya, 3 Sep): you build from
+ * everything, and the look you enter becomes the wardrobe. On every later day
+ * it offers what you actually own, plus the two loaners, exactly as before.
+ * Established keeps its fixed twelve.
  *
  * FILTERS ARE BY GARMENT TYPE AND NOTHING ELSE, and PERFORMANCE HISTORY NEVER
  * APPEARS HERE. Neither of those is an oversight — see domain/entry.ts.
@@ -14,22 +18,28 @@ import { Image, Pressable, StyleSheet, Text, View, type ImageSourcePropType, typ
 import { palette, border, radius, space } from '@/theme/tokens';
 import type { Slot } from '@/domain/garments';
 
-/** `.pc` — the small square tile used in the slot strip and the sheet grid. */
+/** `.pc` — the small square tile used in the slot strip and the sheet grid.
+ *  `image` is the real cutout when the catalogue has one; without it the tile
+ *  falls back to its name, exactly as the whole app did before the AW26
+ *  delivery landed. */
 export function PieceTile({
   name,
   state = 'default',
   onPress,
   isLoan,
+  image,
 }: {
   name: string;
   state?: 'default' | 'held' | 'empty' | 'unavailable';
   onPress?: () => void;
   isLoan?: boolean;
+  image?: ImageSourcePropType;
 }) {
   return (
     <Pressable
       onPress={state === 'unavailable' ? undefined : onPress}
       accessibilityRole="button"
+      accessibilityLabel={state === 'empty' ? `${name} — empty` : name}
       style={[
         s.tile,
         state === 'held' && s.tileHeld,
@@ -37,34 +47,43 @@ export function PieceTile({
         isLoan && s.tileLoan,
       ]}
     >
+      {image ? <Image source={image} style={s.tileImage} resizeMode="contain" /> : null}
       {isLoan ? <Text style={s.loanFlag}>NEW</Text> : null}
       {state === 'held' ? <Text style={s.tick}>✓</Text> : null}
-      <Text style={[s.tileLabel, state === 'empty' && { color: palette.greyMute }]}>{name}</Text>
+      {image ? null : (
+        <Text style={[s.tileLabel, state === 'empty' && { color: palette.greyMute }]}>{name}</Text>
+      )}
     </Pressable>
   );
 }
 
 /**
- * The slot strip — five slots, one piece each, Outer through Extra.
- * Tap a filled slot to put it back.
+ * The slot strip — SIX cells now, because Extra holds two (see STRIP_SLOTS in
+ * domain/entry.ts). Tap a filled cell to put that piece back.
+ *
+ * KEYED BY INDEX, NOT BY SLOT: two cells are both called 'Extra', so a
+ * slot-name key would collide and React would reuse the wrong cell. And clearing
+ * is BY NAME, not by slot — clearing 'Extra' would take out both accessories
+ * when the user tapped one.
  */
 export function SlotStrip({
   slots,
   onClear,
 }: {
-  slots: readonly { slot: Slot; name?: string; isLoan?: boolean }[];
-  onClear: (slot: Slot) => void;
+  slots: readonly { slot: Slot; name?: string; isLoan?: boolean; image?: ImageSourcePropType }[];
+  onClear: (name: string) => void;
 }) {
   return (
     <View style={s.strip}>
-      {slots.map((sl) => (
-        <View key={sl.slot} style={{ flex: 1 }}>
+      {slots.map((sl, i) => (
+        <View key={`${sl.slot}-${i}`} style={{ flex: 1 }}>
           {sl.name ? (
             <PieceTile
               name={sl.name}
               state="held"
               isLoan={sl.isLoan}
-              onPress={() => onClear(sl.slot)}
+              image={sl.image}
+              onPress={() => onClear(sl.name!)}
             />
           ) : (
             <PieceTile name={sl.slot} state="empty" />
@@ -75,13 +94,24 @@ export function SlotStrip({
   );
 }
 
-/** `.grid3 .cellph` — the three-across garment grid the builder picks from. */
+/**
+ * `.grid3 .cellph` — the three-across garment grid the builder picks from.
+ *
+ * FILTERS ARE BY GARMENT TYPE AND NOTHING ELSE, and PERFORMANCE HISTORY NEVER
+ * APPEARS HERE. Neither is an oversight — see domain/entry.ts. The cell shows a
+ * photo and a name, and that is the whole of what it is allowed to tell you.
+ */
 export function GarmentGrid({
   items,
   onPress,
   style,
 }: {
-  items: readonly { name: string; selected?: boolean; dimmed?: boolean }[];
+  items: readonly {
+    name: string;
+    selected?: boolean;
+    dimmed?: boolean;
+    image?: ImageSourcePropType;
+  }[];
   onPress: (name: string) => void;
   style?: ViewStyle;
 }) {
@@ -92,45 +122,32 @@ export function GarmentGrid({
           key={it.name}
           onPress={() => onPress(it.name)}
           accessibilityRole="button"
+          accessibilityLabel={it.name}
           accessibilityState={{ selected: !!it.selected }}
           style={[s.cell, it.selected && s.cellSelected, it.dimmed && { opacity: 0.4 }]}
         >
-          <Text style={s.cellLabel}>{it.name}</Text>
+          <View style={s.cellPhoto}>
+            {it.image ? (
+              <Image source={it.image} style={s.cellImage} resizeMode="contain" />
+            ) : (
+              <Text style={s.cellPlaceholder}>{it.name.split(' ')[0]}</Text>
+            )}
+            {it.selected ? (
+              <View style={s.cellTick}>
+                <Text style={s.cellTickMark}>✓</Text>
+              </View>
+            ) : null}
+          </View>
+          {/* Fixed-height box, not just numberOfLines: react-native-web's
+              line clamp still lets a third line spill, and one taller cell
+              makes the whole row uneven. Two lines' worth, always. */}
+          <View style={s.cellLabelBox}>
+            <Text style={s.cellLabel} numberOfLines={2}>
+              {it.name}
+            </Text>
+          </View>
         </Pressable>
       ))}
-    </View>
-  );
-}
-
-/**
- * The flat lay — the pieces laid out, no body, no fit.
- *
- * NOT A FALLBACK. It is the unrendered state, and it is also the position that
- * brief §10.7 and resolution §13.4 both hold: no bodies, no fit, with art
- * direction as the defensible claim. Jack's open question 2 is whether the model
- * render reopens that.
- */
-export function FlatLay({
-  pieces,
-  height = 210,
-  caption = 'Combination · not rendered',
-}: {
-  pieces: readonly string[];
-  height?: number;
-  caption?: string;
-}) {
-  return (
-    <View style={[s.stage, { height }]}>
-      <View style={s.flat}>
-        {pieces.map((p) => (
-          <View key={p} style={s.flatCell}>
-            <Text style={s.flatLabel}>{p}</Text>
-          </View>
-        ))}
-      </View>
-      <View style={s.stageCaption}>
-        <Text style={s.stageCaptionText}>{caption}</Text>
-      </View>
     </View>
   );
 }
@@ -142,9 +159,9 @@ export function FlatLay({
  * `history` is optional and Pieces-view no longer passes it — the Saved
  * view still does, for its starred-status caption ("yours now" / "★ saved
  * · costs a token"), which is unrelated to worn-history despite sharing the
- * prop. `image` is optional too, real photos only for the Day 1 review
- * pieces so far (see INVENTORY_DAY_ONE_REVIEW) — everything else falls back
- * to the text placeholder, same as before.
+ * prop. `image` is optional too: anything in the AW26 catalogue carries its
+ * cutout (state/wardrobe.ts attaches it on the way in), and the legacy
+ * fixture names for Days 2 and 3 fall back to the text placeholder.
  */
 export function InventoryTile({
   name,
@@ -205,12 +222,16 @@ const s = StyleSheet.create({
     borderWidth: border.hair,
     borderColor: palette.rule,
     backgroundColor: palette.creamSunk,
-    height: 82,
+    height: 68,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingHorizontal: 4,
-    paddingVertical: 6,
+    paddingHorizontal: 3,
+    paddingVertical: 5,
+    overflow: 'hidden',
   },
+  /** Fills the tile when there's a cutout — the name is redundant next to a
+   *  photograph of the thing, and at six cells wide there is no room for it. */
+  tileImage: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' },
   tileHeld: { backgroundColor: palette.accent, borderColor: palette.accentEdge },
   /** No alert hue survives the v3 collapse — ink border on the sunk ground
    *  is the only distinction left for "on loan". */
@@ -242,73 +263,76 @@ const s = StyleSheet.create({
     color: palette.grey,
     textAlign: 'center',
   },
-  strip: { flexDirection: 'row', gap: 5 },
+  /** Six cells now, so they are narrower — the strip stays one row rather
+   *  than wrapping, which is what makes it readable as "your look" at a
+   *  glance. */
+  strip: { flexDirection: 'row', gap: 4 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   cell: {
     width: '31.5%',
-    height: 100,
     borderWidth: border.hair,
     borderColor: palette.rule,
-    backgroundColor: palette.creamSunk,
-    justifyContent: 'flex-end',
-    padding: 6,
+    borderRadius: radius.sm,
+    backgroundColor: palette.creamRaised,
+    overflow: 'hidden',
   },
   /** quintets.css's dedicated selected-state token: a 4px ink border, no
-   *  color pairing (see tokens.ts border.sel / flag 7 in the migration plan). */
+   *  color pairing (see tokens.ts border.sel / flag 7 in the migration plan).
+   *  The 4px eats into the cell rather than growing it, so a selected tile
+   *  does not shove the grid around — `overflow: hidden` above plus the
+   *  fixed photo height keep the row heights equal. */
   cellSelected: {
     borderWidth: border.sel,
     borderColor: palette.ink,
   },
+  cellPhoto: {
+    height: 94,
+    backgroundColor: palette.creamSunk,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cellImage: { width: '100%', height: '100%' },
+  cellPlaceholder: {
+    fontFamily: 'BigShouldersDisplay_900Black',
+    fontSize: 17,
+    textTransform: 'uppercase',
+    color: 'rgba(18,17,16,0.15)',
+  },
+  cellTick: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    width: 18,
+    height: 18,
+    borderRadius: 999,
+    borderWidth: border.hair,
+    borderColor: palette.accentEdge,
+    backgroundColor: palette.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cellTickMark: {
+    fontFamily: 'Archivo_700Bold',
+    fontSize: 10,
+    lineHeight: 12,
+    color: palette.ink,
+  },
+  cellLabelBox: {
+    /** 2 x 9.6 line-height plus the padding below. Clipped, so a long name
+     *  truncates rather than growing the cell. */
+    height: 32,
+    overflow: 'hidden',
+    paddingHorizontal: 6,
+    paddingTop: 6,
+    backgroundColor: palette.cream,
+  },
   cellLabel: {
     fontFamily: 'Archivo_600SemiBold',
     fontSize: 8,
-    lineHeight: 9.2,
+    lineHeight: 9.6,
     letterSpacing: 0.4,
     textTransform: 'uppercase',
     color: palette.grey,
-  },
-  stage: {
-    borderWidth: border.hair,
-    borderColor: palette.rule,
-    backgroundColor: palette.creamSunk,
-    overflow: 'hidden',
-  },
-  flat: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, padding: 12 },
-  flatCell: {
-    width: '31%',
-    height: 74,
-    borderWidth: border.hair,
-    borderColor: palette.rule,
-    backgroundColor: palette.cream,
-    justifyContent: 'flex-end',
-    padding: 6,
-  },
-  flatLabel: {
-    fontFamily: 'Archivo_600SemiBold',
-    fontSize: 7.5,
-    lineHeight: 8.3,
-    letterSpacing: 0.38,
-    textTransform: 'uppercase',
-    color: palette.grey,
-  },
-  stageCaption: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: palette.cream,
-    borderTopWidth: border.hair,
-    borderTopColor: palette.rule,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  stageCaptionText: {
-    fontFamily: 'DMMono_500Medium',
-    fontSize: 7.5,
-    lineHeight: 10,
-    letterSpacing: 1.05,
-    textTransform: 'uppercase',
-    color: palette.disabledInk,
   },
   /** Plain, unclipped wrapper so the drop circle can overlap invCard's
    *  rounded corner without being cut off by its overflow: hidden. */

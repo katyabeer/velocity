@@ -11,23 +11,27 @@
  */
 
 import { create } from 'zustand';
-import type { Slot } from '@/domain/garments';
-import { clearSlot, togglePick, canEnter, type Pick, type PickSource } from '@/domain/entry';
+import type { Category } from '@/domain/garments';
+import { removePick, togglePick, canEnter, type Pick, type PickSource } from '@/domain/entry';
 
 type EntryState = {
   picks: readonly Pick[];
   /** 1 = pick, 2 = look. Steps 3 and 4 happen on other screens. */
   step: 1 | 2;
-  filter: Slot | 'All';
+  /** BY GARMENT TYPE AND NOTHING ELSE. Category, not slot, so Dresses can be
+   *  its own rail while still occupying the Top slot. */
+  filter: Category | 'All';
   /** Once true, NOTHING can be changed. There is no path back. */
   entered: boolean;
   /** Set when the render animation has finished so we don't replay it. */
   rendered: boolean;
 
   toggle: (name: string, source: PickSource) => void;
-  clear: (slot: Slot) => void;
+  /** By NAME, not by slot — Extra holds two, and clearing the slot would
+   *  take out both when the user tapped one. */
+  putBack: (name: string) => void;
   setStep: (step: 1 | 2) => void;
-  setFilter: (f: Slot | 'All') => void;
+  setFilter: (f: Category | 'All') => void;
   enter: () => void;
   markRendered: () => void;
   reset: () => void;
@@ -47,7 +51,7 @@ export const useEntry = create<EntryState>((set) => ({
   toggle: (name, source) =>
     set((s) => (s.entered ? s : { picks: togglePick(s.picks, { name, source }) })),
 
-  clear: (slot) => set((s) => (s.entered ? s : { picks: clearSlot(s.picks, slot) })),
+  putBack: (name) => set((s) => (s.entered ? s : { picks: removePick(s.picks, name) })),
 
   setStep: (step) => set({ step }),
   setFilter: (filter) => set({ filter }),

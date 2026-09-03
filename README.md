@@ -74,7 +74,47 @@ thing to look at:
 7. **Fonts loading at all.** Export names are verified against the installed packages, but
    whether Big Shoulders 900 actually looks like the prototype at 50pt is a visual call.
 8. **The render animation timing** — 620ms a step, ported as `setTimeout` in an effect.
-   It should feel like about four seconds total.
+   It should feel like about four seconds total. NOTE: the brief flow no longer plays
+   this at all (the render is async now); `RenderStage` is only reachable from the
+   model presentation on `today/entered.tsx`.
+
+### Verified on 3 Sep 2026, in a browser at 375×812
+
+The first-run walkthrough was run end to end and looked at, on all three test days:
+onboarding → first challenge → builder (all 60 garments) → composed preview → casting →
+"we're building your look" → five votes → challenge complete → the finished look, plus
+the Today card in all four of its states, the tab dots on both lanes, and Create's
+empty state. Days 2 and 3 were regression-checked (owned-pieces pool, the two loaners,
+legacy fixture names falling back to text tiles).
+
+### Verified on 3 Sep 2026 (second pass — onboarding rework)
+
+Walked the whole chain by tapping, at 375×812: the loading beat (3s, pulsing
+dot, tap-to-skip), all four carousel slides forward and via Skip, sign-up by
+tapping a method, the profile screen's empty-field validation and its mock
+availability tick, and on into the builder. The carousel's eyebrow and heading
+were measured on all four slides and sit at an identical y (130 / 151).
+
+**Still unverified**, because a browser at 375×812 is not a phone:
+
+- The pulsing dot on a real device. `useNativeDriver: true` on opacity and
+  scale, which react-native-web ignores — the native driver path itself has
+  not run.
+- The keyboard on the profile screen. There is no `KeyboardAvoidingView`: the
+  field sits high enough that it should be fine on a phone, and it is the only
+  `TextInput` in the app, so this is the one screen where that assumption has
+  never been tested.
+- The token badge's tilt at native pixel density. A 2° rotation on a small
+  element with a hairline border is where aliasing shows.
+
+- The composed flat lay on a real device. It is `aspectRatio: 3/4` with absolutely
+  positioned percentage boxes; that is the layout most likely to differ under RN's
+  native layout engine rather than react-native-web's.
+- `MIN_BOX_FRACTION` in `ui/ComposedFlatLay.tsx` — the legibility floor on true scale.
+  It is one constant and it is a design call; see that file's header.
+- The 20MB of garment cutouts on a cold native start. 60 × 1000×1000 PNG-24 with alpha
+  is fine over a dev server and untested as a bundled asset load.
+- The tab-icon dot at native pixel density (10pt circle, hairline border).
 
 ## Carried-over known incomplete
 

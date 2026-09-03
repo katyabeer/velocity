@@ -29,12 +29,14 @@ import { dayConfig } from '@/config/testState';
 import { groupByCategory, useWardrobe, type WardrobeView } from '@/state/wardrobe';
 import { useEconomy } from '@/state/economy';
 import { useSession } from '@/state/session';
+import { useEntry } from '@/state/entry';
 
 export default function Wardrobe() {
   const day = useSession((s) => s.day);
   const cfg = dayConfig(day);
 
   const w = useWardrobe();
+  const entered = useEntry((s) => s.entered);
   const starred = useEconomy((s) => s.starred);
   const held = useEconomy((s) => s.held);
   const toggleStar = useEconomy((s) => s.toggleStar);
@@ -217,11 +219,16 @@ export default function Wardrobe() {
             style={{ flex: 1 }}
             onPress={() => router.push('/(tabs)/magazine')}
           />
+          {/* Once you're in, the builder is a dead screen — every control on
+              it no-ops, because nothing can be changed after entry. Point at
+              the look instead. */}
           <Button
-            label="Build tonight's look"
+            label={entered ? 'See your look' : "Build tonight's look"}
             variant="quiet"
             style={{ flex: 1 }}
-            onPress={() => router.push('/(tabs)/today/build')}
+            onPress={() =>
+              router.push(entered ? '/(tabs)/today/entered' : '/(tabs)/today/build')
+            }
           />
         </View>
       </Foot>

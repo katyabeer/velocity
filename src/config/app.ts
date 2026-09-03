@@ -1,18 +1,33 @@
 /**
  * THE NAME. It lives here, once.
  *
- * Resolved to "quintets." per Katya's v3 token export (quintets.css,
- * 2 Sep 2026), which supersedes the earlier *Velocity* rejection and the
- * Bias / Best Dressed / The Read shortlist. `app.json`'s `expo.name`
- * ("Styling Game") is the separate native/build-facing string — not
- * changed here, since that's a lower-stakes internal working title, not
+ * "Editorial." per Katya's loading-screen mockup, 3 Sep 2026. Supersedes
+ * "quintets." (v3 token export, 2 Sep), which superseded the *Velocity*
+ * rejection and the Bias / Best Dressed / The Read shortlist. `app.json`'s
+ * `expo.name` ("Styling Game") is the separate native/build-facing string —
+ * not changed here, since that's a lower-stakes internal working title, not
  * user-facing copy.
  *
- * Every screen imports APP_NAME from here. Renaming the product is this one
- * line. Do not hard-code the name in a component.
+ * ⚠ STILL NO AVAILABILITY CHECKS RUN ON ANY CANDIDATE, and "Editorial" is a
+ * far more contested word than "quintets" — it is a common noun in the exact
+ * category this product sits in. Worth a trademark and App Store search before
+ * anything is printed.
+ *
+ * Every screen imports from here. Renaming the product is these two lines. Do
+ * not hard-code the name in a component.
  */
 
-export const APP_NAME = 'quintets.';
+export const APP_NAME = 'Editorial.';
+
+/**
+ * The letters without the full stop.
+ *
+ * The wordmark's dot is a SEPARATE ELEMENT on the loading screen, because it
+ * doubles as the loading indicator — it pulses while the app boots (see
+ * onboarding/splash.tsx). So the splash cannot render APP_NAME as one string.
+ * Anywhere the name appears as plain copy, use APP_NAME and keep the stop.
+ */
+export const APP_WORDMARK = 'Editorial';
 
 /** 18+. The minors privacy clause in scope §5.2 is dead scope given this —
  *  remove it in scope v1.5. */

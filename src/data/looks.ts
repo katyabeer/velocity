@@ -42,14 +42,11 @@ export type Look = {
  * lands weak-against-strong. If you add/remove/reorder entries, re-check
  * that no adjacent pair is weak+weak.
  *
- * Every entry's `occasion` is "autumn wedding" (from the sheet) — worth
- * flagging: that's the photoshoot's styling brief, not Today's actual
- * narrative brief ("drinks with your ex..."). The old placeholder data used
- * `occasion: 'Your ex'` to match the real brief; these real photos don't
- * depict that scenario, so the caption now shows what the photo actually
- * is rather than a caption that matches the photo even less. Katya's call
- * if that mismatch needs addressing (e.g. a note that judging pairs are a
- * general skill round, not literally tonight's specific job).
+ * RESOLVED 3 Sep 2026. Every entry's `occasion` is "autumn wedding" (from the
+ * sheet), which used to contradict Today's brief ("drinks with your ex...").
+ * The BRIEF moved rather than the captions — TONIGHTS_BRIEF is now the autumn
+ * wedding — because the photographs are the thing that cannot be reshot. See
+ * data/challenges.ts.
  */
 export const JUDGING_LOOKS: readonly Look[] = [
   {

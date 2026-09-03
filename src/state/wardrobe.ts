@@ -5,6 +5,15 @@
  * previously the counter moved but the inventory did not, which was invisible at
  * 96 pieces and glaring at 8. `add` and `remove` here are what make that true —
  * anything that changes the token balance must also call one of them.
+ *
+ * DAY 1 STARTS EMPTY, AND THE FIRST LOOK FILLS IT. Katya, 3 Sep: the capsule
+ * picker is gone, and with it the eight-pieces-off-a-menu grant. The first-run
+ * builder offers the whole catalogue instead, and the pieces you actually chose
+ * become the wardrobe — see `adoptLook`, called once when the entry commits.
+ *
+ * That is the answer to the day-one wardrobe problem, and it is a better one
+ * than the capsule was: the wardrobe is now something you built rather than
+ * something you were handed, and it cannot contain a piece you never looked at.
  */
 
 import { create } from 'zustand';
@@ -20,7 +29,7 @@ import {
   type ArchiveEntry,
   type OwnedPiece,
 } from '@/data/inventory';
-import { INVENTORY_DAY_ONE_REVIEW } from '@/data/inventoryReview';
+import { garmentImage } from '@/data/catalogue';
 import type { CapsuleKey } from '@/data/capsules';
 
 export type WardrobeView = 'pieces' | 'looks' | 'saved';
@@ -45,13 +54,19 @@ type WardrobeState = {
   remove: (name: string) => void;
   /** Saving a freestyle set is how the Looks tab first fills on Day 1. */
   saveSet: (entry: ArchiveEntry) => void;
+  /** The entered look becomes yours to keep. Idempotent, because the screen
+   *  that calls it can be remounted. */
+  adoptLook: (names: readonly string[]) => void;
   hydrate: (day: TestDay, capsule: CapsuleKey) => void;
 };
 
 const seed = (day: TestDay, capsule: CapsuleKey) => {
   const cfg = dayConfig(day);
+  /* Day 1 is EMPTY on purpose — not a thin wardrobe, none at all. The
+     first-run builder draws on the catalogue, so nothing is blocked, and the
+     first entry fills this via adoptLook. Do not re-seed it with a capsule. */
   const pieces =
-    day === 1 ? [...INVENTORY_DAY_ONE_REVIEW] : day === 2 ? inventoryDayTwo(capsule) : [...INVENTORY_ESTABLISHED];
+    day === 1 ? [] : day === 2 ? inventoryDayTwo(capsule) : [...INVENTORY_ESTABLISHED];
   const archive =
     day === 1 ? ARCHIVE_DAY_ONE : day === 2 ? ARCHIVE_DAY_TWO : ARCHIVE_ESTABLISHED;
   return {
@@ -76,7 +91,15 @@ export const useWardrobe = create<WardrobeState>((set) => ({
       return {
         pieces: [
           ...s.pieces,
-          { name, category: categoryOf(name), worn: 0, best: null, provenance: 'taken', isNew: true },
+          {
+            name,
+            category: categoryOf(name),
+            worn: 0,
+            best: null,
+            provenance: 'taken',
+            isNew: true,
+            image: garmentImage(name),
+          },
         ],
         count: s.count + 1,
       };
@@ -92,6 +115,29 @@ export const useWardrobe = create<WardrobeState>((set) => ({
     }),
 
   saveSet: (entry) => set((s) => ({ archive: [entry, ...s.archive] })),
+
+  adoptLook: (names) =>
+    set((s) => {
+      const fresh = names.filter((n) => !s.pieces.some((p) => p.name === n));
+      if (!fresh.length) return s;
+      return {
+        pieces: [
+          ...s.pieces,
+          ...fresh.map((name) => ({
+            name,
+            category: categoryOf(name),
+            worn: 1,
+            best: null,
+            /* 'starter' rather than 'taken': no token was spent, and these are
+               the pieces the wardrobe begins with. */
+            provenance: 'starter' as const,
+            isNew: true,
+            image: garmentImage(name),
+          })),
+        ],
+        count: s.count + fresh.length,
+      };
+    }),
 
   hydrate: (day, capsule) => set({ ...seed(day, capsule), view: 'pieces', filter: 'All' }),
 }));

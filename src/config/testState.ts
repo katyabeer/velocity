@@ -10,7 +10,7 @@
  *
  * Change ACTIVE_DAY, save, and Fast Refresh reboots the app into that state.
  *
- *   1  brand new       onboarding from slide 1, 8 pieces, no result act at all
+ *   1  brand new       onboarding from slide 1, EMPTY wardrobe, no result act
  *   2  returning       skips onboarding, first result in, 11 pieces, 2 tokens
  *   3  established     skips onboarding, 96 pieces, 9 looks, all five You sections
  *
@@ -35,7 +35,16 @@ export const DAY_CONFIG = {
     onboarding: true,
     /** ABSENT ENTIRELY, not an empty state. Do not add a placeholder. */
     yesterday: 'none',
-    wardrobeCount: 8,
+    /**
+     * ZERO, and the first-run walkthrough is what fills it. The capsule picker
+     * that used to hand over eight pieces is gone (Katya, 3 Sep) — the builder
+     * offers the whole catalogue instead, and the look you enter becomes the
+     * wardrobe. See `adoptLook` in state/wardrobe.ts.
+     *
+     * Unused for days 1 and 2 anyway: seed() counts the actual pieces below
+     * Established. Kept accurate so the table isn't a lie.
+     */
+    wardrobeCount: 0,
     /** Hidden — a zero here would be a lie. */
     showOvernightRoundel: false,
     /** Hidden — a nudge drawn from eight things you can already see is noise. */

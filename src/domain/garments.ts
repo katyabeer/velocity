@@ -69,7 +69,32 @@ const RULES: readonly Rule[] = [
 /** Unmatched names fall through to Extra, exactly as the prototype does. */
 const FALLBACK: Rule = { pattern: /.^/, slot: 'Extra', category: 'Extras' };
 
+/**
+ * Authored answers, which beat the regex.
+ *
+ * The regex above is right for the capsule and fixture names it was written
+ * against, and wrong for a real catalogue: "tuxedo dress shirt" hits the dress
+ * rule before the shirt rule, and "silk charmeuse blouse" and "black fine
+ * turtleneck" match nothing at all and fall through to Extras. Widening the
+ * patterns to cover sixty real garment names is a losing game — the next
+ * delivery brings sixty more.
+ *
+ * So `data/catalogue.ts` registers what the delivery sheet already states, once
+ * on import, and every existing caller of `slotOf`/`categoryOf` gets the right
+ * answer with no change at its call site. Nothing in tests/ imports the
+ * catalogue, so the domain tests still exercise the regex.
+ */
+const authored = new Map<string, { slot: Slot; category: Category }>();
+
+export function registerGarments(
+  entries: readonly { name: string; slot: Slot; category: Category }[],
+): void {
+  entries.forEach((g) => authored.set(g.name, { slot: g.slot, category: g.category }));
+}
+
 export function classify(name: string): { slot: Slot; category: Category } {
+  const known = authored.get(name);
+  if (known) return known;
   const hit = RULES.find((r) => r.pattern.test(name)) ?? FALLBACK;
   return { slot: hit.slot, category: hit.category };
 }

@@ -39,7 +39,15 @@ export type Casting = {
 };
 
 /** One look, two presentations. The flat lay is not a fallback — it is the
- *  unrendered state. */
+ *  unrendered state.
+ *
+ *  ⚠ DEFAULT FLIPPED TO 'flat', 3 Sep. Not a position on Jack's open question 2
+ *  — both presentations are still live and the toggle still shows both. It is
+ *  about which one is REAL right now: the flat lay composes the actual AW26
+ *  cutouts on the delivery's own template, and RenderStage's figure is still
+ *  the placeholder wireframe standing in for Jack's pipeline. Telling someone
+ *  "your look is ready" and handing them a grey mannequin is the worst payoff
+ *  in the app. Flip this back the moment the model render is real. */
 export type RenderMode = 'model' | 'flat';
 
 /** Which screen's walkthrough tip has been dismissed. */
@@ -75,7 +83,9 @@ const initial = (day: TestDay) => {
     day,
     phase: 'entry' as Phase,
     yesterday: cfg.yesterday as YesterdayState,
-    handle: 'katya.b',
+    /* EMPTY on day one — the profile screen's field starts blank and the user
+       types their own. Days 2 and 3 are returning users, who already have one. */
+    handle: day === 1 ? '' : 'katya.b',
     rails: 'both' as Rails,
     /** Day 1 has no capsule until o6. Days 2 and 3 assume the first one. */
     capsule: (day === 1 ? null : 'quiet') as CapsuleKey | null,
@@ -85,7 +95,7 @@ const initial = (day: TestDay) => {
       skin: 'Mid',
       body: 'Average',
     } as Casting,
-    renderMode: 'model' as RenderMode,
+    renderMode: 'flat' as RenderMode,
     dismissedTips: {},
     castingOrigin: 'brief' as const,
   };

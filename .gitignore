@@ -13,7 +13,8 @@ dist/
 
 # Claude Code local settings
 .claude/
-.px/
+.px/*
+!.px/pulse.toml
 
 # Raw asset delivery — source-of-truth for the team, not needed to build the
 # app. Processed/resized copies the app actually bundles live in assets/.

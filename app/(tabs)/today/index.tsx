@@ -13,6 +13,26 @@
  * The primary button changes with the phase, not with the screen. During entry
  * it builds; after 20:00 it judges. There is never a moment where both are
  * offered, because the clock does not allow it.
+ *
+ * ─── THE JOB CARD NOW HAS FOUR STATES (Katya, 3 Sep) ────────────────────────
+ * The render is asynchronous, so the card is where its progress lives — that is
+ * what replaced the status chip that used to float in every screen's header
+ * (see state/submission.ts). The card is the one place in the app where the
+ * job's state belongs, and the only place the render matters.
+ *
+ *   open       nothing entered. The brief, and a button that builds.
+ *   entered    in, but the round is not finished. Judging is the primary
+ *              action; the render's progress is reported, not acted on.
+ *   building   in and judged, render still going. "Building your look."
+ *   complete   in, judged, render landed. "Challenge complete", and the
+ *              primary action is to go and look at it.
+ *
+ * The strip itself is ui/RenderStrip.tsx, shared with Create.
+ *
+ * Rendering and judging are tracked SEPARATELY on purpose. They overlap in
+ * practice — the minute of render runs while you vote — and collapsing them
+ * into one progress read would mean the card either lies about the render or
+ * lies about the round.
  */
 
 import { Pressable, View } from 'react-native';
@@ -23,13 +43,17 @@ import { Button } from '@/ui/controls';
 import { Card, EarnedRow, Tip } from '@/ui/cards';
 import { StepRibbon, type Step } from '@/ui/StepRibbon';
 import { ResultCard } from '@/ui/ResultCard';
+import { RenderStrip } from '@/ui/RenderStrip';
 import { palette } from '@/theme/tokens';
 import { dayConfig } from '@/config/testState';
 import { TONIGHTS_BRIEF } from '@/data/challenges';
 import { useSession, TIPS, TIP_LEAD } from '@/state/session';
 import { useEconomy } from '@/state/economy';
 import { useEntry } from '@/state/entry';
+import { useRenderStatus } from '@/state/submission';
 import { MAX_PIECES } from '@/domain/entry';
+
+type CardState = 'open' | 'entered' | 'building' | 'complete';
 
 export default function Today() {
   const day = useSession((s) => s.day);
@@ -44,8 +68,18 @@ export default function Today() {
   const callsCast = useEconomy((s) => s.callsCast);
   const quota = useEconomy((s) => s.quota);
   const overnight = useEconomy((s) => s.overnightTokens);
+  const renderStatus = useRenderStatus('brief');
 
   const judged = callsCast >= quota;
+  const seeLook = () => router.push('/(tabs)/today/entered');
+
+  const state: CardState = !entered
+    ? 'open'
+    : !judged
+      ? 'entered'
+      : renderStatus === 'ready'
+        ? 'complete'
+        : 'building';
 
   const steps: Step[] = [
     {
@@ -55,28 +89,47 @@ export default function Today() {
     },
     {
       label: 'Judge',
-      hint: phase === 'judging' ? `${callsCast} of ${quota}` : 'from 8pm',
+      hint: judged ? 'done' : phase === 'judging' ? `${callsCast} of ${quota}` : 'from 8pm',
       state: judged ? 'done' : phase === 'judging' ? 'now' : 'todo',
     },
     { label: 'Result', hint: '7am', state: judged ? 'now' : 'todo' },
   ];
 
+  /** Kicker, headline and body, per state. The headline is the thing Katya
+   *  asked for by name: the card says which of the four it is, in words. */
+  const heading = {
+    open: {
+      kick: phase === 'entry' ? "today's job · open until 8pm" : "today's job · closed, now judging",
+      title: TONIGHTS_BRIEF.title,
+    },
+    entered: { kick: "today's job · you're in", title: TONIGHTS_BRIEF.title },
+    building: { kick: "today's job · done", title: 'Building your look.' },
+    complete: { kick: "today's job · done", title: 'Challenge complete.' },
+  }[state];
+
   const primary = (() => {
-    if (phase === 'entry') {
-      return entered
-        ? { label: 'Entered · judging opens at 8pm', variant: 'off' as const, onPress: undefined }
-        : {
-            label: "Build tonight's look",
-            variant: 'solid' as const,
-            onPress: () => router.push('/(tabs)/today/build'),
-          };
+    if (state === 'open') {
+      if (phase === 'entry')
+        return {
+          label: "Build tonight's look",
+          variant: 'solid' as const,
+          onPress: () => router.push('/(tabs)/today/build'),
+        };
+      return {
+        label: callsCast === 0 ? "Judge tonight's looks" : `Keep judging · ${quota - callsCast} to go`,
+        variant: 'solid' as const,
+        onPress: () => router.push('/(tabs)/today/judging'),
+      };
     }
-    if (judged) return { label: 'Judged · result at 7am', variant: 'off' as const, onPress: undefined };
-    return {
-      label: callsCast === 0 ? "Judge tonight's drinks" : `Keep judging · ${quota - callsCast} to go`,
-      variant: 'solid' as const,
-      onPress: () => router.push('/(tabs)/today/judging'),
-    };
+    if (state === 'entered')
+      return {
+        label: callsCast === 0 ? 'Last step · vote on tonight’s looks' : `Keep voting · ${quota - callsCast} to go`,
+        variant: 'solid' as const,
+        onPress: () => router.push('/(tabs)/today/judging'),
+      };
+    if (state === 'building')
+      return { label: 'Result at 7am', variant: 'off' as const, onPress: undefined };
+    return { label: 'See your look', variant: 'solid' as const, onPress: seeLook };
   })();
 
   return (
@@ -98,26 +151,44 @@ export default function Today() {
 
         {/* ── ACT 2 · today, as one unit ── */}
         <Card ink style={{ padding: 15, marginTop: yesterday === 'none' ? 0 : 18 }}>
-          <Kick>
-            {phase === 'entry' ? "today's job · open until 8pm" : "today's job · closed, now judging"}
-          </Kick>
-          <Big style={{ marginTop: 7 }}>{TONIGHTS_BRIEF.title}</Big>
+          <Kick>{heading.kick}</Kick>
+          <Big style={{ marginTop: 7 }}>{heading.title}</Big>
 
-          {phase === 'entry' ? (
-            <Body style={{ marginTop: 8 }}>
-              Effortless, and not too pleased with yourself. Five pieces. At 8pm the job shuts and
-              everyone judges what came in — including you.
-            </Body>
+          {state === 'open' ? (
+            phase === 'entry' ? (
+              <Body style={{ marginTop: 8 }}>
+                {TONIGHTS_BRIEF.note} Up to {MAX_PIECES} pieces. At 8pm the job shuts and everyone
+                judges what came in — including you.
+              </Body>
+            ) : (
+              <Body style={{ marginTop: 8 }}>
+                Entry closed at 8pm with <B>41 looks</B> in. Nobody can enter now, so you can see
+                the field without it changing anyone&apos;s answer.
+              </Body>
+            )
           ) : (
             <Body style={{ marginTop: 8 }}>
-              Entry closed at 8pm with <B>41 looks</B> in. Nobody can enter now, so you can see the
-              field without it changing anyone&apos;s answer. Ten calls settles it.
+              {state === 'entered'
+                ? 'Your look is in and nothing can change it. One thing left tonight.'
+                : state === 'building'
+                  ? 'That’s the whole job done. We’re putting your look on a model now — it takes about a minute, and you don’t have to wait for it.'
+                  : 'That’s the whole job done, and your look is rendered. The room settles it overnight; the result lands at 7am with tomorrow’s job.'}
             </Body>
           )}
 
+          {/* The render read-out, from entry until it has been looked at. */}
+          {entered && renderStatus !== 'none' ? (
+            <View style={{ marginTop: 12 }}>
+              <RenderStrip ready={renderStatus === 'ready'} onPress={seeLook} />
+            </View>
+          ) : null}
+
           <StepRibbon steps={steps} style={{ marginTop: 14 }} />
 
-          {!tipDismissed ? (
+          {/* Only while the job is still open. The tip explains build-then-judge,
+              which is stale advice on a card that already says both are done —
+              and it would be the third accent-filled block in a row. */}
+          {!tipDismissed && state === 'open' ? (
             <Tip
               lead={TIP_LEAD.today}
               body={TIPS.today.replace(TIP_LEAD.today, '').trim()}

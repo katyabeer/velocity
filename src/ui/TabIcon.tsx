@@ -8,8 +8,9 @@
  * Stroke weight goes 1.6 → 2.2 when the tab is active, matching `.tabbar a.on svg`.
  */
 
+import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { palette } from '@/theme/tokens';
+import { palette, border } from '@/theme/tokens';
 
 export type TabKey = 'today' | 'magazine' | 'create' | 'wardrobe' | 'you';
 
@@ -26,20 +27,54 @@ const PATHS: Record<TabKey, React.ReactNode> = {
   ),
 };
 
-export function TabIcon({ name, focused }: { name: TabKey; focused: boolean }) {
+/**
+ * `badge` is the async render's only persistent signal: a finished render you
+ * have not looked at yet. It replaces the chip that used to float in every
+ * screen's header (see state/submission.ts) — on a tab it says *where* the
+ * thing is, which the header chip never did, and it costs no page furniture.
+ *
+ * Accent fill with its ink keyline, per the token rules — accent is a fill
+ * colour only, and it needs the edge to separate it from the cream tab bar.
+ */
+export function TabIcon({
+  name,
+  focused,
+  badge,
+}: {
+  name: TabKey;
+  focused: boolean;
+  badge?: boolean;
+}) {
   return (
-    <Svg
-      width={21}
-      height={21}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={focused ? palette.ink : palette.greyDecor}
-      strokeWidth={focused ? 2.2 : 1.6}
-    >
-      {PATHS[name]}
-    </Svg>
+    <View style={{ width: 21, height: 21 }}>
+      <Svg
+        width={21}
+        height={21}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke={focused ? palette.ink : palette.greyDecor}
+        strokeWidth={focused ? 2.2 : 1.6}
+      >
+        {PATHS[name]}
+      </Svg>
+      {badge ? <View style={s.badge} /> : null}
+    </View>
   );
 }
+
+const s = StyleSheet.create({
+  badge: {
+    position: 'absolute',
+    top: -3,
+    right: -4,
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+    borderWidth: border.hair,
+    borderColor: palette.accentEdge,
+    backgroundColor: palette.accent,
+  },
+});
 
 /** The star / bookmark used on the magazine save button. */
 export function SaveIcon({ filled }: { filled: boolean }) {

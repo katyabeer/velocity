@@ -22,16 +22,27 @@ import { StyleSheet } from 'react-native';
 import { TabIcon, type TabKey } from '@/ui/TabIcon';
 import { palette, border } from '@/theme/tokens';
 import { type as T } from '@/theme/type';
+import { useRenderBadge, type RenderLane } from '@/state/submission';
 
-const TABS: readonly { name: string; key: TabKey; label: string }[] = [
-  { name: 'today', key: 'today', label: 'Today' },
+/** `lane` marks the two tabs that can own a finished-but-unseen render. The
+ *  badge lives here rather than in every screen's header — see
+ *  state/submission.ts on why the floating chip was retired. */
+const TABS: readonly { name: string; key: TabKey; label: string; lane?: RenderLane }[] = [
+  { name: 'today', key: 'today', label: 'Today', lane: 'brief' },
   { name: 'magazine', key: 'magazine', label: 'Magazine' },
-  { name: 'create', key: 'create', label: 'Create' },
+  { name: 'create', key: 'create', label: 'Create', lane: 'create' },
   { name: 'wardrobe', key: 'wardrobe', label: 'Wardrobe' },
   { name: 'you', key: 'you', label: 'You' },
 ];
 
 export default function TabsLayout() {
+  /* Two fixed subscriptions rather than a hook inside the map — hook order has
+     to be stable, and the tab list is a constant anyway. */
+  const briefReady = useRenderBadge('brief');
+  const createReady = useRenderBadge('create');
+  const badgeFor = (lane?: RenderLane) =>
+    lane === 'brief' ? briefReady : lane === 'create' ? createReady : false;
+
   return (
     <Tabs
       screenOptions={{
@@ -50,7 +61,9 @@ export default function TabsLayout() {
           name={t.name}
           options={{
             title: t.label,
-            tabBarIcon: ({ focused }) => <TabIcon name={t.key} focused={focused} />,
+            tabBarIcon: ({ focused }) => (
+              <TabIcon name={t.key} focused={focused} badge={badgeFor(t.lane)} />
+            ),
           }}
         />
       ))}
