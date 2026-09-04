@@ -79,6 +79,7 @@ change:
 | `src/domain/settlement.ts` | the voting arithmetic. Has been wrong before |
 | `src/domain/economy.ts` | "no judging, no clothes" — the whole economy |
 | `src/domain/magazine.ts` | sample-don't-sort — the rule most likely to be broken |
+| `src/domain/renders.ts` | the re-render's three constraints. Drop one and it is a slot machine |
 
 ---
 
@@ -125,6 +126,25 @@ change:
     regulatory position (R-G5, brief invariant 7).
 19. **The rails question is soft.** A hard filter splits the garment pool, which splits the
     room, and multiplies the cold-start floor from ~125 DAU to ~375.
+20. **Freestyle is render-or-nothing.** No private save, no unrendered save, no unlimited
+    fallback. A spent user is blocked at the ENTRY of Create, not at the commit button —
+    they never see step 1. Amended 4 Sep (Katya), reversing HANDOVER §3.
+21. **Create's commit is at step 2, and the allowance goes at the commit** — not at
+    completion. Spend-on-success lets someone start a render, kill the app and start
+    again, which is a reroll through the back door. Refunds are for SYSTEM FAILURE only;
+    never for a user changing their mind, or delete-and-retry becomes that same reroll.
+22. **Two render allowances, never one shared counter** — `brief` 1/day, `freestyle` 1/day
+    plus 1 re-render. Both reset at **07:00 local, not midnight**: 07:00 is the day
+    boundary everywhere else, and two boundaries in one app is a bug generator.
+23. **The one re-render needs all three constraints or it is a slot machine.** Frozen
+    input · replaces in place · window shuts on the **first reaction or 15 minutes**,
+    whichever comes first. Amended 4 Sep (Katya), reversing D-brief invariant 5. If a
+    constraint has to go, the feature goes with it.
+24. **Free-text tags, on freestyle looks only.** Max 5, normalised, not clickable, not
+    filterable, and they must NEVER reach the feed sampler — a tag filter is a sort, and
+    invariant 7 is sample-don't-sort. Amended 4 Sep (Katya), reversing D-brief invariant 8.
+    The accepted consequence: **the gap is now brief-only**, because the builder keeps its
+    single closed declared word and a freestyle look has none to compare a read against.
 
 ## Reversed. Do not re-propose.
 
@@ -171,7 +191,23 @@ A fresh session will be tempted by several of these. They were tried and rejecte
   stay and study something you had just spent two screens looking at
 - A disabled "No tokens" button in the magazine sheet. It walled off the sheet
   at exactly the moment someone was most engaged. It offers the free action —
-  Save for later — instead of refusing the paid one
+  Save for later — instead of refusing the paid one. NOTE this is not a ban on
+  disabled buttons: Create's empty state has one ("Create a look", 4 Sep), and
+  it is correct there because there is no alternative action to offer
+- The save-unrendered path in Create ("Render and save privately", "Save to my
+  looks"). Cut 4 Sep with invariant 20. It let the flow be a corridor to a
+  closed door, and it made a17 carry three different faces
+- The closed occasion axis (`OCCASIONS`, nine words, one choosable) and the fake
+  `FREE_TAG_BANK`. Replaced by real free text 4 Sep. The cost is that occasion
+  stops aggregating: `wedding`, `weddingvibes` and `bigday` are three tags
+- MODEL as a ribbon segment in Create. Cut 4 Sep: casting is a screen shared by
+  both flows, not a step, which is how the builder already treated it. It made a
+  five-segment ribbon numbered 1, 2, 2, 3, 4 under a header reading "3 of 4"
+- "Make another →" on a17. There is no another — one render a day, and offering
+  a second is the tab promising something it refuses two taps later
+- Clearing the create submission lane on a17's mount. It used to be correct; it
+  now throws away `publishedAt` and `rerenderUsed`, which ARE the re-render
+  window, and read on screen as "Not published yet". `markSeen` clears the dot
 
 ---
 
@@ -192,6 +228,13 @@ Search for `⚠` to find every one. All are Katya's or Jack's call, not yours.
 | `domain/magazine.ts`, `data/looks.ts` | Jack 5 — per-look settled splits must be stored. **Cannot be backfilled** |
 | `domain/reactions.ts` | reactions-logic.md §11, all five defaults taken as written: keep thumbs as a fast path · reactions feed NO milestone · negative threshold 5 · excluded from both ladders · spreads reactable. Say if any should flip |
 | `domain/reactions.ts`, `ui/Reactions.tsx` | the negative gate is CLIENT-SIDE here because there is no server. §6 requires it server-side. `publicStats` / `ownerStats` is the contract to build the API against |
+| `state/create.ts`, `today/build.tsx` | **Katya 1** — casting order. Create is now tag→cast; the builder is still cast→tag. The create brief recommends moving the builder so both flows are one sequence configured twice. NOT DONE — it changes a screen signed off two days ago, so it is your call |
+| `domain/tags.ts` | **Katya 2** — the gap is now brief-only. Confirm you are happy that freestyle looks show a read but never a gap |
+| `domain/tags.ts` (`BLOCKED`) | **Katya 3** — nobody owns the tag blocklist or the report queue. `BLOCKED` is a three-word placeholder of the right shape, and the report affordance on the magazine card is NOT built |
+| `domain/tags.ts` (`TAG_DELIMITERS`) | space commits a chip, per §5 — so a multi-word tag is impossible and "cold field" lands as `#cold` `#field`. Say if two-word tags need to exist |
+| `state/create.ts` | the create brief contradicts itself on when the allowance is spent (§6's `building` says step 3 is still unspent; §3, §4 and AC 2 put the spend at step 2). Resolved in favour of the acceptance criteria — say if you meant it the other way |
+| `domain/renders.ts` | **Jack 1** — worst case is now THREE renders per user per day (brief · freestyle · freestyle re-render). Lands on the render cost curve, which is the variable cost that grows as the product succeeds. His sign-off, not ours |
+| `state/submission.ts` (`SIMULATED_FAILURE`) | **Jack 2** — render latency and failure rate. Decides whether `rendering` is a spinner or a state people live in for hours. Built as the latter, because that shape survives either answer |
 | `data/looks.ts` (`mine`) | there is no ownership model — one fixture is flagged as yours so the owner's read is reachable. Create's posts don't enter the feed |
 | `config/app.ts` | the name. Now **Editorial.** (3 Sep), after *quintets.*, after the *Velocity* rejection. STILL no availability or trademark checks on any candidate, and "Editorial" is a common noun in this exact category — the most contested of the three so far |
 
@@ -238,13 +281,18 @@ app/                       expo-router routes — the navigation tree IS this fo
   (tabs)/_layout.tsx       THE FIVE TABS
     today/                 a1 a12 a7 a8 a13 a14 a2 a4  (the day, in order)
     magazine/              a5 a16
-    create/                a11 a17
+    create/                a11 a17 — a SIX-STATE MACHINE, not a screen. Only two
+                           states are the flow: pick · look (the commit) · tag ·
+                           render, with casting on /casting between 3 and 4
     wardrobe/              a15
     you/                   a10
   casting.tsx              a18 — a modal, because two flows open it
 
 src/
   domain/     pure, testable, no React. The rules live here
+              tags.ts     free-text tags + the reversal of "no free text anywhere"
+              renders.ts  the two allowances, the 07:00 day, the re-render window,
+                          and the Create tab's six-state machine
   data/       fixtures — looks, capsules, challenges, inventory
   state/      six zustand stores, one per domain
   theme/      tokens.ts (colours, spacing) · type.ts (the four typefaces)
@@ -262,7 +310,10 @@ tests/        node:test over the domain layer
 | `S.pinch`, `taken`, `unlocked`, `earnedOvernight` | `state/economy.ts` |
 | `S.ward`, `wview`, `wfilter`, `saved` | `state/wardrobe.ts` |
 | `S.page`, `feedLen`, `reacts`, `rev`, `spIdx`, `sheet` | `state/magazine.ts` |
-| `S.cstep`, `cpick`, `cocc`, `cfree`, `cdest` | `state/create.ts` |
+| `S.cstep`, `cpick`, `cfree`, `freeRender` | `state/create.ts` |
+
+`S.cocc` (the closed occasion axis) and `S.cdest` (post vs keep) have no successor —
+both were deleted on 4 Sep. See invariants 20 and 24.
 
 **Subscribe with a selector**, always — `useMagazine((s) => s.filter)`, not
 `useMagazine()`. Taking the whole store re-renders the entire feed on one reaction tap,
@@ -295,7 +346,7 @@ The overnight roundel is hidden because a zero there would be a lie. The shuffle
 
 ```
 npm run typecheck      # tsc --noEmit, strict + noUncheckedIndexedAccess
-npm test               # 61 assertions over the domain layer
+npm test               # 140 assertions over the domain layer
 ```
 
 **Motion on the spread card is decoration over settled state.** Calling a look
@@ -322,6 +373,16 @@ broke visually. The known-unverified list is in `README.md`.
 If the footer of a screen floats away from the bottom, it is the flex gotcha: the
 scrolling child needs `flex: 1` *and* `minHeight: 0`. `Scroll` in `ui/layout.tsx` does
 both — a screen that hand-rolls a ScrollView will not.
+
+**`accessibilityState` does not reach the DOM on web.** A `variant="off"`
+button rendered with `role="button"`, `tabindex="0"` and no `aria-disabled`,
+so a screen reader was told a dead control was live and a keyboard user could
+tab to it and press Enter to nothing. Passing `aria-disabled` / `focusable` by
+hand does not help — `Pressable` drops both. Its own `disabled` prop is what
+emits the attribute and removes it from the tab order. Same class of gap as
+the missing `aria-checked` on the onboarding rails radios. Fixed once, in
+`ui/controls.tsx`; check the rendered attributes rather than the props if you
+add another dead control.
 
 **`{ someProp: undefined }` does NOT reset a style property.** RN's style
 composition *drops* undefined values, so `[base, { width: undefined }]` keeps

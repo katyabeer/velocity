@@ -93,3 +93,17 @@ export const DAY_CONFIG = {
 
 export type DayConfig = (typeof DAY_CONFIG)[TestDay];
 export const dayConfig = (day: TestDay): DayConfig => DAY_CONFIG[day];
+
+/**
+ * ⚠ THE FAILED RENDER, made reachable.
+ *
+ * Create has a `failed` state (create brief §6): the job died, the allowance
+ * came back, there is a retry. It is a real screen and it needs looking at,
+ * but nothing in a prototype fails on its own — and Jack's open question 2
+ * (render latency and failure rate) is exactly the number that would tell us
+ * how often to fake it.
+ *
+ * Flip this to true, save, and every render fails instead of landing. Leave it
+ * false for anything a participant will see.
+ */
+export const SIMULATED_FAILURE = false;

@@ -167,27 +167,25 @@ export const ENTRY_STEPS = [
 
 export type EntryStepKey = (typeof ENTRY_STEPS)[number]['key'];
 
-/** Create keeps its tag step — a freestyle post has no brief, so tags are the
- *  only thing telling the magazine what it is. (Handover §5.)
+/**
+ * CREATE'S RIBBON MOVED, 4 Sep. It now lives in domain/renders.ts as
+ * `CREATE_RIBBON`, alongside the allowance that its last segment spends.
  *
- *  NO SEPARATE LOOK STEP. There used to be one, right after Pick — cut
- *  because the preview it offered is the same preview the Render step
- *  already shows right before you commit (a composed flat lay of your picks).
- *  Seeing your pieces together makes the most sense as the last look before
- *  it renders, not as its own early stop.
+ * Three things changed with it, all of them reversals, all of them recorded
+ * where the code is:
  *
- *  Four steps, not three: Model is its own ribbon entry even though its UI
- *  lives on the separate `/casting` route (shared with the brief flow) —
- *  the ribbon should read Pick/Tag/Model/Render on every screen of the
- *  journey, casting included, not drop a step because it's a different file. */
-export const CREATE_STEPS = [
-  { key: 'pick', label: 'Pick', hint: `3 to ${MAX_PIECES}` },
-  { key: 'tag', label: 'Tag', hint: 'if posting' },
-  { key: 'model', label: 'Model', hint: 'who wears it' },
-  { key: 'render', label: 'Render', hint: 'one a day' },
-] as const;
-
-export type CreateStepKey = (typeof CREATE_STEPS)[number]['key'];
-
-/** One render a day in Create. `save as a set` is unlimited. */
-export const FREE_RENDERS_PER_DAY = 1;
+ *   MODEL CAME OUT OF THE RIBBON. Casting (a18) is a screen shared by both
+ *   flows, not a step — which is how ENTRY_STEPS above already treats it.
+ *
+ *   THE LOOK STEP CAME BACK, and is now the COMMIT. The note that used to sit
+ *   here said a separate look step was cut because the Render step already
+ *   showed the same flat lay. That reasoning is dead: the commit moved to the
+ *   look step, so the flat lay is now the last thing you see BEFORE spending
+ *   the render rather than the first thing after. There is no see-then-decide
+ *   step any more, which is the whole point of moving it.
+ *
+ *   THE SAVE-UNRENDERED PATH IS GONE. `FREE_RENDERS_PER_DAY` lived here as
+ *   "one render a day, `save as a set` is unlimited". Both halves are wrong
+ *   now — see PER_DAY in domain/renders.ts, and §2.2 of the create brief for
+ *   why there is no unlimited fallback to fall back to.
+ */

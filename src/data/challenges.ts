@@ -50,35 +50,23 @@ export const TONIGHTS_BRIEF = {
   shortName: 'The autumn wedding',
 } as const;
 
-/** Where you'd wear it — the Create tag step. Create keeps its tags because a
- *  freestyle post has no brief. */
-export const OCCASIONS = [
-  'Work',
-  'Wedding',
-  'Airport',
-  'Night out',
-  'First date',
-  'Funeral',
-  'School run',
-  'Festival',
-  'Nowhere',
-] as const;
-
 /**
- * Free-text tags, faked as a bank in the prototype because there is no keyboard
- * in a static page.
+ * ══ THE CLOSED OCCASION AXIS AND THE FAKE TAG BANK ARE BOTH GONE, 4 Sep ══
  *
- * JACK'S OPEN QUESTION 3 — free tags, yes or no. Saying yes reverses brief
- * invariant 8, buys a moderation stack, and costs tag comparability. The
- * standing suggestion is: DECORATION ONLY — never used for filtering, sorting
- * or the dataset. Wire the real input to that contract or leave it out.
+ * `OCCASIONS` (nine words, one choosable) and `FREE_TAG_BANK` (five canned
+ * strings standing in for a keyboard the prototype didn't have) were deleted
+ * when Katya reversed D-brief invariant 8. Create's tag step is now pure free
+ * text — domain/tags.ts carries the mechanics, the reversal, and the three
+ * costs that were named and accepted, one of which is that the occasion axis
+ * stops aggregating: `wedding`, `weddingvibes` and `bigday` are three tags.
+ *
+ * That also settles JACK'S OPEN QUESTION 3 — free tags, yes or no — in the
+ * OPPOSITE direction to his standing suggestion ("decoration only"). They are
+ * real, stored, self-authored text. What they are still NOT is navigation:
+ * tags are not clickable and not filterable in MVP, and they must never reach
+ * the feed sampler, because a tag filter is a sort and invariant 7 is
+ * sample-don't-sort.
+ *
+ * `MAX_FREE_TAGS` was 3 and is now `MAX_TAGS` = 5, in domain/tags.ts, next to
+ * the rest of the rules it belongs with.
  */
-export const FREE_TAG_BANK = [
-  'bad weather',
-  'my mum would hate it',
-  'tuesday energy',
-  'stolen from a film',
-  'too much on purpose',
-] as const;
-
-export const MAX_FREE_TAGS = 3;

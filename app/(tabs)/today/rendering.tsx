@@ -57,6 +57,7 @@ import { useEntry } from '@/state/entry';
 import { useEconomy } from '@/state/economy';
 import { useSession } from '@/state/session';
 import { useSubmission } from '@/state/submission';
+import { useCreate } from '@/state/create';
 import { useWardrobe } from '@/state/wardrobe';
 
 export default function Rendering() {
@@ -66,6 +67,7 @@ export default function Rendering() {
   const setPhase = useSession((s) => s.setPhase);
   const grant = useEconomy((s) => s.grantDayOneTokens);
   const submit = useSubmission((s) => s.submit);
+  const spendBrief = useCreate((s) => s.spendBrief);
   const adoptLook = useWardrobe((s) => s.adoptLook);
 
   /* One number, from the domain. `dayConfig(1).entryGrant` used to hold a
@@ -84,9 +86,16 @@ export default function Rendering() {
     submit('brief', {
       destination: 'brief',
       picks: names,
-      occasion: null,
-      freeTags: [],
+      /* A brief entry has no free tags. Its single closed declared word is a
+         different field entirely — free text is a FREESTYLE reversal only, and
+         Build keeping its closed word is what keeps the gap alive on brief
+         entries (domain/tags.ts). */
+      tags: [],
     });
+    /* The brief's own render allowance, spent here. Two separate counters, so
+       entering the day's job leaves the freestyle render untouched and vice
+       versa — never one shared counter (domain/renders.ts). */
+    spendBrief();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

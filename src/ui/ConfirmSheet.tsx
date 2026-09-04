@@ -48,6 +48,7 @@ import { Button } from './controls';
 
 const SCREEN_H = Dimensions.get('window').height;
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const CLOSE_MS = 200;
 
 export function ConfirmSheet({
   visible,
@@ -85,16 +86,29 @@ export function ConfirmSheet({
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }).start();
-    } else {
-      Animated.timing(progress, {
-        toValue: 0,
-        duration: 200,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        if (finished) setMounted(false);
-      });
+      return;
     }
+
+    Animated.timing(progress, {
+      toValue: 0,
+      duration: CLOSE_MS,
+      easing: Easing.in(Easing.cubic),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) setMounted(false);
+    });
+
+    /* NEVER GATE STATE ON AN ANIMATION CALLBACK ALONE. The JS driver can be
+       starved — a backgrounded tab, or the Claude preview pane, where
+       requestAnimationFrame never fires at all — and the callback above then
+       never runs. That would leave `mounted` true forever, and this component
+       renders a FULL-SCREEN Modal with a scrim Pressable over it: invisible
+       (opacity 0, translated off) but still swallowing every tap on the page
+       beneath. The judging round lost a vote to exactly this class of bug.
+
+       The same fallback is in ui/BottomSheet.tsx and ui/LookPlate.tsx. */
+    const t = setTimeout(() => setMounted(false), CLOSE_MS + 200);
+    return () => clearTimeout(t);
     /* `progress` is a useRef value and never changes identity; listing it
        satisfies the lint rule without changing when this runs. */
   }, [visible, progress]);

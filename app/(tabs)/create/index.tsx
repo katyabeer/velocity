@@ -1,78 +1,110 @@
 /**
- * a11 · CREATE — Pick → Tag → Model → Render → Success.
+ * a11 · CREATE — the freestyle flow, and the tab that hosts it.
  *
- * NO BRIEF AND NO SCORE. This is the pressure valve: the daily job is one entry
- * with a deadline, and this is where you make things for no reason.
+ * NO BRIEF AND NO SCORE. This is the pressure valve: the daily job is one
+ * entry with a deadline, and this is where you make things for no reason.
+ * NOTHING HERE IS A BRIEF — no brief title, no slots against a brief, no
+ * entry, no comparison pool, no band, no result screen, no voting. A freestyle
+ * look never settles. Asserted in tests/renders.test.ts, because two flows
+ * sharing a chassis makes sharing the copy with it perpetually tempting.
  *
- * CREATE KEEPS ITS TAG STEP. The brief flow does not (locked decision 18). The
- * reason is not symmetry, it is information: a freestyle post has no brief, so
- * its tags are the only thing telling the magazine what it is. Don't unify the
- * two flows.
+ * ══ THE TAB IS A STATE MACHINE, NOT A SCREEN ══
  *
- * NO SEPARATE LOOK STEP. There used to be one between Pick and Tag, showing
- * the pieces together. Cut because the Render step already shows exactly
- * that same preview right before you commit — seeing your pieces together
- * makes more sense as the last look before it renders than as its own early
- * stop you'd otherwise see twice.
+ * Six states (`createTabState` in domain/renders.ts), and only two of them are
+ * the flow. The important one is `spent`: since the save-unrendered path was
+ * deleted on 4 Sep, a spent user cannot do anything with a look, so they never
+ * see step 1 at all. That is not a restriction bolted on — it is the whole
+ * reason the flow is blocked at ENTRY rather than at the commit button.
  *
- * MODEL COMES BEFORE RENDER, both consuming the day's one render — "save to
- * my looks" only means an instant, unrendered, unlimited fallback once
- * today's render is already spent (see the Render step below). Model is its
- * own ribbon step even though its screen lives at /casting, shared with the
- * brief flow — see CREATE_STEPS in domain/entry.ts.
+ * ══ FOUR STEPS: PICK · LOOK · TAG · RENDER ══
  *
- * ASYNC SUBMIT, NOT A WAIT SCREEN. Tapping either render button doesn't show
- * a "please wait" animation any more — it tells you, lets you carry on, and a
- * dot appears on the Create tab once it's ready (ui/TabIcon.tsx). It used to be
- * a chip in every screen's header; that was retired on 3 Sep, see
- * state/submission.ts. Create's render runs in its own lane, so submitting one
- * here can no longer wipe out the daily brief's.
+ * Model came out of the ribbon (4 Sep). Casting is a screen shared with the
+ * builder, not a step, which is how the builder already treats it — so the
+ * header's "of 4" is finally true.
  *
- * ⚠ JACK'S OPEN QUESTION 4: Create allows layering, brief entry is five slots.
- * Unresolved — the renderer has to know which contract it is honouring.
+ * ⚑ THE COMMIT IS AT STEP 2, on the flat lay, and it is the only irreversible
+ * tap in the tab. There is NO see-then-decide step anywhere after it: by the
+ * time a render exists the decision to publish it is minutes old. Backing out
+ * of step 2 asks first, because with no save path abandonment is lossy.
+ *
+ * ⚠ JACK'S OPEN QUESTION 4 is still open: Create allows layering, a brief
+ * entry is five slots. The renderer has to know which contract it is
+ * honouring.
  */
 
+import { useState } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
-import { Foot, Gap, Header, Pinned, Screen, Scroll, Wrap } from '@/ui/layout';
-import { Hero, Body, Tiny, Kick, B } from '@/ui/text';
-import { Bar, Button, Chip, ChipRow } from '@/ui/controls';
+import { Foot, Gap, Header, LogoBlock, Pinned, Screen, Scroll } from '@/ui/layout';
+import { Hero, Big, Body, Tiny, Kick, B } from '@/ui/text';
+import { Bar, Button, ChipRow } from '@/ui/controls';
 import { StepRibbonBleed, statesFor } from '@/ui/StepRibbon';
 import { GarmentGrid, SlotStrip } from '@/ui/pieces';
 import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
 import { RenderStrip } from '@/ui/RenderStrip';
-import { EmptyState } from '@/ui/cards';
+import { ConfirmSheet } from '@/ui/ConfirmSheet';
+import { TagInput } from '@/ui/TagInput';
+import { Card, EmptyState } from '@/ui/cards';
 import { palette, border } from '@/theme/tokens';
 import { CATEGORIES, categoryOf, slotOf, type Category } from '@/domain/garments';
+import { MAX_PIECES, MIN_PIECES, isPicked, isSlotOccupied, slotStrip } from '@/domain/entry';
 import {
-  CREATE_STEPS,
-  MAX_PIECES,
-  MIN_PIECES,
-  isPicked,
-  isSlotOccupied,
-  slotStrip,
-} from '@/domain/entry';
-import { FREE_TAG_BANK, OCCASIONS } from '@/data/challenges';
+  CREATE_RIBBON,
+  LEAVE_WITHOUT_RENDERING,
+  NEXT_RENDER_LINE,
+  ONE_A_DAY_AMBIENT,
+  ONE_A_DAY_AT_COMMIT,
+  ONE_A_DAY_WHEN_SPENT,
+  RERENDER_BLOCK_LINES,
+  RERENDER_NOTE,
+  createTabState,
+  rerenderVerdict,
+} from '@/domain/renders';
+import { MAX_TAGS, chipLabel } from '@/domain/tags';
 import { BUILDER_POOL_ESTABLISHED } from '@/data/inventory';
 import { garmentImage } from '@/data/catalogue';
-import { useCreate, useRendersLeft, type CreateStep } from '@/state/create';
-import { useRenderBadge, useSubmission } from '@/state/submission';
+import { useCreate, useFreestyleLeft } from '@/state/create';
+import { useSubmission } from '@/state/submission';
 import { useSession } from '@/state/session';
 import { useWardrobe } from '@/state/wardrobe';
 
 export default function Create() {
   const c = useCreate();
-  const rendersLeft = useRendersLeft();
+  const left = useFreestyleLeft();
   const day = useSession((s) => s.day);
   const setCastingOrigin = useSession((s) => s.setCastingOrigin);
   const owned = useWardrobe((s) => s.pieces);
-  const renderReady = useRenderBadge('create');
-  const markSeen = useSubmission((s) => s.markSeen);
+  const job = useSubmission((s) => s.lanes.create);
+
+  const [leaving, setLeaving] = useState(false);
+  const [tagFocused, setTagFocused] = useState(false);
 
   /* Create offers what you OWN, always — it is the pressure valve, not a
      shop. On Day 1 that is the look you entered this morning, which is the
      point: freestyle is for recombining your own wardrobe. */
   const pool: readonly string[] = day >= 3 ? BUILDER_POOL_ESTABLISHED : owned.map((p) => p.name);
+
+  const state = createTabState({
+    poolSize: pool.length,
+    minPieces: MIN_PIECES,
+    left,
+    inFlight: job?.status === 'pending',
+    failed: job?.status === 'failed',
+    inFlow: c.step > 1,
+  });
+
+  if (state === 'failed') return <Failed />;
+  if (state === 'insufficient') return <Insufficient />;
+  /* RENDER IS A STATE, NOT A STEP IN THE SWITCH. It takes no input, and a
+     re-render is launched from the `spent` state where `step` has already been
+     reset to 1 — so driving it off `step` alone showed the PICKER while a job
+     was in flight. It reads the job record, which is also what makes a
+     re-render's frozen input free: there is nothing else for it to read. */
+  if (state === 'rendering' || c.step === 4) return <Rendering />;
+  if (state === 'spent') return <Spent />;
+
+  /* ── available · building · rendering: the flow itself ───────────────── */
+
   const visible = pool.filter((n) => c.filter === 'All' || categoryOf(n) === c.filter);
   /* Only rails the pool can actually fill — an empty rail is a dead end.
      Canonical order, and the full category list so a legacy Accessories name
@@ -80,120 +112,82 @@ export default function Create() {
   const railsPresent = new Set(pool.map(categoryOf));
   const rails = CATEGORIES.filter((cat) => railsPresent.has(cat));
 
+  /* Casting has no segment, so the ribbon reads the step directly — which is
+     the point of taking Model out of it. */
   const ribbon = statesFor(
-    CREATE_STEPS.map((s) => ({ label: s.label, hint: s.hint })),
-    // Internal steps are 1–3 (Pick/Tag/Render); Model is ribbon position 3
-    // but lives on the separate /casting screen, so once we're past Tag the
-    // ribbon position is one ahead of the internal step.
-    c.step >= 3 ? c.step + 1 : c.step,
+    CREATE_RIBBON.map((s) => ({ label: s.label, hint: s.hint })),
+    c.step,
   );
 
   const canAdvance = c.picks.length >= MIN_PIECES;
-  const titles = ['Pick your pieces', 'Tag it', 'Render'] as const;
+  const titles = ['Pick your pieces', 'Have a look', 'Tag it'] as const;
 
-  const primary = (() => {
-    if (c.step === 1)
-      return {
-        label: canAdvance
-          ? 'Tag it →'
-          : `At least ${MIN_PIECES} (${c.picks.length} of ${MAX_PIECES})`,
-        variant: canAdvance ? ('solid' as const) : ('off' as const),
-        onPress: canAdvance ? () => c.setStep(2) : undefined,
-      };
-    // step 2
-    return rendersLeft > 0
-      ? {
-          label: c.occasion ? 'Pick a model →' : 'Pick where you would wear it',
-          variant: c.occasion ? ('solid' as const) : ('off' as const),
-          onPress: c.occasion
-            ? () => {
-                setCastingOrigin('create');
-                router.push('/casting');
-              }
-            : undefined,
-        }
-      : {
-          label: c.occasion ? 'Continue →' : 'Pick where you would wear it',
-          variant: c.occasion ? ('solid' as const) : ('off' as const),
-          onPress: c.occasion ? () => c.setStep(3) : undefined,
-        };
-  })();
+  /* Step 2 is the only place the chevron can lose work, so it is the only
+     place that asks. Step 3 is PAST the commit and has nothing to go back to,
+     so it gets no chevron at all rather than a dead one. */
+  const onBack = c.step === 2 ? () => setLeaving(true) : undefined;
 
   return (
     <Screen>
-      <Header
-        onBack={c.step > 1 ? () => c.setStep((c.step - 1) as CreateStep) : undefined}
-        title={titles[c.step - 1]}
-        right={c.step === 1 ? <Tiny>{c.picks.length} of {MAX_PIECES}</Tiny> : undefined}
-      />
+      {/* STEP 1 IS THE TAB'S HOME, SO IT GETS THE TAB'S MASTHEAD (Katya,
+          4 Sep). Every other tab home is a `LogoBlock` — Magazine, Today's
+          challenge, Wardrobe, You — and Create was the only one wearing the
+          in-flow `Header` instead, which made it read as a screen you had
+          navigated into rather than a place you had arrived at. It also gave
+          step 1 a back chevron that did nothing, because there is nothing
+          behind the first step of a tab.
+
+          Steps 2 and 3 keep the Header: they ARE screens you navigated into,
+          and step 2's chevron is the one control that can lose work.
+
+          No count in either. The tag count lives beside the FIELD it governs
+          (ui/TagInput.tsx) — in the header it was a second copy of the same
+          number three lines above the first, which is the same mistake the
+          builder's "0 of 6" made before it moved into the slot strip. */}
+      {c.step === 1 ? (
+        <LogoBlock title="Create" />
+      ) : (
+        <Header onBack={onBack} title={titles[c.step - 1]} />
+      )}
 
       <StepRibbonBleed steps={ribbon} />
 
-      {/* The Create tab's dot leads here, so the way through to the finished
-          render has to be here too — tapping it is the only thing that clears
-          the dot (see state/submission.ts). */}
-      {renderReady ? (
-        <View style={{ paddingHorizontal: 22, paddingTop: 12 }}>
-          <RenderStrip
-            ready
-            onPress={() => {
-              markSeen('create');
-              router.push('/(tabs)/create/posted');
-            }}
-          />
-        </View>
-      ) : null}
-
-      {c.step === 1 && pool.length > 0 ? (
-        <Pinned>
-          <Kick>your look</Kick>
-          <View style={{ marginTop: 8 }}>
-            <SlotStrip
-              slots={slotStrip(c.picks).map((sl) => ({
-                slot: sl.slot,
-                name: sl.pick?.name,
-                image: sl.pick ? garmentImage(sl.pick.name) : undefined,
-              }))}
-              onClear={(name) => c.putBack(name)}
-            />
-          </View>
-          <View style={{ marginTop: 9 }}>
-            <Bar progress={c.picks.length / MAX_PIECES} />
-          </View>
-          {/* Stays small. It is a control's instruction, not prose — and at
-              16px it took two lines and pushed the grid down on the one screen
-              where seeing the clothes is the whole job, which is the same
-              reason the walkthrough tooltip came off it. */}
-          <Tiny style={{ marginTop: 7 }}>
-            Tap a filled slot to put it back. The last two are both for extras.
-          </Tiny>
-        </Pinned>
-      ) : null}
-
+      {/* ── 1 · PICK ────────────────────────────────────────────────────── */}
       {c.step === 1 ? (
-        <Scroll>
-          <Hero size={36}>{'Make\nanything.'}</Hero>
-          <Body style={{ marginTop: 8 }}>
-            No brief and no score. {MIN_PIECES} pieces minimum, {MAX_PIECES} maximum.
-          </Body>
-
-          {/* CREATE OFFERS WHAT YOU OWN, and on a brand-new account that is
-              nothing at all — the capsule that used to pre-fill the wardrobe
-              is gone (see state/wardrobe.ts). Saying so, and saying how to fix
-              it, rather than showing an empty grid under a live filter rail. */}
-          {pool.length === 0 ? (
-            <EmptyState
-              kick="nothing to make with yet"
-              body="Create is for recombining pieces you already own, and you don’t own any yet."
-              note="Enter today’s challenge and the pieces you pick are yours to keep — then come back and make something with no brief and no score."
-            >
-              <Button
-                label="Enter today’s challenge"
-                style={{ marginTop: 12 }}
-                onPress={() => router.push('/(tabs)/today/build')}
+        <>
+          <Pinned>
+            <View style={s_row}>
+              <Kick>your look</Kick>
+              <Tiny color={palette.ink} style={{ fontFamily: 'Archivo_700Bold' }}>
+                {c.picks.length} of {MAX_PIECES}
+              </Tiny>
+            </View>
+            <View style={{ marginTop: 8 }}>
+              <SlotStrip
+                slots={slotStrip(c.picks).map((sl) => ({
+                  slot: sl.slot,
+                  name: sl.pick?.name,
+                  image: sl.pick ? garmentImage(sl.pick.name) : undefined,
+                }))}
+                onClear={(name) => c.putBack(name)}
               />
-            </EmptyState>
-          ) : (
+            </View>
+            <View style={{ marginTop: 9 }}>
+              <Bar progress={c.picks.length / MAX_PIECES} />
+            </View>
+            <Tiny style={{ marginTop: 7 }}>
+              Tap a filled slot to put it back. The last two are both for extras.
+            </Tiny>
+          </Pinned>
+
+          <Scroll>
+            <Hero size={36}>{'Make\nanything.'}</Hero>
+            {/* Placement 1 of the one-a-day rule (§7): ambient, present, not
+                argued. Never in onboarding — this is learned in context. */}
+            <Body style={{ marginTop: 8 }}>
+              No brief and no score. {ONE_A_DAY_AMBIENT}
+            </Body>
+
             <View style={{ marginTop: 14 }}>
               <ChipRow
                 items={['All', ...rails]}
@@ -201,143 +195,427 @@ export default function Create() {
                 onChange={(v) => c.setFilter(v as Category | 'All')}
               />
             </View>
-          )}
 
-          {pool.length === 0 ? null : (
-          <GarmentGrid
-            style={{ marginTop: 11 }}
-            items={visible.map((n) => ({
-              name: n,
-              image: garmentImage(n),
-              selected: isPicked(c.picks, n),
-              /* A slot that is already filled dims, but stays tappable — picking
-                 into it swaps rather than refusing. */
-              dimmed: isSlotOccupied(c.picks, slotOf(n)) && !isPicked(c.picks, n),
-            }))}
-            onPress={c.toggle}
-          />
-          )}
-          <Gap />
-        </Scroll>
+            <GarmentGrid
+              style={{ marginTop: 11 }}
+              items={visible.map((n) => ({
+                name: n,
+                image: garmentImage(n),
+                selected: isPicked(c.picks, n),
+                /* A filled slot dims but stays tappable — picking into it
+                   swaps rather than refusing. */
+                dimmed: isSlotOccupied(c.picks, slotOf(n)) && !isPicked(c.picks, n),
+              }))}
+              onPress={c.toggle}
+            />
+            <Gap />
+          </Scroll>
+        </>
       ) : null}
 
+      {/* ── 2 · LOOK — ⚑ the commit ─────────────────────────────────────── */}
       {c.step === 2 ? (
         <Scroll>
-          <Hero>{'Where\nwould you\nwear it?'}</Hero>
-
-          <Body style={{ marginTop: 10 }}>
-            {rendersLeft > 0 ? (
-              <>
-                You get <B>one render with a model</B> today — the next step spends it, so get
-                your tags right first.
-              </>
-            ) : (
-              <>
-                You&apos;ve used today&apos;s render. This will save as an unrendered combination
-                instead — that part&apos;s unlimited.
-              </>
-            )}
+          <Hero>Together.</Hero>
+          <Body style={{ marginTop: 7 }}>
+            Not a render — the actual pieces, laid out. No body, no fit.
           </Body>
-
-          <Wrap style={{ marginTop: 16 }}>
-            {OCCASIONS.map((o) => (
-              <Chip
-                key={o}
-                label={o}
-                tone={c.occasion === o ? 'on' : 'default'}
-                onPress={() => c.setOccasion(c.occasion === o ? null : o)}
-              />
-            ))}
-          </Wrap>
-
-          <View style={{ marginTop: 22, paddingTop: 16, borderTopWidth: border.hair, borderTopColor: palette.rule }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <Kick>your own words</Kick>
-              <Tiny>optional</Tiny>
-            </View>
-            <Wrap style={{ marginTop: 9 }}>
-              {c.freeTags.length ? (
-                c.freeTags.map((t) => (
-                  <Chip key={t} label={`${t} ×`} tone="green" onPress={() => c.removeFreeTag(t)} />
-                ))
-              ) : (
-                <Tiny>None yet.</Tiny>
-              )}
-            </Wrap>
-            {/* The prototype faked free text with a bank, because a static page
-                has no keyboard. Replace with a real TextInput — and read Jack's
-                open question 3 first: the standing suggestion is DECORATION
-                ONLY, never used for filtering, sorting or the dataset. */}
-            <Button
-              label="Add a tag"
-              variant="quiet"
-              style={{ marginTop: 9 }}
-              onPress={() => c.addFreeTag(FREE_TAG_BANK[c.freeTags.length % FREE_TAG_BANK.length]!)}
-            />
+          <Body style={{ marginTop: 10 }}>
+            The next tap <B>spends today&apos;s render</B> and posts it. You tag it and cast it
+            after, but the look itself is fixed from here.
+          </Body>
+          <View style={{ marginTop: 16 }}>
+            <ComposedFlatLay pieces={c.picks.map((p) => p.name)} />
           </View>
           <Gap />
         </Scroll>
       ) : null}
 
+      {/* ── 3 · TAG ─────────────────────────────────────────────────────── */}
       {c.step === 3 ? (
         <Scroll>
-          <Hero>Ready.</Hero>
+          <Hero>Tag it.</Hero>
           <Body style={{ marginTop: 7 }}>
-            {rendersLeft > 0
-              ? 'Last look before it renders — nothing changes after this.'
-              : "No render left today — this saves as an unrendered combination."}
+            Add up to {MAX_TAGS} — think occasion, style, mood, trend. Your words, not ours.
           </Body>
-          <View style={{ marginTop: 14 }}>
-            <ComposedFlatLay pieces={c.picks.map((p) => p.name)} />
+          {/* Optional, and said plainly. Mandatory free text produces #asdf,
+              and absence is better data than garbage. */}
+          <Body style={{ marginTop: 10 }}>
+            Skip it if you like — a look with no tags is a perfectly good look. What you write
+            here <B>cannot be changed once it posts</B>.
+          </Body>
+
+          <View style={{ marginTop: 20 }}>
+            <TagInput
+              tags={c.tags}
+              draft={c.draft}
+              rejection={c.rejection}
+              focused={tagFocused}
+              onChangeDraft={c.setDraft}
+              onCommit={c.commitDraft}
+              onRemove={c.removeTag}
+              onFocus={() => setTagFocused(true)}
+              onBlur={() => setTagFocused(false)}
+            />
           </View>
-          {c.occasion || c.freeTags.length ? (
-            <Wrap style={{ marginTop: 12 }}>
-              {c.occasion ? <Chip label={c.occasion} tone="on" /> : null}
-              {c.freeTags.map((t) => (
-                <Chip key={t} label={t} tone="green" />
-              ))}
-            </Wrap>
-          ) : null}
+
+          <View style={s_paid}>
+            <Kick tone="muted">already paid for</Kick>
+            <Body style={{ marginTop: 6 }}>
+              Today&apos;s render is spent. Nothing left to decide — pick who wears it and it
+              posts itself.
+            </Body>
+          </View>
           <Gap />
         </Scroll>
       ) : null}
 
       <Foot>
+        {c.step === 1 ? (
+          <Button
+            label={
+              canAdvance
+                ? 'See them together →'
+                : `At least ${MIN_PIECES} pieces (${c.picks.length} of ${MAX_PIECES})`
+            }
+            variant={canAdvance ? 'solid' : 'off'}
+            onPress={canAdvance ? () => c.setStep(2) : undefined}
+          />
+        ) : null}
+
+        {/* ONE action, not two. The private-save half is deleted: render or
+            nothing (§2.2).
+
+            Placement 2 of the one-a-day rule (§7), and the load-bearing one:
+            the rule at the moment it costs something. It sits IN THE FOOTER
+            rather than above the plate because the plate is tall enough to
+            push anything above it off screen — and a rule about spending that
+            is not visible when you spend is not a placement. Kept verbatim
+            from the prototype's #crendnote; the wording is doing real work. */}
+        {c.step === 2 ? (
+          <>
+            <Tiny style={{ marginBottom: 10 }}>{ONE_A_DAY_AT_COMMIT}</Tiny>
+            <Button label="Render it and post it" onPress={c.commit} />
+          </>
+        ) : null}
+
+        {/* Not "CREATE A LOOK". The create decision happened at step 2, and
+            repeating it here implies it hasn't. */}
         {c.step === 3 ? (
-          rendersLeft > 0 ? (
-            <>
-              <Button
-                label="Render and post"
-                onPress={() => {
-                  c.renderAndPost();
-                  c.startAgain();
-                  router.replace('/(tabs)/today');
-                }}
-              />
-              <Button
-                label="Render and save privately"
-                variant="ghost"
-                style={{ marginTop: 8 }}
-                onPress={() => {
-                  c.renderAndSavePrivately();
-                  c.startAgain();
-                  router.replace('/(tabs)/today');
-                }}
-              />
-            </>
-          ) : (
-            <Button
-              label="Save to my looks"
-              onPress={() => {
-                c.saveUnrendered();
-                router.push('/(tabs)/create/posted');
-              }}
-            />
-          )
-        ) : (
-          <Button label={primary.label} variant={primary.variant} onPress={primary.onPress} />
-        )}
+          <Button
+            label="Who wears it →"
+            onPress={() => {
+              c.commitDraft();
+              setCastingOrigin('create');
+              router.push('/casting');
+            }}
+          />
+        ) : null}
       </Foot>
+
+      {/* §2.2 consequence 2: no save path means abandonment is lossy, so it
+          asks. One line, not a ceremony — and nothing is refunded because
+          nothing has been spent yet. */}
+      <ConfirmSheet
+        visible={leaving}
+        kick="nothing is kept"
+        question={LEAVE_WITHOUT_RENDERING}
+        note="Your pieces go back to the wardrobe. Today's render is still yours to spend."
+        confirmLabel="Leave it"
+        cancelLabel="Keep going"
+        onConfirm={() => {
+          setLeaving(false);
+          c.startAgain();
+        }}
+        onCancel={() => setLeaving(false)}
+      />
+    </Screen>
+  );
+}
+
+const s_row = {
+  flexDirection: 'row' as const,
+  justifyContent: 'space-between' as const,
+  alignItems: 'baseline' as const,
+};
+
+const s_paid = {
+  marginTop: 24,
+  paddingTop: 16,
+  borderTopWidth: border.hair,
+  borderTopColor: palette.rule,
+};
+
+/* ═════════════════════════ the other four states ═════════════════════════ */
+
+/**
+ * §6 · `rendering`. The render is a JOB, NOT A SCREEN: start it and the user
+ * may navigate away, close the app, or come back hours later. Leaving is safe
+ * and the copy says so, because a user who waits here has misunderstood what
+ * the tab is doing.
+ *
+ * PUBLICATION IS A CONSEQUENCE OF THE JOB COMPLETING, not of anyone seeing it.
+ * Nothing on this screen decides anything — the decision was the step-2 commit.
+ *
+ * It reads the JOB RECORD rather than the flow's picks, which is what makes a
+ * re-render's frozen input free: the record is the only input there is, so
+ * there is nothing to accidentally re-read from a form.
+ *
+ * ⚠ JACK'S OPEN QUESTION 2: whether this is a few seconds or a state people
+ * live in for hours depends on a render latency nobody has measured yet. It is
+ * built as the latter — leaving is safe, and the dot on the tab is the return
+ * path — because that shape survives either answer.
+ */
+function Rendering() {
+  const c = useCreate();
+  const job = useSubmission((s) => s.lanes.create);
+  const markSeen = useSubmission((s) => s.markSeen);
+  const ready = job?.status === 'ready';
+
+  const pieces = job?.picks ?? c.picks.map((p) => p.name);
+  const tags = job?.tags ?? c.tags;
+
+  return (
+    <Screen>
+      <Header title={ready ? 'Posted' : 'Rendering'} />
+
+      <StepRibbonBleed
+        steps={statesFor(
+          CREATE_RIBBON.map((st) => ({ label: st.label, hint: st.hint })),
+          4,
+          [true, true, true],
+        )}
+      />
+
+      <Scroll>
+        <Hero>{ready ? 'It’s up.' : 'On its way.'}</Hero>
+        <Body style={{ marginTop: 7 }}>
+          {ready
+            ? 'Posted itself, exactly as committed.'
+            : 'It posts itself when it lands. Go and do something else — the dot on this tab will tell you.'}
+        </Body>
+
+        {/* The same strip the Today challenge card uses, so the two async
+            renders read alike. */}
+        <View style={{ marginTop: 14 }}>
+          <RenderStrip
+            ready={ready}
+            pendingNote="A few seconds"
+            onPress={() => {
+              markSeen('create');
+              router.push('/(tabs)/create/posted');
+            }}
+          />
+        </View>
+
+        {/* §6: the look as a flat lay while it renders. Not the render — that
+            does not exist yet, and inventing one here would be the only place
+            in the app that showed a look it had not made. */}
+        <View style={{ marginTop: 16 }}>
+          <ComposedFlatLay pieces={pieces} />
+        </View>
+
+        {tags.length ? <Tiny style={{ marginTop: 12 }}>{tags.map(chipLabel).join('  ')}</Tiny> : null}
+        <Gap />
+      </Scroll>
+
+      <Foot>
+        <Button
+          label={ready ? 'See it' : 'Leave it running'}
+          variant={ready ? 'solid' : 'ghost'}
+          onPress={() => {
+            if (ready) {
+              markSeen('create');
+              router.push('/(tabs)/create/posted');
+            } else {
+              router.push('/(tabs)/magazine');
+            }
+          }}
+        />
+      </Foot>
+    </Screen>
+  );
+}
+
+
+/**
+ * §6.1 · THE SPENT STATE CARRIES THE WHOLE TAB. Because the save path is gone,
+ * this is the only thing in Create for most of the day, so it has to read as a
+ * reward rather than a lockout:
+ *
+ *   · today's render AT FULL SIZE — it is the best thing the user made today
+ *     and it cost real money
+ *   · its tags, and its reaction count if there is one
+ *   · the time to 07:00 phrased as the NEXT thing, not the absence of this one
+ *   · a route to the magazine, to see it in place
+ *   · NO "come back tomorrow" empty state. There is a render to look at.
+ *
+ * It is also placement 3 of the one-a-day rule (§7) — where the rule stops
+ * being information and becomes the situation. This is where it is learned.
+ *
+ * THE RE-RENDER LIVES HERE TOO, not only on a17. The brief asks for it "on the
+ * owner's own magazine card"; there is no ownership model in the feed (Create's
+ * posts don't enter it — see data/looks.ts), and this is the screen that
+ * actually holds the user's own look, so this is where the offer belongs.
+ */
+function Spent() {
+  const c = useCreate();
+  const job = useSubmission((s) => s.lanes.create);
+  const verdict = rerenderVerdict({
+    publishedAt: job?.publishedAt ?? null,
+    rerenderUsed: job?.rerenderUsed ?? false,
+    reactions: job?.reactions ?? 0,
+    now: Date.now(),
+  });
+
+  const pieces = job?.picks ?? c.picks.map((p) => p.name);
+  const tags = job?.tags ?? c.tags;
+
+  return (
+    <Screen>
+      {/* The tab's masthead, not an in-flow header — this is where Create
+          lives for most of the day, so it is a place, not a step. */}
+      <LogoBlock title="Create" subtitle="today’s render" />
+
+      <Scroll>
+        {/* §6.1's ORDER, and it is the whole point of the screen: the render
+            FIRST, at full size, then its tags, then its reactions, and only
+            then the time to 07:00. The 7am line was the Hero at the top for
+            one draft and it out-shouted the thing it was sitting above — a
+            state that has to read as a reward cannot lead with the rule. */}
+        <View style={{ marginTop: 4 }}>
+          <ComposedFlatLay pieces={pieces} />
+        </View>
+
+        {tags.length ? (
+          <Tiny style={{ marginTop: 12 }}>{tags.map(chipLabel).join('  ')}</Tiny>
+        ) : null}
+
+        {job ? (
+          <Tiny style={{ marginTop: 8 }}>
+            {job.reactions === 0
+              ? 'No reactions yet.'
+              : `${job.reactions} ${job.reactions === 1 ? 'reaction' : 'reactions'} so far.`}
+          </Tiny>
+        ) : null}
+
+        <View style={s_paid}>
+          {/* Placement 3 of the one-a-day rule (§7) — where it stops being
+              information and becomes the situation. This is where it is
+              actually learned. */}
+          <Kick tone="muted">one a day</Kick>
+          <Big size={22} style={{ marginTop: 7 }}>
+            {NEXT_RENDER_LINE}
+          </Big>
+          <Body style={{ marginTop: 7 }}>{ONE_A_DAY_WHEN_SPENT}</Body>
+        </View>
+
+        <View style={s_paid}>
+          <Kick tone="muted">one more go at the render</Kick>
+          <Body style={{ marginTop: 6 }}>{RERENDER_NOTE}</Body>
+          {verdict.allowed ? (
+            <Button
+              label="Render it again"
+              variant="ghost"
+              style={{ marginTop: 12 }}
+              onPress={c.rerender}
+            />
+          ) : (
+            <Tiny style={{ marginTop: 10 }}>{RERENDER_BLOCK_LINES[verdict.because]}</Tiny>
+          )}
+        </View>
+
+        <Gap />
+      </Scroll>
+
+      <Foot>
+        <Button label="See it in the magazine" onPress={() => router.push('/(tabs)/magazine')} />
+      </Foot>
+    </Screen>
+  );
+}
+
+/**
+ * §6 · `failed`. The allowance came back, so this is a retry and not an
+ * apology. Refunds are for system failure ONLY — never for a user changing
+ * their mind, or delete-and-retry becomes the reroll the frozen-input
+ * constraint exists to prevent.
+ */
+function Failed() {
+  const refundFailure = useCreate((s) => s.refundFailure);
+
+  return (
+    <Screen>
+      <LogoBlock title="Create" />
+      <Scroll>
+        <EmptyState
+          kick="that didn’t render"
+          body="Something went wrong at our end, not yours."
+          note="Your render is back. Nothing was charged for the attempt."
+        >
+          <Button label="Start again" style={{ marginTop: 12 }} onPress={refundFailure} />
+        </EmptyState>
+        <Gap />
+      </Scroll>
+    </Screen>
+  );
+}
+
+/**
+ * §6 · `insufficient` — Create's front door, in its empty state.
+ *
+ * One card, three lines, in Katya's order (4 Sep): what the tab is, what it
+ * costs, and what it needs. The masthead says "Create", so the card no longer
+ * repeats it as a kicker — and the old fourth line ("enter today's challenge
+ * and the pieces you pick are yours to keep…") came off with it.
+ *
+ * "MAKE ANYTHING." IS INSIDE THE CARD, not floating above it. Loose over the
+ * card it read as the screen's headline with an unrelated notice below; inside
+ * it, the three lines are one statement.
+ *
+ * ══ THE BUTTON IS DISABLED, AND THAT IS THE DECISION (Katya, 4 Sep) ══
+ *
+ * "Create a look" has to mean the create path — Create is the flow with the
+ * tagging in it, and a button on this tab that opened the daily challenge was
+ * the tab sending you somewhere else under its own name. But the create path
+ * has nothing to open onto here: Create builds from what you OWN, and owning
+ * a garment needs a token, which needs judging (invariant 1, no judging no
+ * clothes). Routing there would land on an empty grid with a dead CTA.
+ *
+ * So the label stays true and the control states the condition instead. Three
+ * options were on the table — lend pieces from the catalogue, relabel the
+ * button for the challenge, or route into an empty flow — and Katya took none
+ * of them: name the missing thing, and disable the button.
+ *
+ * ⚠ A DISABLED BUTTON, DELIBERATELY, and it is NOT the one that was reversed.
+ * The rejected one was the magazine sheet's "No tokens" — that walled off a
+ * sheet at the moment someone was most engaged, AND it had a free action
+ * available to offer instead (Save for later). Neither is true here: there is
+ * no alternative action to offer, and the tab bar is the way on. Do not
+ * "restore" a CTA to this card by citing that reversal.
+ */
+function Insufficient() {
+  return (
+    <Screen>
+      <LogoBlock title="Create" />
+      <Scroll>
+        <Card style={{ marginTop: 4 }}>
+          {/* The state, named before the pitch — so the disabled button below
+              is already explained by the time you reach it. `alert` is the
+              kicker tone the app uses for a condition, not a warning colour. */}
+          <Kick tone="alert">no wardrobe pieces</Kick>
+          <Hero size={34} style={{ marginTop: 10 }}>
+            {'Make\nanything.'}
+          </Hero>
+          <Body style={{ marginTop: 10 }}>No brief and no score. {ONE_A_DAY_AMBIENT}</Body>
+          <Body style={{ marginTop: 8 }}>
+            Create is for recombining pieces you already own, and you need {MIN_PIECES} to
+            start.
+          </Body>
+          <Button label="Create a look" variant="off" style={{ marginTop: 14 }} />
+        </Card>
+        <Gap />
+      </Scroll>
     </Screen>
   );
 }

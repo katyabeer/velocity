@@ -28,7 +28,8 @@ import { Hero, Kick, Tiny } from '@/ui/text';
 import { Button, Chip } from '@/ui/controls';
 import { StepRibbonBleed, statesFor } from '@/ui/StepRibbon';
 import { palette, border } from '@/theme/tokens';
-import { CREATE_STEPS, ENTRY_STEPS } from '@/domain/entry';
+import { ENTRY_STEPS } from '@/domain/entry';
+import { CREATE_RIBBON } from '@/domain/renders';
 import { useSession, type Casting } from '@/state/session';
 import { useCreate } from '@/state/create';
 
@@ -43,13 +44,16 @@ export default function CastingScreen() {
   const casting = useSession((s) => s.casting);
   const setCasting = useSession((s) => s.setCasting);
   const origin = useSession((s) => s.castingOrigin);
-  const setCreateStep = useCreate((s) => s.setStep);
+  const startCreateRender = useCreate((s) => s.startRender);
 
   const go = () => {
     if (origin === 'create') {
-      // Picking a model doesn't itself spend today's render — that happens
-      // at the Render step's two buttons. This just returns you there.
-      setCreateStep(3);
+      /* Casting is the LAST INPUT the job needs, so this is where the job
+         actually starts. It is not where the allowance is spent — that was the
+         step-2 commit, and it stayed there deliberately: if the allowance were
+         only spent on success, a user could start a render, kill the app and
+         start again, which is a reroll through the back door. */
+      startCreateRender();
       router.replace('/(tabs)/create');
     } else {
       router.replace('/(tabs)/today/rendering');
@@ -69,13 +73,21 @@ export default function CastingScreen() {
       />
 
       {/* Whichever flow opened this, its own ribbon, so the screen reads as a
-          step OF that journey rather than a flow it dropped out of. Create is
-          at Model (3 of 4); the brief has no Model step of its own, so it sits
-          at Render — which is what the next tap actually starts. */}
+          step OF that journey rather than a flow it dropped out of.
+
+          CASTING HAS NO SEGMENT OF ITS OWN in either ribbon (Katya, 4 Sep).
+          Create used to give it one, labelled MODEL, which made a five-segment
+          ribbon numbered 1,2,2,3,4 under a header reading "3 of 4". Now both
+          flows sit at RENDER here, because rendering is what the next tap
+          starts — and Create's "of 4" is finally true. */}
       <StepRibbonBleed
         steps={
           origin === 'create'
-            ? statesFor(CREATE_STEPS.map((s) => ({ label: s.label, hint: s.hint })), 3)
+            ? statesFor(CREATE_RIBBON.map((s) => ({ label: s.label, hint: s.hint })), 4, [
+                true,
+                true,
+                true,
+              ])
             : statesFor(ENTRY_STEPS.map((s) => ({ label: s.label, hint: s.hint })), 3, [
                 true,
                 true,
@@ -87,7 +99,9 @@ export default function CastingScreen() {
         <Hero>{'Who’s\nwearing it?'}</Hero>
         <Tiny style={{ marginTop: 8 }}>
           Changes the render, not the clothes. Set it once and reuse it.
-          {origin === 'brief' ? ' The next tap enters your look — nothing can be changed after it.' : ''}
+          {origin === 'brief'
+            ? ' The next tap enters your look — nothing can be changed after it.'
+            : ' The next tap starts the render — it posts itself when it lands.'}
         </Tiny>
 
         <View style={{ marginTop: 16 }}>

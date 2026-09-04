@@ -34,6 +34,21 @@ export function Button({
     <Pressable
       onPress={disabled ? undefined : onPress}
       accessibilityRole="button"
+      /**
+       * `disabled`, NOT just `accessibilityState`. On react-native-web the
+       * accessibility state does not reach the DOM: an off-variant button
+       * rendered with `role="button"`, `tabindex="0"` and no `aria-disabled`
+       * at all, so a screen reader was told it was a live control and a
+       * keyboard user could tab to it and press Enter to no effect and no
+       * explanation. Passing `aria-disabled` and `focusable` by hand does not
+       * help either — Pressable drops both. Its own `disabled` prop is what
+       * emits the attribute and takes the control out of the tab order.
+       *
+       * Same class of gap as the missing `aria-checked` on the onboarding
+       * rails radios (4 Sep). `accessibilityState` is kept alongside for
+       * native, where it is the one that counts.
+       */
+      disabled={disabled}
       accessibilityState={{ disabled }}
       style={({ pressed }) => [
         s.btn,
