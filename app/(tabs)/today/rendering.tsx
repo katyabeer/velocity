@@ -12,10 +12,12 @@
  * sixty-second habit cannot afford. The render lands while you vote, and the
  * Today tab grows a dot when it does.
  *
- * WHAT IT SHOWS IN THE MEANTIME is the composed flat lay of exactly what was
- * picked. That is not a placeholder standing in for the real thing: R-L6 makes
- * the flat lay the unrendered state, and showing the pieces you chose is the
- * only honest thing to put here while the model render does not exist yet.
+ * IT SHOWS NOTHING IN THE MEANTIME (Katya, 3 Sep). It used to hold a composed
+ * flat lay of the picks. That card is gone: this screen exists to move you on,
+ * and putting the look on it invited you to stay and study something you had
+ * just spent two screens looking at. The whole screen is now one sentence and
+ * a button, which is what a hand-off should be. The look is still one tap away
+ * once it lands — see today/entered.tsx.
  *
  * THE FIRST LOOK BECOMES THE WARDROBE. `adoptLook` runs here, with entry — the
  * pieces you actually chose are the ones you keep. That is what replaced the
@@ -38,9 +40,8 @@ import { useEffect } from 'react';
 import { router } from 'expo-router';
 import { View } from 'react-native';
 import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
-import { Big, Kick, Tiny, B } from '@/ui/text';
+import { Big, Body, Kick, B } from '@/ui/text';
 import { Button } from '@/ui/controls';
-import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
 import { palette, border } from '@/theme/tokens';
 import { dayConfig } from '@/config/testState';
 import { DAY_ONE_ENTRY_GRANT_ENABLED } from '@/domain/economy';
@@ -94,27 +95,20 @@ export default function Rendering() {
         <Big style={{ marginTop: 7 }}>
           {`We’re building your\nlook right now.`}
         </Big>
-        <Tiny style={{ marginTop: 8 }}>
+        <Body style={{ marginTop: 8 }}>
           All {picks.length} pieces, exactly as you picked them. It takes about a minute, and you
           don&apos;t have to sit here for it — <B>go and vote</B>, and we&apos;ll put a dot on Today
           the moment it&apos;s ready.
-        </Tiny>
-
-        <View style={{ marginTop: 16 }}>
-          <ComposedFlatLay
-            pieces={picks.map((p) => p.name)}
-            caption="Your entry · render in progress"
-          />
-        </View>
+        </Body>
 
         {granted ? (
           <View style={s.grantNote}>
             <Kick tone="alert">first day only</Kick>
-            <Tiny style={{ marginTop: 5 }}>
+            <Body style={{ marginTop: 5 }}>
               <B>{entryGrant} tokens</B> for entering, so you have something to spend tonight. After
               today, tokens only come from judging — and the {picks.length} pieces you just used are
               yours to keep either way.
-            </Tiny>
+            </Body>
           </View>
         ) : null}
 

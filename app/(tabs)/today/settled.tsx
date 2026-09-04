@@ -11,6 +11,17 @@
  * ninety-plus is a chore. The screen's job is to end the day cleanly and point
  * at the magazine, not to open a second loop.
  *
+ * TWO WAYS OUT, AND THIS SCREEN DOES NOT KEEP YOU (Katya, 3 Sep). It used to be
+ * a cul-de-sac: the magazine button led away, and there was nothing else — not
+ * even the Today tab, which did nothing at all (see today/_layout.tsx for why).
+ *
+ * `dismissTo`, not `replace`. It pops back to the day's index rather than
+ * stacking another copy of it on top, so leaving here unwinds the whole
+ * evening's chain — build, render, judge, settled — instead of burying it. The
+ * state you land on is the job card's own, which already knows the difference
+ * between a render still going ("Building your look") and one that has landed
+ * ("Challenge complete"); this screen does not need to tell it which.
+ *
  * TWO DELIBERATE DEVIATIONS FROM HOUSE RULES, both from the mockup:
  *
  *  · NO HEADER AND NO TOKEN BADGE. Every other screen carries the badge top
@@ -33,7 +44,7 @@
 import { StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, Screen, Scroll } from '@/ui/layout';
-import { Big, Hero, Kick, Tiny } from '@/ui/text';
+import { Hero, Big, Body, Tiny, Kick } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { Card } from '@/ui/cards';
 import { palette, border } from '@/theme/tokens';
@@ -83,7 +94,7 @@ export default function Settled() {
 
         <Card style={{ marginTop: 18 }}>
           <Kick tone="muted">what happens now</Kick>
-          <Tiny style={{ marginTop: 5, fontSize: 12.5, lineHeight: 20, color: palette.grey }}>
+          <Body style={{ marginTop: 5 }}>
             {/* The mockup says "twenty people", which conflates the two
                 settlement thresholds — twenty is COMPARISONS, and the people
                 floor is twelve. Both numbers, correctly, rather than one
@@ -91,7 +102,7 @@ export default function Settled() {
             {DISTINCT_RATERS_TO_SETTLE} people compare your look with someone else&apos;s,{' '}
             {COMPARISONS_TO_SETTLE} times between them. When they have, it settles — and you hear
             at 7am, along with tomorrow&apos;s job.
-          </Tiny>
+          </Body>
         </Card>
 
         <Tiny style={s.closing}>
@@ -107,6 +118,14 @@ export default function Settled() {
 
       <Foot>
         <Button label="Go to the magazine" onPress={() => router.push('/(tabs)/magazine')} />
+        {/* The magazine is the recommended next thing, so it keeps the accent
+            fill; this is the quieter way out. */}
+        <Button
+          label="Return to the challenges"
+          variant="ghost"
+          style={{ marginTop: 8 }}
+          onPress={() => router.dismissTo('/(tabs)/today')}
+        />
       </Foot>
     </Screen>
   );

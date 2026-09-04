@@ -38,14 +38,12 @@ git diff | px diff semantic --format text      # function-level semantic diff
 
 **Memory (rare).** `px memory recall "<q>" --max 3` only for user-referenced prior work or explicit recall. Escalate `--full` or `px memory thread <id>` (paginate `--after <last-id>`).
 
-<!-- pulse-section-start -->
 **Pulse.** Sprint OS for genuinely hairy multi-file work (rewrites, schema migrations, new subsystems, multi-day refactors) — a `plan → beats → per-beat criteria-gate → sign-off` state machine; the last beat's sign-off auto-closes the Pulse. Criteria are the headless done-contract (a beat is done ⟺ its criteria pass/waive); strikes are its struggle log.
 - **Skip it for single-file fixes, typo edits, prose tweaks, one-line patches** — ceremony cost is punitive on small work.
 - **Start one:** invoke skill `pulse-plan` — it decomposes a brief into a Pulse + Beats via `px pulse plan --apply`, folds in the project's live plan-phase template (`px pulse inject plan`), and carries the schema rail, scope handshake, and full lifecycle mechanics.
 - **Orient / re-engage:** `px pulse now` is your operational map — it recommends the next action across your pulses (the session-init hook surfaces it on pickup); then `px pulse show --format md` for the full pulse, `px pulse status` for state.
 - **Two rules to hold up front, both irreversible:** no secrets in Beat/Pulse text — it **syncs in plaintext**; and sign-off honors the beat's `requires_ack_kind` — you **MAY** sign off when it's unset/`llm`/`either`, but **DEFER `human`-ack beats to the user**.
 - **Then the hooks take over** — don't memorise mechanics, read what arrives verbatim: every prompt injects the live beat context + pinned rules (**never paraphrase**); `beat start`/`resume` inhales the prior-beat recap to stderr; every completion (signoff / criterion check / skip) exhales your single next action + the exact command (incl. the `--pass cN` for any pending criterion). Verb reference, signoff grammar, and the action-criteria subsystem live in the `pulse-plan` skill and `px pulse --help`.
-<!-- pulse-section-end -->
 
 **Installations.** `px` clients enrol in N px-Server installations; each lives in `~/.local/px/installations/<guid>/`. `px config installation {list,add,remove,show,migrate-project}` manages enrolment. Per-install data is filesystem-isolated; resolution at every command is from `.px/pulse.toml` (per-project pin) / `--installation` flag / `PX_INSTALLATION_ID` env — **never from a stored default**. Commands in unpinned dirs refuse to run rather than guess (airgap mandate).
 
@@ -148,6 +146,23 @@ A fresh session will be tempted by several of these. They were tried and rejecte
   the Today card and tab tell you when it has landed
 - A render-status chip floating in every screen's header. The status belongs on
   the job card, which is the one screen the job is on
+- A three-across wardrobe grid. Cut 3 Sep with the jump to 14px names: a third
+  of the width holds ~13 characters, so the longer AW26 names truncated. Two
+  across, and the photograph gets room
+- The provenance line on wardrobe cards ('starter' / 'taken' / 'piece-brief').
+  Cut 3 Sep. The field still exists on the data, it is only unrendered
+- The builder's "No hints, on purpose" tooltip. Cut 3 Sep. It was a hint about
+  there being no hints, in the biggest accent panel on the screen, directly
+  above the grid it was pushing down. The rule it stated is still enforced
+- The flat lay's "FLAT LAY · NO BODY, NO FIT" caption bar. Cut 3 Sep — the
+  plate is a picture of clothes, and a caption stating what it isn't was the
+  loudest thing on it. The claim still appears in the builder's own copy
+- The composed flat lay on the "we're building your look" screen. Cut 3 Sep:
+  that screen exists to move you on, and putting the look on it invited you to
+  stay and study something you had just spent two screens looking at
+- A disabled "No tokens" button in the magazine sheet. It walled off the sheet
+  at exactly the moment someone was most engaged. It offers the free action —
+  Save for later — instead of refusing the paid one
 
 ---
 
@@ -166,6 +181,32 @@ Search for `⚠` to find every one. All are Katya's or Jack's call, not yours.
 | `create/index.tsx` | Jack 4 — layered looks in the renderer |
 | `domain/magazine.ts`, `data/looks.ts` | Jack 5 — per-look settled splits must be stored. **Cannot be backfilled** |
 | `config/app.ts` | the name. Now **Editorial.** (3 Sep), after *quintets.*, after the *Velocity* rejection. STILL no availability or trademark checks on any candidate, and "Editorial" is a common noun in this exact category — the most contested of the three so far |
+
+---
+
+## Navigation, and the one thing that bites
+
+**Every tab stack with more than one screen needs `unstable_settings` naming its
+anchor**, or a route reached directly — a deep link, or a `router.replace` chain
+— becomes that tab's *only* route, with nothing beneath it:
+
+```ts
+export const unstable_settings = { initialRouteName: 'index' };
+```
+
+The day's flow `replace`s all the way through (`build` → `rendering` → `judging`
+→ `settled`) to keep it one-way, so without the anchor the whole Today tab was a
+single screen. The symptom was invisible in every individual file: from the
+challenge-complete screen, pressing the Today tab did nothing, because pressing
+a focused tab pops its stack to the top and the top was already the only route.
+
+**Pressing a tab takes you to that tab's home**, and that is explicit —
+`homeOnTabPress` in `(tabs)/_layout.tsx`. React Navigation does it for free on
+native, but on web the bar renders real links, so the press is handled as link
+navigation and the default `tabPress` behaviour never runs. It navigates the
+nested stack BY NAME: a tab route's `state` has `routes` and `index` but no
+`key`, and an untargeted stack action bubbles UP to the root stack instead of
+down into the tab.
 
 ---
 
@@ -241,8 +282,20 @@ The overnight roundel is hidden because a zero there would be a lie. The shuffle
 
 ```
 npm run typecheck      # tsc --noEmit, strict + noUncheckedIndexedAccess
-npm test               # 53 assertions over the domain layer
+npm test               # 61 assertions over the domain layer
 ```
+
+**Animation cannot be verified in the Claude preview pane.** That surface renders
+offscreen — `document.visibilityState` is `hidden` and `requestAnimationFrame`
+never fires — so every JS-driven `Animated` value sits at its start value
+forever. Static layout screenshots are fine (they're captured out of band);
+motion needs a real device or a normal browser tab.
+
+That environment found a real bug, so it is worth knowing: **never gate state on
+an animation's completion callback alone.** `Animated.timing(...).start(cb)`
+runs `cb` on the JS driver, and a starved frame loop means it never runs. The
+judging round's vote was lost exactly this way. `ui/LookPlate.tsx` and
+`ui/BottomSheet.tsx` both carry a `setTimeout` fallback for that reason.
 
 Then **run it on a device or simulator and look at it.** Neither command above catches
 layout, and the prototype's history is full of things that passed structural checks and

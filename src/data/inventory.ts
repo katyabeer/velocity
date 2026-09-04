@@ -154,10 +154,26 @@ export const LOAN_PIECES = ['sequin blazer', 'gold sandal'] as const;
 /** Looks archive fixtures. */
 export type ArchiveEntry = {
   job: string;
-  /** Band name, or 'flat' for a saved combination that was never rendered. */
+  /**
+   * Band name, or one of two non-band states:
+   *   'flat'  a saved combination that was never rendered
+   *   'live'  entered and rendered, but the room has not settled it yet
+   *
+   * 'live' exists because the Looks tab is "everything you've entered" and an
+   * entry lands there the moment its render does — hours before there is a
+   * band. Showing a band there would be inventing a result; the row says
+   * "settles at 7am" instead. Never a number, either: locked decision 5.
+   */
   band: string;
   when: string;
   note: string;
+  /**
+   * The garments in it, newest entries only. Drives the row's thumbnail — a
+   * real composed flat lay rather than the empty grey plate the fixtures get.
+   * Optional because the Day 2/3 fixtures below are pre-dated placeholders
+   * with no piece list to draw.
+   */
+  pieces?: readonly string[];
 };
 
 export const ARCHIVE_DAY_ONE: readonly ArchiveEntry[] = [];

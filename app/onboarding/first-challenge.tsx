@@ -24,7 +24,7 @@
 import { Image, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { OnboardingFrame } from '@/ui/OnboardingFrame';
-import { Big, Hero, Kick, Tiny } from '@/ui/text';
+import { Hero, Big, Body, Kick } from '@/ui/text';
 import { palette, border, radius, rotation, useReducedMotion } from '@/theme/tokens';
 import { TONIGHTS_BRIEF } from '@/data/challenges';
 import { MAX_PIECES, MIN_PIECES } from '@/domain/entry';
@@ -34,8 +34,8 @@ import { garment } from '@/data/catalogue';
  *  categories, fixed, so it never reads as "these would work". Nothing on this
  *  screen may hint at an answer: deciding what suits the job is the skill. */
 const TEASER = [
-  'cape-detail wool coat',
-  'velvet jewel-tone dress',
+  'cape detail wool coat',
+  'velvet jewel tone dress',
   'clean riding boot',
   'jewelled evening clutch',
 ] as const;
@@ -53,16 +53,16 @@ export default function FirstChallenge() {
       topAlign
     >
       <Hero size={34}>{'Let’s do your\nfirst challenge.'}</Hero>
-      <Tiny style={{ marginTop: 10 }}>
+      <Body style={{ marginTop: 10 }}>
         Everyone gets the same job, and everyone has until 8pm. Yours is open now.
-      </Tiny>
+      </Body>
 
       <View style={s.brief}>
         <Kick>today&apos;s job · open until 8pm</Kick>
         <Big size={21} style={{ marginTop: 7 }}>
           {TONIGHTS_BRIEF.title}
         </Big>
-        <Tiny style={{ marginTop: 7 }}>{TONIGHTS_BRIEF.note}</Tiny>
+        <Body style={{ marginTop: 7 }}>{TONIGHTS_BRIEF.note}</Body>
       </View>
 
       {/* Static tilt, zeroed under reduced motion — decorative, not
@@ -85,9 +85,9 @@ export default function FirstChallenge() {
         })}
       </View>
 
-      <Tiny style={{ marginTop: 14 }}>
+      <Body style={{ marginTop: 14 }}>
         Next: every garment we have, and you pick {MIN_PIECES} to {MAX_PIECES} of them.
-      </Tiny>
+      </Body>
     </OnboardingFrame>
   );
 }

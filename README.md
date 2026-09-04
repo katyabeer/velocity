@@ -116,6 +116,26 @@ were measured on all four slides and sit at an identical y (130 / 151).
   is fine over a dev server and untested as a bundled asset load.
 - The tab-icon dot at native pixel density (10pt circle, hairline border).
 
+### Full regression pass, 4 Sep 2026
+
+Static gates all clean: `tsc --noEmit`, 61/61 domain tests, `eslint .` (0 problems),
+and a production `expo export -p web` with all 60 garment and 28 look assets bundled.
+
+Runtime: every route loaded on all three test days (13 routes x 3), with
+`console.error`, `window.onerror` and `unhandledrejection` captured throughout —
+**zero errors, no error boundaries**. The full day flow was walked end to end on
+Day 1 and Day 3 (build -> preview -> casting -> building -> five votes -> settled
+-> back to Today), plus the wardrobe's three views and its removal drawer (both
+answers), the magazine sheet down to a zero balance and on into Save for later,
+and the Saved tab receiving it.
+
+Two real bugs found and fixed by that pass, both pre-existing:
+
+- `magazine/piece.tsx` called `router.back()` DURING RENDER as its
+  no-focused-piece guard. React 19 flags it as a setState in another component's
+  render, and it has nowhere to go on a cold load. Now `<Redirect>`.
+- "1 PIECES" on the Saved tab. `pieceLabel` in `state/wardrobe.ts` now handles it.
+
 ## Carried-over known incomplete
 
 - **The magazine filter rail is visually live but does not change the content pool.**

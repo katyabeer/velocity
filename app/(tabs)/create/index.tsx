@@ -35,7 +35,7 @@
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, Header, Pinned, Screen, Scroll, Wrap } from '@/ui/layout';
-import { Hero, Kick, Tiny, B } from '@/ui/text';
+import { Hero, Body, Tiny, Kick, B } from '@/ui/text';
 import { Bar, Button, Chip, ChipRow } from '@/ui/controls';
 import { StepRibbonBleed, statesFor } from '@/ui/StepRibbon';
 import { GarmentGrid, SlotStrip } from '@/ui/pieces';
@@ -160,6 +160,10 @@ export default function Create() {
           <View style={{ marginTop: 9 }}>
             <Bar progress={c.picks.length / MAX_PIECES} />
           </View>
+          {/* Stays small. It is a control's instruction, not prose — and at
+              16px it took two lines and pushed the grid down on the one screen
+              where seeing the clothes is the whole job, which is the same
+              reason the walkthrough tooltip came off it. */}
           <Tiny style={{ marginTop: 7 }}>
             Tap a filled slot to put it back. The last two are both for extras.
           </Tiny>
@@ -169,9 +173,9 @@ export default function Create() {
       {c.step === 1 ? (
         <Scroll>
           <Hero size={36}>{'Make\nanything.'}</Hero>
-          <Tiny style={{ marginTop: 8 }}>
+          <Body style={{ marginTop: 8 }}>
             No brief and no score. {MIN_PIECES} pieces minimum, {MAX_PIECES} maximum.
-          </Tiny>
+          </Body>
 
           {/* CREATE OFFERS WHAT YOU OWN, and on a brand-new account that is
               nothing at all — the capsule that used to pre-fill the wardrobe
@@ -221,7 +225,7 @@ export default function Create() {
         <Scroll>
           <Hero>{'Where\nwould you\nwear it?'}</Hero>
 
-          <Tiny style={{ marginTop: 10 }}>
+          <Body style={{ marginTop: 10 }}>
             {rendersLeft > 0 ? (
               <>
                 You get <B>one render with a model</B> today — the next step spends it, so get
@@ -233,7 +237,7 @@ export default function Create() {
                 instead — that part&apos;s unlimited.
               </>
             )}
-          </Tiny>
+          </Body>
 
           <Wrap style={{ marginTop: 16 }}>
             {OCCASIONS.map((o) => (
@@ -278,11 +282,11 @@ export default function Create() {
       {c.step === 3 ? (
         <Scroll>
           <Hero>Ready.</Hero>
-          <Tiny style={{ marginTop: 7 }}>
+          <Body style={{ marginTop: 7 }}>
             {rendersLeft > 0
               ? 'Last look before it renders — nothing changes after this.'
               : "No render left today — this saves as an unrendered combination."}
-          </Tiny>
+          </Body>
           <View style={{ marginTop: 14 }}>
             <ComposedFlatLay pieces={c.picks.map((p) => p.name)} />
           </View>

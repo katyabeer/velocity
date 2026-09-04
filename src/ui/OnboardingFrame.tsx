@@ -23,8 +23,7 @@
 
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Screen } from './layout';
-import { Button } from './controls';
-import { Dots } from './controls';
+import { Button, Dots } from './controls';
 import { Kick, Tiny } from './text';
 import { palette, border } from '@/theme/tokens';
 

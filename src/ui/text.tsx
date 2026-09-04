@@ -27,32 +27,37 @@ function scaled(base: TextStyle, size?: number): TextStyle {
   };
 }
 
-const make =
-  (base: TextStyle) =>
-  ({ size, color, style, ...rest }: Props) => (
+/** `name` is only for React DevTools and the display-name lint rule — every
+ *  component below is produced by this factory, so without it they all show up
+ *  as anonymous in a component tree. */
+const make = (base: TextStyle, name: string) => {
+  const Component = ({ size, color, style, ...rest }: Props) => (
     <RNText {...rest} style={[scaled(base, size), color ? { color } : null, style]} />
   );
+  Component.displayName = name;
+  return Component;
+};
 
 /** PageTitle is the section name — the top-left label on every tab screen.
  *  Archivo Black 22 (T.sectionName), not the display face — Katya's
  *  explicit correction. H2/Hero keep the display face for in-page
  *  headlines (call sites keep their own `size` overrides, so that's a
  *  font/weight change only, not a layout one). */
-export const PageTitle = make(T.sectionName!);
-export const H2 = make(T.display!);
-export const Hero = make(T.display!);
+export const PageTitle = make(T.sectionName!, 'PageTitle');
+export const H2 = make(T.display!, 'H2');
+export const Hero = make(T.display!, 'Hero');
 /** v3: SigHead (section heads — "Your posts", "Milestones") demotes from
  *  the display face to quintets.css's `.qt-screen-title` (Archivo Black) —
  *  the display face is no longer used for in-app section chrome. */
-export const SigHead = make(T.screenTitle!);
+export const SigHead = make(T.screenTitle!, 'SigHead');
 /** v3: Lede and Big converge — quintets.css has one "lede" voice (italic
  *  Archivo, 23px), not two Bodoni sizes. */
-export const Lede = make(T.lede!);
-export const Big = make(T.lede!);
-export const Body = make(T.body!);
-export const Tiny = make(T.tiny!);
-export const Meta = make(T.meta!);
-export const Num = make(T.num!);
+export const Lede = make(T.lede!, 'Lede');
+export const Big = make(T.lede!, 'Big');
+export const Body = make(T.body!, 'Body');
+export const Tiny = make(T.tiny!, 'Tiny');
+export const Meta = make(T.meta!, 'Meta');
+export const Num = make(T.num!, 'Num');
 
 /** The all-caps eyebrow (quintets.css `.qt-eyebrow`). `tone` used to pick
  *  between klein/shock as TEXT color; both retire to `link` (accent is

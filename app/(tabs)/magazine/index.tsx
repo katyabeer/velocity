@@ -14,6 +14,11 @@
  * ELIGIBLE POOL: settled entries · free posts · house editorial. NEVER a live
  * entry — otherwise you are reading tonight's rivals.
  *
+ * OUT OF TOKENS ROUTES TO SAVE, NOT TO A WALL. The sheet's row button becomes
+ * "Save for later" when a token can't be spent — see ui/BottomSheet.tsx for why,
+ * and note that saving grants nothing: invariant 1 still holds, and the piece
+ * only enters the wardrobe when a token is spent on it.
+ *
  * ⚠ KNOWN INCOMPLETE, carried over: the filter rail is visually live but does
  * not change the content pool. Do not demo it as working.
  */
@@ -30,6 +35,7 @@ import { LookCard, SpreadCapped, SpreadCard } from '@/ui/FeedCards';
 import { palette, border, space } from '@/theme/tokens';
 import { canTake } from '@/domain/economy';
 import { FEED_LOOKS } from '@/data/looks';
+import { garmentImage } from '@/data/catalogue';
 import { cards, spreadIsCapped, FIRST_PAGE, NEXT_PAGE, useMagazine } from '@/state/magazine';
 import { useEconomy } from '@/state/economy';
 import { useWardrobe } from '@/state/wardrobe';
@@ -184,12 +190,14 @@ export default function Magazine() {
                 name: p,
                 held: economy.held.includes(p),
                 starred: economy.starred.includes(p),
+                image: garmentImage(p),
               }))
             : []
         }
         canTake={canTake(economy, wardrobeCount, wardrobeCap)}
         onClose={closeSheet}
         onToggleTake={toggleTake}
+        onToggleSave={economy.toggleStar}
         onOpenPiece={(name) =>
           sheetLook ? openPiece(name, sheetLook.by, sheetLook.tags) : undefined
         }

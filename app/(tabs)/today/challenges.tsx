@@ -11,13 +11,12 @@
  * never what tonight needs. That distinction is the whole mechanism.
  */
 
-import { View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, LogoBlock, Screen, Scroll } from '@/ui/layout';
 import { Body, Tiny, B } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { LockIcon } from '@/ui/TabIcon';
-import { StyleSheet, Text } from 'react-native';
 import { palette, border } from '@/theme/tokens';
 import { CHALLENGES } from '@/data/challenges';
 import { useEconomy, tokenLabel } from '@/state/economy';

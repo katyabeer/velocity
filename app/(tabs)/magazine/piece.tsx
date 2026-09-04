@@ -15,7 +15,7 @@
  */
 
 import { Pressable, StyleSheet, View } from 'react-native';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { Foot, Gap, Header, Screen, Scroll, Wrap } from '@/ui/layout';
 import { H2, Kick, Num, Tiny } from '@/ui/text';
 import { Button, Chip } from '@/ui/controls';
@@ -36,10 +36,12 @@ export default function Piece() {
   const add = useWardrobe((s) => s.add);
   const remove = useWardrobe((s) => s.remove);
 
-  if (!piece) {
-    router.back();
-    return null;
-  }
+  /* No focused piece means this route was reached directly — a deep link, or a
+     reload on it. It used to call `router.back()` here, DURING RENDER, which
+     React 19 flags as a setState in another component's render pass and which
+     has nowhere to go on a cold load anyway. `<Redirect>` is the declarative
+     equivalent and is safe at render time. */
+  if (!piece) return <Redirect href="/(tabs)/magazine" />;
 
   const held = economy.held.includes(piece.name);
   const starred = economy.starred.includes(piece.name);
@@ -70,7 +72,7 @@ export default function Piece() {
             onPress={() => economy.toggleStar(piece.name)}
             style={[s.save, starred && { backgroundColor: palette.ink }]}
             accessibilityRole="button"
-            accessibilityLabel={starred ? 'Unstar' : 'Star'}
+            accessibilityLabel={starred ? 'Remove from saved' : 'Save for later'}
           >
             <SaveIcon filled={starred} />
           </Pressable>

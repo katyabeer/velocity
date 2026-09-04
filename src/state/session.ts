@@ -50,8 +50,12 @@ export type Casting = {
  *  in the app. Flip this back the moment the model render is real. */
 export type RenderMode = 'model' | 'flat';
 
-/** Which screen's walkthrough tip has been dismissed. */
-export type TipKey = 'today' | 'build' | 'magazine';
+/** Which screen's walkthrough tip has been dismissed.
+ *
+ *  'build' is GONE (Katya, 3 Sep) — see today/build.tsx. It said "no hints, on
+ *  purpose", which was a hint, in the biggest accent panel on the screen,
+ *  directly above the grid it was pushing down. */
+export type TipKey = 'today' | 'magazine';
 
 type SessionState = {
   day: TestDay;
@@ -119,8 +123,6 @@ export const useSession = create<SessionState>((set) => ({
 export const TIPS: Record<TipKey, string> = {
   today:
     'Build first, judge after. At 8pm the job shuts and the judging opens — which is also how you unlock tokens.',
-  build:
-    'No hints, on purpose. Nothing here is sorted by what suits the job. That part is yours to decide.',
   magazine:
     'This is where clothes come from. Judging earns tokens. This is the only place to spend them.',
 };
@@ -128,6 +130,5 @@ export const TIPS: Record<TipKey, string> = {
 /** Which word in each tip is bold in the prototype. */
 export const TIP_LEAD: Record<TipKey, string> = {
   today: 'Build first, judge after.',
-  build: 'No hints, on purpose.',
   magazine: 'This is where clothes come from.',
 };

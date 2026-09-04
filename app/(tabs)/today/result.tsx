@@ -18,7 +18,7 @@
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
-import { Body, H2, Kick, Num, Tiny } from '@/ui/text';
+import { H2, Body, Tiny, Num, Kick } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { BandLadder, Card, Stat } from '@/ui/cards';
 import { LookPlate } from '@/ui/LookPlate';
@@ -53,10 +53,10 @@ export default function Result() {
             <H2 size={30} style={{ marginTop: 6 }}>
               {'Upper\nhalf'}
             </H2>
-            <Tiny style={{ marginTop: 7 }}>
+            <Body style={{ marginTop: 7 }}>
               Above the middle of people who started around when you did. Never a number — 20
               comparisons can&apos;t carry one.
-            </Tiny>
+            </Body>
           </View>
         </View>
 
@@ -64,9 +64,9 @@ export default function Result() {
         <View style={{ marginTop: 6 }}>
           <BandLadder active="upperHalf" />
         </View>
-        <Tiny style={{ marginTop: 7 }}>
+        <Body style={{ marginTop: 7 }}>
           Five bands, always relative to people who started when you did.
-        </Tiny>
+        </Body>
 
         <Kick style={{ marginTop: 17 }}>what beat you</Kick>
         <View style={{ flexDirection: 'row', gap: 12, marginTop: 8, alignItems: 'flex-start' }}>

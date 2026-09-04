@@ -23,6 +23,13 @@
  *    on the first run — you already have everything, so a shelf of "pieces you
  *    don't own" would be a lie.
  *
+ * NO WALKTHROUGH TOOLTIP (Katya, 3 Sep). "No hints, on purpose" used to sit
+ * above the grid. It was a hint about there being no hints, in the largest
+ * accent panel on the screen, directly above the thing it was talking about —
+ * and it pushed the grid down on the one screen where seeing the clothes is
+ * the whole job. The rule it stated is still true and still enforced (see
+ * rule 1 above); it just no longer says so out loud.
+ *
  * Step 2 is a CONFIRMATION, AND NOW A REAL ONE. It composes the actual cutouts
  * on the delivery's flat-lay template rather than listing names in boxes. Still
  * not a render: nothing renders before you commit, which is what keeps
@@ -32,12 +39,11 @@
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, Header, Pinned, Screen, Scroll } from '@/ui/layout';
-import { Hero, Kick, Lede, Tiny, B } from '@/ui/text';
+import { Hero, Lede, Body, Tiny, Kick, B } from '@/ui/text';
 import { Bar, Button, ChipRow } from '@/ui/controls';
 import { StepRibbonBleed, statesFor } from '@/ui/StepRibbon';
 import { GarmentGrid, SlotStrip } from '@/ui/pieces';
 import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
-import { Tip } from '@/ui/cards';
 import { palette, border } from '@/theme/tokens';
 import { CATEGORIES, categoryOf, slotOf, type Category } from '@/domain/garments';
 import {
@@ -54,7 +60,7 @@ import { TONIGHTS_BRIEF } from '@/data/challenges';
 import { BUILDER_POOL_ESTABLISHED, LOAN_PIECES } from '@/data/inventory';
 import { cataloguePool, garmentImage } from '@/data/catalogue';
 import { useEntry } from '@/state/entry';
-import { useSession, TIPS, TIP_LEAD } from '@/state/session';
+import { useSession } from '@/state/session';
 import { useWardrobe } from '@/state/wardrobe';
 import { useEconomy } from '@/state/economy';
 
@@ -76,8 +82,6 @@ export default function Build() {
   const day = useSession((s) => s.day);
   const rails = useSession((s) => s.rails);
   const setCastingOrigin = useSession((s) => s.setCastingOrigin);
-  const tipDismissed = useSession((s) => s.dismissedTips.build);
-  const dismissTip = useSession((s) => s.dismissTip);
 
   const owned = useWardrobe((s) => s.pieces);
   const picks = useEntry((s) => s.picks);
@@ -155,7 +159,7 @@ export default function Build() {
 
       <View style={{ paddingHorizontal: 22, paddingTop: 13 }}>
         <Lede>{TONIGHTS_BRIEF.title}</Lede>
-        <Tiny style={{ marginTop: 6 }}>{TONIGHTS_BRIEF.note}</Tiny>
+        <Body style={{ marginTop: 6 }}>{TONIGHTS_BRIEF.note}</Body>
       </View>
 
       {step === 1 ? (
@@ -167,6 +171,10 @@ export default function Build() {
           <View style={{ marginTop: 9 }}>
             <Bar progress={picks.length / MAX_PIECES} />
           </View>
+          {/* Stays small. It is a control's instruction, not prose — and at
+              16px it took two lines and pushed the grid down on the one screen
+              where seeing the clothes is the whole job, which is the same
+              reason the walkthrough tooltip came off it. */}
           <Tiny style={{ marginTop: 7 }}>
             Tap a filled slot to put it back. The last two are both for extras.
           </Tiny>
@@ -175,14 +183,6 @@ export default function Build() {
 
       {step === 1 ? (
         <Scroll>
-          {!tipDismissed ? (
-            <Tip
-              lead={TIP_LEAD.build}
-              body={TIPS.build.replace(TIP_LEAD.build, '').trim()}
-              onDismiss={() => dismissTip('build')}
-            />
-          ) : null}
-
           <View style={{ marginTop: 11, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <Kick tone="muted">{firstRun ? 'everything we have' : 'your wardrobe'}</Kick>
             <Tiny>{pool.length} pieces</Tiny>
@@ -218,9 +218,9 @@ export default function Build() {
                 <Kick tone="alert">new — unlocked for tonight</Kick>
                 <Tiny color={palette.ink}>{loansLeft}</Tiny>
               </View>
-              <Tiny style={{ marginTop: 6 }}>
+              <Body style={{ marginTop: 6 }}>
                 Two pieces you don&apos;t own, yours to use for this job only. They go back at close.
-              </Tiny>
+              </Body>
               <GarmentGrid
                 style={{ marginTop: 10 }}
                 items={LOAN_PIECES.map((n) => ({
@@ -238,16 +238,16 @@ export default function Build() {
       ) : (
         <Scroll>
           <Hero>Together.</Hero>
-          <Tiny style={{ marginTop: 7 }}>
+          <Body style={{ marginTop: 7 }}>
             Not a render — the actual pieces, laid out. No body, no fit.
-          </Tiny>
+          </Body>
           <View style={{ marginTop: 14 }}>
             <ComposedFlatLay pieces={picks.map((p) => p.name)} />
           </View>
-          <Tiny style={{ marginTop: 12 }}>
+          <Body style={{ marginTop: 12 }}>
             Once you enter, <B>nothing can be changed</B>. The render comes after, and at 8pm you
             judge the field alongside everyone else.
-          </Tiny>
+          </Body>
           <Gap />
         </Scroll>
       )}

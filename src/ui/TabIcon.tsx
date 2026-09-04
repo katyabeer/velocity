@@ -14,6 +14,32 @@ import { palette, border } from '@/theme/tokens';
 
 export type TabKey = 'today' | 'magazine' | 'create' | 'wardrobe' | 'you';
 
+/**
+ * TAB ORDER IS THE PRODUCT'S ORDER — see app/(tabs)/_layout.tsx, which builds
+ * the bar from this list.
+ *
+ * It lives here rather than in the layout because a second thing now needs it:
+ * the magazine's take-a-piece animation flies a thumbnail at the Wardrobe tab,
+ * and it works out where that tab is from this array's index. Two hard-coded
+ * orders would drift apart the first time a tab moved.
+ */
+export const TAB_ORDER: readonly TabKey[] = [
+  'today',
+  'magazine',
+  'create',
+  'wardrobe',
+  'you',
+];
+
+/** Horizontal centre of a tab, as a fraction of screen width. The bar lays its
+ *  items out in equal flex columns, so the centre of column i of n is
+ *  (i + 0.5) / n — no measurement needed, and it cannot fall out of step with
+ *  the bar because both read TAB_ORDER. */
+export const tabCentreFraction = (key: TabKey): number => {
+  const i = TAB_ORDER.indexOf(key);
+  return (i < 0 ? 0 : i + 0.5) / TAB_ORDER.length;
+};
+
 const PATHS: Record<TabKey, React.ReactNode> = {
   today: <Path d="M4 5h16M4 12h16M4 19h10" />,
   magazine: <Path d="M4 4h7v16H4zM13 4h7v16h-7z" />,

@@ -89,11 +89,19 @@ export const type = StyleSheet.create({
     lineHeight: 28.5,
     color: palette.ink,
   },
-  /** .qt-body */
+  /** .qt-body — 16px as of 3 Sep (Katya), up from 14.
+   *
+   *  THIS IS THE PROSE STYLE, and until now almost nothing used it: `Body`
+   *  appeared 7 times against `Tiny`'s ~55, so `tiny` had quietly become the
+   *  app's body copy at 10px. Raising `body` alone would have changed almost
+   *  nothing on screen, so the paragraph-level `Tiny` call sites moved across
+   *  with it. `tiny` stays 10px and keeps its real job — counters, toggle
+   *  labels, section metadata, legal small print. If you are writing a
+   *  sentence, use `Body`. */
   body: {
     fontFamily: family.sans400,
-    fontSize: 14,
-    lineHeight: 21.7,
+    fontSize: 16,
+    lineHeight: 24.8,
     color: palette.grey,
   },
   /** Not one of quintets.css's 8 named recipes — the old `.tiny` footnote

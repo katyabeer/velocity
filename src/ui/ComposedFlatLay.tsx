@@ -9,6 +9,17 @@
  * fit, art direction as the defensible claim. `RenderStage`'s figure is the
  * other position, still live (Jack's open question 2).
  *
+ * NO CAPTION BY DEFAULT (Katya, 3 Sep). The plate used to carry a mono
+ * "FLAT LAY · NO BODY, NO FIT" bar across its foot on every appearance. It is
+ * off unless a call site asks for one — the plate is a picture of clothes, and
+ * a caption stating what it isn't was the loudest thing on it.
+ *
+ * ⚠ That line was doing one real job: "no body, no fit" is the app's stated
+ * art-direction position (brief §10.7, resolution §13.4), and it is now
+ * unstated in the UI. `today/entered.tsx` still labels the presentation in its
+ * header toggle ("Flat lay" / "On a model"), which is the only place it is
+ * still said. Katya — flag if the claim needs to be visible somewhere.
+ *
  * ─── THE GEOMETRY IS NOT INVENTED ───────────────────────────────────────────
  * Boxes, canvas and the two templates are copied verbatim from the AW26
  * delivery README (`velocity-aw26-assets/README.txt`), in its own units: a
@@ -134,8 +145,8 @@ export function compose(pieces: readonly string[]): {
 
 export function ComposedFlatLay({
   pieces,
-  caption = 'Flat lay · no body, no fit',
-  showCaption = true,
+  caption,
+  showCaption = false,
   style,
 }: {
   pieces: readonly string[];
@@ -144,6 +155,7 @@ export function ComposedFlatLay({
   style?: ViewStyle;
 }) {
   const { placements } = compose(pieces);
+  const label = showCaption ? caption : undefined;
 
   return (
     <View style={[s.stage, style]}>
@@ -175,9 +187,9 @@ export function ComposedFlatLay({
         );
       })}
 
-      {showCaption ? (
+      {label ? (
         <View style={s.caption}>
-          <Text style={s.captionText}>{caption}</Text>
+          <Text style={s.captionText}>{label}</Text>
         </View>
       ) : null}
     </View>

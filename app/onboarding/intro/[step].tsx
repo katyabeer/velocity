@@ -151,7 +151,7 @@ function Media({ index, reduced }: { index: number; reduced: boolean }) {
       <View style={s.stack}>
         <View style={s.row}>
           <Cutout name="black lace gothic dress" tilt={tilt(-rotation.r3)} />
-          <Cutout name="boxy broad-shoulder knit" tilt={tilt(rotation.r2)} />
+          <Cutout name="boxy broad shoulder knit" tilt={tilt(rotation.r2)} />
         </View>
         <View style={[s.row, { flex: 1.5 }]}>
           <LookPhoto index={4} mat tilt={tilt(-rotation.r2)} />

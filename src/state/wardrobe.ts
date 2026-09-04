@@ -153,5 +153,9 @@ export function groupByCategory(
     .map((category) => ({ category, items: pieces.filter((p) => p.category === category) }));
 }
 
+/** "1 piece", not "1 pieces". Trivial, and it shows on the Saved tab the moment
+ *  someone saves their first thing — which is exactly when they are looking. */
+export const pieceLabel = (n: number): string => `${n} piece${n === 1 ? '' : 's'}`;
+
 export const wornLabel = (p: OwnedPiece): string =>
   p.worn === 0 ? 'never worn' : `worn ${p.worn}× · best: ${p.best ?? '—'}`;

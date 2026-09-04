@@ -27,7 +27,7 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, LogoBlock, Screen, Scroll, Wrap } from '@/ui/layout';
-import { Tiny } from '@/ui/text';
+import { Body, Tiny } from '@/ui/text';
 import { Button, Chip } from '@/ui/controls';
 import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
 import { palette } from '@/theme/tokens';
@@ -98,13 +98,13 @@ export default function Posted() {
           ))}
         </Wrap>
 
-        <Tiny style={{ marginTop: 10 }}>
+        <Body style={{ marginTop: 10 }}>
           {posting
             ? "No score, no placing. Somebody might spend a token on it — you'll know if they do."
             : view.rendered
               ? "Nobody can take a piece from something they can't see — this one's just for you."
               : 'No render spent on this one. Find it any time in Wardrobe → Looks.'}
-        </Tiny>
+        </Body>
 
         <Gap />
       </Scroll>

@@ -42,7 +42,7 @@ import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TextInput, View, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { OnboardingFrame } from '@/ui/OnboardingFrame';
-import { Big, Kick, Tiny } from '@/ui/text';
+import { Big, Body, Tiny, Kick } from '@/ui/text';
 import { palette, border, radius } from '@/theme/tokens';
 import { useSession, type Rails } from '@/state/session';
 
@@ -144,9 +144,9 @@ export default function Profile() {
         </Tiny>
       ) : null}
 
-      <Tiny style={{ marginTop: 7 }}>
+      <Body style={{ marginTop: 7 }}>
         This is your profile name that will be visible to other users when you publish looks.
-      </Tiny>
+      </Body>
 
       <Kick tone="muted" style={{ marginTop: 24 }}>
         and what shall we show you
@@ -173,7 +173,7 @@ export default function Profile() {
         })}
       </View>
 
-      <Tiny style={{ marginTop: 9 }}>You can always change it later.</Tiny>
+      <Body style={{ marginTop: 9 }}>You can always change it later.</Body>
     </OnboardingFrame>
   );
 }

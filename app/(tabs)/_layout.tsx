@@ -18,22 +18,71 @@
  */
 
 import { Tabs } from 'expo-router';
+import type { NavigationState, ParamListBase, RouteProp } from '@react-navigation/native';
 import { StyleSheet } from 'react-native';
-import { TabIcon, type TabKey } from '@/ui/TabIcon';
+import { TabIcon, TAB_ORDER, type TabKey } from '@/ui/TabIcon';
 import { palette, border } from '@/theme/tokens';
 import { type as T } from '@/theme/type';
 import { useRenderBadge, type RenderLane } from '@/state/submission';
 
 /** `lane` marks the two tabs that can own a finished-but-unseen render. The
  *  badge lives here rather than in every screen's header — see
- *  state/submission.ts on why the floating chip was retired. */
-const TABS: readonly { name: string; key: TabKey; label: string; lane?: RenderLane }[] = [
-  { name: 'today', key: 'today', label: 'Today', lane: 'brief' },
-  { name: 'magazine', key: 'magazine', label: 'Magazine' },
-  { name: 'create', key: 'create', label: 'Create', lane: 'create' },
-  { name: 'wardrobe', key: 'wardrobe', label: 'Wardrobe' },
-  { name: 'you', key: 'you', label: 'You' },
-];
+ *  state/submission.ts on why the floating chip was retired.
+ *
+ *  ORDER COMES FROM TAB_ORDER (ui/TabIcon.tsx), which the magazine's
+ *  fly-to-wardrobe animation also reads to find the target tab. Keep the order
+ *  there, not here. */
+const META: Record<TabKey, { label: string; lane?: RenderLane }> = {
+  today: { label: 'Today', lane: 'brief' },
+  magazine: { label: 'Magazine' },
+  create: { label: 'Create', lane: 'create' },
+  wardrobe: { label: 'Wardrobe' },
+  you: { label: 'You' },
+};
+
+const TABS = TAB_ORDER.map((key) => ({ name: key, key, label: META[key].label, lane: META[key].lane }));
+
+/**
+ * PRESSING A TAB TAKES YOU TO THAT TAB'S HOME. Every tab has one, and this is
+ * what makes the tab bar an escape hatch rather than a set of five bookmarks.
+ *
+ * It has to be explicit. React Navigation pops a focused tab's stack to the top
+ * for free, but that never fired here: on web the bar renders real links, so
+ * the press is handled as link navigation and `tabPress` default behaviour
+ * never runs. The symptom Katya hit was the challenge-complete screen — tapping
+ * Today did nothing at all, because that screen was the entire Today stack (see
+ * today/_layout.tsx, which now anchors `index` beneath it).
+ *
+ * It navigates the nested stack BY NAME rather than dispatching a targeted
+ * `popToTop`. A tab route's `state` carries its `routes` and `index` but NOT a
+ * `key` (it is a rehydrated partial state), and a stack action with no target
+ * bubbles UP to the root stack rather than down into the tab — which would pop
+ * the wrong navigator entirely. Navigating to a route already in the stack
+ * unwinds to it, which is the same outcome by a safer route.
+ *
+ * Works from ANOTHER tab too, so it is one press to switch and come home rather
+ * than one to switch and a second to unwind. And it defers to the default when
+ * the tab is already at its root, so a press there still does the ordinary
+ * thing.
+ */
+function homeOnTabPress({
+  navigation,
+  route,
+}: {
+  navigation: { navigate: (name: string, params?: object) => void };
+  route: RouteProp<ParamListBase, string>;
+}) {
+  return {
+    tabPress: (e: { preventDefault: () => void }) => {
+      /* `state` is undefined until that tab's stack has mounted, and
+         `index === 0` means it is already home — leave both to the default. */
+      const nested = (route as { state?: NavigationState }).state;
+      if (!nested || !nested.index) return;
+      e.preventDefault();
+      navigation.navigate(route.name, { screen: 'index' });
+    },
+  };
+}
 
 export default function TabsLayout() {
   /* Two fixed subscriptions rather than a hook inside the map — hook order has
@@ -59,6 +108,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           key={t.name}
           name={t.name}
+          listeners={homeOnTabPress}
           options={{
             title: t.label,
             tabBarIcon: ({ focused }) => (

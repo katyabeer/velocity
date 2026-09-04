@@ -19,13 +19,13 @@
  * 8pm, so seeing the field cannot change anyone's look, including yours.
  */
 
-import { View } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Header, Screen, Scroll, Strip } from '@/ui/layout';
 import { Bar, Button } from '@/ui/controls';
-import { LookPair } from '@/ui/LookPlate';
-import { Tiny } from '@/ui/text';
-import { StyleSheet, Text } from 'react-native';
+import { LookPair, type PickSide } from '@/ui/LookPlate';
+import { Body, Tiny } from '@/ui/text';
 import { palette } from '@/theme/tokens';
 import { JUDGING_LOOKS } from '@/data/looks';
 import { TONIGHTS_BRIEF } from '@/data/challenges';
@@ -36,11 +36,19 @@ export default function Judging() {
   const quota = useEconomy((s) => s.quota);
   const castCall = useEconomy((s) => s.castCall);
 
+  /** Which side has been committed to, while its plate flies out. Holding it
+   *  here rather than inside LookPair is what lets the footer's tie button use
+   *  the same exit — see the header note in ui/LookPlate.tsx. */
+  const [leaving, setLeaving] = useState<PickSide | null>(null);
+
   const i = (callsCast * 2) % JUDGING_LOOKS.length;
   const left = JUDGING_LOOKS[i]!;
   const right = JUDGING_LOOKS[(i + 1) % JUDGING_LOOKS.length]!;
 
-  const cast = () => {
+  /** The call only lands once the plate has left. Casting on touch would swap
+   *  in the next pair mid-flight, so you would watch the wrong look fly away. */
+  const settle = () => {
+    setLeaving(null);
     castCall();
     if (callsCast + 1 >= quota) router.replace('/(tabs)/today/settled');
   };
@@ -64,24 +72,35 @@ export default function Judging() {
           <Tiny>Which one works?</Tiny>
         </View>
 
+        {/* Keyed on the call index: a new pair is a fresh mount, which is what
+            resets the exit animation. */}
         <LookPair
+          key={callsCast}
           left={{ tint: left.tint, occasion: left.occasion, pieces: left.pieces, image: left.image }}
           right={{ tint: right.tint, occasion: right.occasion, pieces: right.pieces, image: right.image }}
-          onPick={cast}
+          leaving={leaving}
+          onPick={setLeaving}
+          onExitDone={settle}
         />
 
         <View style={{ paddingHorizontal: 22, paddingTop: 12 }}>
           <Bar progress={callsCast / quota} />
-          <Tiny style={{ marginTop: 9 }}>
+          <Body style={{ marginTop: 9 }}>
             {callsCast === 0
               ? "The same job you just answered. Nobody can enter now, so seeing these can't change anyone's look — including yours."
               : `${quota - callsCast} to go. Mark anything you fancy on the way through; it lands when you finish.`}
-          </Tiny>
+          </Body>
         </View>
       </Scroll>
 
       <Foot>
-        <Button label="Too close to call" variant="quiet" onPress={cast} />
+        {/* A tie is a real answer, not a skip — so it gets the same exit, both
+            plates going down together rather than one flying off. */}
+        <Button
+          label="Too close to call"
+          variant="quiet"
+          onPress={leaving ? undefined : () => setLeaving('tie')}
+        />
       </Foot>
     </Screen>
   );

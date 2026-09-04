@@ -31,7 +31,7 @@
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Gap, LogoBlock, Screen, Scroll, Sig } from '@/ui/layout';
-import { Lede, Tiny, Kick, SigHead, B } from '@/ui/text';
+import { SigHead, Lede, Body, Tiny, Kick, B } from '@/ui/text';
 import { Milestones, Reach, Stat, Roundel, Trend } from '@/ui/cards';
 import { LookPlate } from '@/ui/LookPlate';
 import { palette } from '@/theme/tokens';
@@ -72,9 +72,9 @@ export default function You() {
                 ]}
               />
             </View>
-            <Tiny style={{ marginTop: 7 }}>
+            <Body style={{ marginTop: 7 }}>
               Built from your looks, what you take from the magazine, and what the room says back.
-            </Tiny>
+            </Body>
           </Sig>
         ) : null}
 
@@ -124,9 +124,9 @@ export default function You() {
                 <View style={{ marginTop: 11 }}>
                   <Trend values={[30, 24, 44, 38, 52, 66, 60, 81, 74]} />
                 </View>
-                <Tiny style={{ marginTop: 7 }}>
+                <Body style={{ marginTop: 7 }}>
                   Your last nine jobs. Climbing since May, with a dip when you tried colour.
-                </Tiny>
+                </Body>
                 <Tiny
                   color={palette.link}
                   style={{ marginTop: 9, fontFamily: 'Archivo_700Bold' }}
@@ -143,10 +143,10 @@ export default function You() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Lede>Your first one is in.</Lede>
-                  <Tiny style={{ marginTop: 8 }}>
+                  <Body style={{ marginTop: 8 }}>
                     One job is a point, not a line. The shape of it starts showing up here after
                     about a week.
-                  </Tiny>
+                  </Body>
                 </View>
               </View>
             )}
@@ -192,12 +192,12 @@ export default function You() {
               </>
             ) : null}
 
-            <Tiny style={{ marginTop: 8 }}>
+            <Body style={{ marginTop: 8 }}>
               You own {count} pieces and wear {day >= 3 ? 'eleven' : 'five'} of them.{' '}
               <Tiny color={palette.link} style={{ fontFamily: 'Archivo_700Bold' }} onPress={() => router.push('/(tabs)/magazine')}>
                 Find something to go with the rest →
               </Tiny>
-            </Tiny>
+            </Body>
           </Sig>
         ) : null}
 
@@ -207,13 +207,13 @@ export default function You() {
           <View style={{ marginTop: 9 }}>
             <Milestones earned={cfg.milestonesEarned} />
           </View>
-          <Tiny style={{ marginTop: 9 }}>
+          <Body style={{ marginTop: 9 }}>
             {cfg.milestonesEarned === 0
               ? "Six, and that's all there are. No levels, no leaderboard."
               : cfg.milestonesEarned === 1
                 ? 'One down. Six is all there are — no levels, no leaderboard.'
                 : "Six, and that's all there are. No levels, no leaderboard."}
-          </Tiny>
+          </Body>
         </Sig>
 
         <Gap />

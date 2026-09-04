@@ -16,8 +16,12 @@
  *
  *   brief   the daily job. Sixty seconds — deliberately long enough that you
  *           go and judge rather than wait, which is the whole point of the
- *           screen that sends you there. Nothing is written on ready: the look
- *           IS the entry, and the entry store already holds it.
+ *           screen that sends you there. On ready it files the entry into the
+ *           wardrobe's Looks archive, banded 'live' — that tab is "everything
+ *           you've entered", and the entry belongs in it from the moment there
+ *           is something to look at. It does NOT wait for the overnight
+ *           settlement: a look with no band yet is still a look you entered,
+ *           and the row says so rather than inventing a placing.
  *   create  freestyle. Five seconds, and the 'set' destination's private save
  *           lands inside the timeout rather than at submit() time — nothing is
  *           produced until 'ready', which is "nothing renders before you
@@ -35,6 +39,7 @@
 
 import { create } from 'zustand';
 import { useWardrobe } from './wardrobe';
+import { TONIGHTS_BRIEF } from '@/data/challenges';
 
 /** Which producer a record belongs to. One in flight per lane, at most. */
 export type RenderLane = 'brief' | 'create';
@@ -101,15 +106,26 @@ export const useSubmission = create<SubmissionState>((set, get) => ({
       const current = get().lanes[lane];
       if (!current) return;
 
-      /* A private Create render produces its wardrobe entry HERE, not at
-         submit time — see the header. The brief produces nothing: the entry
-         store is already holding the look. */
+      /* Both destinations that produce something produce it HERE, not at
+         submit time — see the header. */
       if (current.destination === 'set') {
         useWardrobe.getState().saveSet({
           job: 'Untitled combination',
           band: 'private',
           when: 'just now',
           note: `${current.picks.length} pieces · rendered, not posted`,
+          pieces: current.picks,
+        });
+      }
+
+      if (current.destination === 'brief') {
+        useWardrobe.getState().saveSet({
+          job: TONIGHTS_BRIEF.shortName,
+          /* No band yet — the room settles it overnight. See ArchiveEntry. */
+          band: 'live',
+          when: 'today',
+          note: `${current.picks.length} pieces · entered`,
+          pieces: current.picks,
         });
       }
 

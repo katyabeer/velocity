@@ -15,18 +15,22 @@
  * build so the cap is actually reachable in a session. See WARDROBE_CAP.
  */
 
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, LogoBlock, Screen, Scroll, SectionHead } from '@/ui/layout';
-import { Kick, Tiny, B } from '@/ui/text';
+import { Body, Tiny, Kick, B } from '@/ui/text';
 import { Button, ChipRow, Segmented } from '@/ui/controls';
 import { EmptyState, NewBox } from '@/ui/cards';
 import { InventoryTile } from '@/ui/pieces';
+import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
+import { ConfirmSheet } from '@/ui/ConfirmSheet';
+import { garmentImage } from '@/data/catalogue';
 import { palette, border, space } from '@/theme/tokens';
 import { CATEGORIES, type Category } from '@/domain/garments';
 import { WARDROBE_CAP } from '@/domain/economy';
 import { dayConfig } from '@/config/testState';
-import { groupByCategory, useWardrobe, type WardrobeView } from '@/state/wardrobe';
+import { groupByCategory, pieceLabel, useWardrobe, type WardrobeView } from '@/state/wardrobe';
 import { useEconomy } from '@/state/economy';
 import { useSession } from '@/state/session';
 import { useEntry } from '@/state/entry';
@@ -41,12 +45,17 @@ export default function Wardrobe() {
   const held = useEconomy((s) => s.held);
   const toggleStar = useEconomy((s) => s.toggleStar);
 
+  /** The piece the removal drawer is asking about, or null when it's shut.
+   *  Local, not in the store: it is a question this screen is asking, and it
+   *  should not survive navigating away mid-question. */
+  const [pendingDrop, setPendingDrop] = useState<string | null>(null);
+
   const groups = groupByCategory(w.pieces, w.filter);
   const populatedCategories = CATEGORIES.filter((c) => w.pieces.some((p) => p.category === c));
 
   return (
     <Screen>
-      <LogoBlock title="Wardrobe" subtitle={`${w.count} pieces`} />
+      <LogoBlock title="Wardrobe" subtitle={pieceLabel(w.count)} />
 
       <Scroll>
         <Segmented
@@ -76,9 +85,9 @@ export default function Wardrobe() {
               <View style={s.full}>
                 <Kick tone="alert">wardrobe full · {WARDROBE_CAP} of {WARDROBE_CAP}</Kick>
                 <Text style={s.fullTitle}>Drop something before you take anything else.</Text>
-                <Tiny color={palette.grey} style={{ marginTop: 6 }}>
+                <Body color={palette.grey} style={{ marginTop: 6 }}>
                   Nothing is lost for good — a dropped piece can be taken again with a token.
-                </Tiny>
+                </Body>
               </View>
             ) : w.count >= WARDROBE_CAP - 5 ? (
               <Tiny style={{ marginTop: 12 }}>
@@ -121,10 +130,9 @@ export default function Wardrobe() {
                       <InventoryTile
                         key={p.name}
                         name={p.name}
-                        provenance={p.provenance}
                         isNew={p.isNew}
                         image={p.image}
-                        onDrop={() => w.remove(p.name)}
+                        onDrop={() => setPendingDrop(p.name)}
                       />
                     ))}
                   </View>
@@ -160,15 +168,34 @@ export default function Wardrobe() {
                     key={`${a.job}-${i}`}
                     style={[s.archRow, i === w.archive.length - 1 && { borderBottomWidth: 0 }]}
                   >
-                    <View style={s.archPlate} />
+                    {/* A real plate when the entry carries its pieces — the
+                        empty grey box is only for the pre-dated fixtures that
+                        have no piece list to draw. */}
+                    <View style={s.archPlate}>
+                      {a.pieces?.length ? (
+                        <ComposedFlatLay pieces={a.pieces} />
+                      ) : null}
+                    </View>
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <Text style={s.archJob}>{a.job}</Text>
                       <Text style={s.archNote}>
                         {a.when} · {a.note}
                       </Text>
                     </View>
-                    <Text style={[s.archBand, a.band === 'flat' && { color: palette.greyMute }]}>
-                      {a.band === 'flat' ? 'not rendered' : a.band}
+                    {/* 'live' and 'flat' are not bands — see ArchiveEntry. An
+                        unsettled entry reports when it will settle, never a
+                        placing it does not have yet. */}
+                    <Text
+                      style={[
+                        s.archBand,
+                        (a.band === 'flat' || a.band === 'live') && s.archBandQuiet,
+                      ]}
+                    >
+                      {a.band === 'flat'
+                        ? 'not rendered'
+                        : a.band === 'live'
+                          ? 'settles 7am'
+                          : a.band}
                     </Text>
                   </View>
                 ))}
@@ -177,14 +204,17 @@ export default function Wardrobe() {
           </>
         ) : null}
 
-        {/* ══ SAVED ══ Starring is free; these wait until you have a token. */}
+        {/* ══ SAVED ══ Saving is free; these wait until you have a token.
+            The store still calls it `starred` / `toggleStar` — the copy moved
+            to "save" (3 Sep) to match the magazine sheet's "Save for later",
+            the internals didn't. Renaming the store is churn with no reader. */}
         {w.view === 'saved' ? (
           <>
-            <SectionHead title="Want, don't own" note={`${starred.length} pieces`} />
+            <SectionHead title="Want, don't own" note={pieceLabel(starred.length)} />
             {starred.length === 0 ? (
               <EmptyState
-                kick="nothing starred"
-                body="Star pieces in the magazine and they wait here until you have a token."
+                kick="nothing saved yet"
+                body="Save pieces from the magazine and they wait here until you have a token."
               />
             ) : (
               <>
@@ -193,16 +223,20 @@ export default function Wardrobe() {
                     <InventoryTile
                       key={n}
                       name={n}
-                      history={held.includes(n) ? 'yours now' : '★ saved · costs a token'}
-                      provenance="starred"
-                      isNew={!held.includes(n)}
+                      history={held.includes(n) ? 'yours now' : 'saved · costs a token'}
+                      image={garmentImage(n)}
+                      /* No NEW flag here. It used to be set to "not owned
+                         yet", but everywhere else in the app NEW means
+                         "arrived today" — on a saved piece it claims the
+                         opposite of what the row says. The caption carries
+                         the status. */
                       onPress={() => toggleStar(n)}
                     />
                   ))}
                 </View>
-                <Tiny style={{ marginTop: 9 }}>
-                  Tap to unstar. <B>Spend tokens in the magazine.</B>
-                </Tiny>
+                <Body style={{ marginTop: 9 }}>
+                  Tap one to take it off the list. <B>Spend tokens in the magazine.</B>
+                </Body>
               </>
             )}
           </>
@@ -219,19 +253,42 @@ export default function Wardrobe() {
             style={{ flex: 1 }}
             onPress={() => router.push('/(tabs)/magazine')}
           />
-          {/* Once you're in, the builder is a dead screen — every control on
-              it no-ops, because nothing can be changed after entry. Point at
-              the look instead. */}
-          <Button
-            label={entered ? 'See your look' : "Build tonight's look"}
-            variant="quiet"
-            style={{ flex: 1 }}
-            onPress={() =>
-              router.push(entered ? '/(tabs)/today/entered' : '/(tabs)/today/build')
-            }
-          />
+          {/* HIDDEN ONCE YOU'RE IN (Katya, 3 Sep), not relabelled. The builder
+              is a dead screen after entry — every control on it no-ops,
+              because nothing can be changed — and on Day 1 the walkthrough
+              means you have already entered by the time you first see this
+              tab, so the button would be dead on arrival. "Find more pieces"
+              takes the full width on its own. */}
+          {entered ? null : (
+            <Button
+              label="Build tonight's look"
+              variant="quiet"
+              style={{ flex: 1 }}
+              onPress={() => router.push('/(tabs)/today/build')}
+            />
+          )}
         </View>
       </Foot>
+      {/* NOTHING EVER LEAVES is the wardrobe's whole promise, so dropping a
+          piece is the one action here that contradicts it and the only one
+          that asks first. The note is the reassurance that keeps the promise
+          true: a dropped piece is not destroyed, it costs a token to take
+          again. */}
+      <ConfirmSheet
+        visible={pendingDrop !== null}
+        kick="remove a piece"
+        question={'Are you sure you’d like to remove this piece from your wardrobe?'}
+        subject={pendingDrop ?? undefined}
+        image={pendingDrop ? garmentImage(pendingDrop) : undefined}
+        note="Nothing is lost for good — you can take it again from the magazine for a token."
+        confirmLabel="Yes, remove"
+        cancelLabel="Keep it"
+        onConfirm={() => {
+          if (pendingDrop) w.remove(pendingDrop);
+          setPendingDrop(null);
+        }}
+        onCancel={() => setPendingDrop(null)}
+      />
     </Screen>
   );
 }
@@ -289,12 +346,14 @@ const s = StyleSheet.create({
     borderBottomWidth: border.hair,
     borderBottomColor: palette.rule,
   },
+  /** Wide enough for the flat lay to be legible as a thumbnail — ComposedFlatLay
+   *  sets its own 3:4 aspect, so no height here. */
   archPlate: {
-    width: 42,
-    height: 52,
+    width: 54,
     borderWidth: border.hair,
     borderColor: palette.rule,
     backgroundColor: palette.creamSunk,
+    overflow: 'hidden',
   },
   archJob: { fontFamily: 'Archivo_600SemiBold', fontSize: 12, lineHeight: 14.4, color: palette.ink },
   archNote: {
@@ -303,6 +362,11 @@ const s = StyleSheet.create({
     lineHeight: 12.4,
     color: palette.greyMute,
     marginTop: 3,
+  },
+  archBandQuiet: {
+    color: palette.greyMute,
+    fontFamily: 'Archivo_600SemiBold',
+    textTransform: 'none',
   },
   /** disp800 retired — see cards.tsx statValue for the same call. */
   archBand: {

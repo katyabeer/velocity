@@ -34,7 +34,7 @@ import { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
-import { Big, Kick, Tiny } from '@/ui/text';
+import { Big, Body, Tiny, Kick } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { RenderedFigure } from '@/ui/RenderStage';
 import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
@@ -79,20 +79,17 @@ export default function Entered() {
         {mode === 'model' ? (
           <RenderedFigure />
         ) : (
-          <ComposedFlatLay
-            pieces={picks.map((p) => p.name)}
-            caption="Flat lay · no body, no fit"
-          />
+          <ComposedFlatLay pieces={picks.map((p) => p.name)} />
         )}
 
         <View style={{ paddingTop: 14 }}>
           <Kick>you&apos;re in</Kick>
           <Big style={{ marginTop: 6 }}>That&apos;s your answer in.</Big>
-          <Tiny style={{ marginTop: 7 }}>
+          <Body style={{ marginTop: 7 }}>
             {judged
               ? 'Nothing can be changed now. The room is comparing it against everyone else’s, and the result lands at 7am with tomorrow’s job.'
               : 'Nothing can be changed now. One thing left tonight — judge the field alongside everyone else, and the result lands at 7am.'}
-          </Tiny>
+          </Body>
 
           <Gap />
         </View>

@@ -66,7 +66,7 @@ export type CatalogueGarment = {
 
 export const CATALOGUE: readonly CatalogueGarment[] = [
   {
-    name: 'funnel-neck wool coat',
+    name: 'funnel neck wool coat',
     slot: 'Outer',
     category: 'Outerwear',
     gender: 'unisex',
@@ -76,7 +76,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_funnel-neck-wool-coat.png'),
   },
   {
-    name: 'belted double-breasted overcoat',
+    name: 'belted double breasted overcoat',
     slot: 'Outer',
     category: 'Outerwear',
     gender: 'unisex',
@@ -86,7 +86,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_belted-double-breasted-overcoat.png'),
   },
   {
-    name: 'leopard faux-fur coat',
+    name: 'leopard faux fur coat',
     slot: 'Outer',
     category: 'Outerwear',
     gender: 'womens',
@@ -96,7 +96,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_leopard-faux-fur-coat.png'),
   },
   {
-    name: 'shearling-collar coat',
+    name: 'shearling collar coat',
     slot: 'Outer',
     category: 'Outerwear',
     gender: 'unisex',
@@ -156,7 +156,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_suede-jacket.png'),
   },
   {
-    name: 'peplum sculpted-shoulder jacket',
+    name: 'peplum sculpted shoulder jacket',
     slot: 'Outer',
     category: 'Outerwear',
     gender: 'womens',
@@ -166,7 +166,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_peplum-sculpted-shoulder-jacket.png'),
   },
   {
-    name: 'cape-detail wool coat',
+    name: 'cape detail wool coat',
     slot: 'Outer',
     category: 'Outerwear',
     gender: 'womens',
@@ -226,7 +226,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_tuxedo-dress-shirt.png'),
   },
   {
-    name: 'argyle drop-shoulder sweater',
+    name: 'argyle drop shoulder sweater',
     slot: 'Top',
     category: 'Tops',
     gender: 'unisex',
@@ -256,7 +256,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_sweater-dress.png'),
   },
   {
-    name: 'boxy broad-shoulder knit',
+    name: 'boxy broad shoulder knit',
     slot: 'Top',
     category: 'Tops',
     gender: 'unisex',
@@ -276,7 +276,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_peplum-knit-top.png'),
   },
   {
-    name: 'drop-waist day dress',
+    name: 'drop waist day dress',
     slot: 'Top',
     category: 'Dresses',
     gender: 'womens',
@@ -286,7 +286,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_drop-waist-day-dress.png'),
   },
   {
-    name: 'velvet jewel-tone dress',
+    name: 'velvet jewel tone dress',
     slot: 'Top',
     category: 'Dresses',
     gender: 'womens',
@@ -306,7 +306,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_black-lace-gothic-dress.png'),
   },
   {
-    name: 'wide-leg wool trouser',
+    name: 'wide leg wool trouser',
     slot: 'Bottom',
     category: 'Bottoms',
     gender: 'unisex',
@@ -316,7 +316,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_wide-leg-wool-trouser.png'),
   },
   {
-    name: 'drop-waist pencil skirt',
+    name: 'drop waist pencil skirt',
     slot: 'Bottom',
     category: 'Bottoms',
     gender: 'womens',
@@ -326,7 +326,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_drop-waist-pencil-skirt.png'),
   },
   {
-    name: 'dark-indigo straight jean',
+    name: 'dark indigo straight jean',
     slot: 'Bottom',
     category: 'Bottoms',
     gender: 'unisex',
@@ -416,7 +416,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_charcoal-check-pencil-skirt.png'),
   },
   {
-    name: 'low-rise stirrup trouser',
+    name: 'low rise stirrup trouser',
     slot: 'Bottom',
     category: 'Bottoms',
     gender: 'womens',
@@ -496,7 +496,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_mesh-ballet-flat.png'),
   },
   {
-    name: 'peep-toe pump heel',
+    name: 'peep toe pump heel',
     slot: 'Shoes',
     category: 'Shoes',
     gender: 'womens',
@@ -526,7 +526,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_chunky-biker-boot.png'),
   },
   {
-    name: 'croc-effect knee boot',
+    name: 'croc effect knee boot',
     slot: 'Shoes',
     category: 'Shoes',
     gender: 'womens',
@@ -566,7 +566,7 @@ export const CATALOGUE: readonly CatalogueGarment[] = [
     image: require('../../assets/garments/garm_supersized-tote.png'),
   },
   {
-    name: 'east-west shoulder bag',
+    name: 'east west shoulder bag',
     slot: 'Extra',
     category: 'Extras',
     gender: 'unisex',
