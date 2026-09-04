@@ -90,7 +90,12 @@ const initial = (day: TestDay) => {
     /* EMPTY on day one — the profile screen's field starts blank and the user
        types their own. Days 2 and 3 are returning users, who already have one. */
     handle: day === 1 ? '' : 'katya.b',
-    rails: 'both' as Rails,
+    /* WOMEN'S BY DEFAULT (Katya, 4 Sep). Locked decision 16 said Both; this
+       overrides that default and nothing else about it. The question stays
+       SOFT — `cataloguePool` sorts and never filters — so the invariant that
+       matters (a hard filter splits the room and triples the cold-start floor)
+       is untouched. It is a starting position, not a restriction. */
+    rails: 'womens' as Rails,
     /** Day 1 has no capsule until o6. Days 2 and 3 assume the first one. */
     capsule: (day === 1 ? null : 'quiet') as CapsuleKey | null,
     casting: {

@@ -28,21 +28,35 @@
  * percentage of that canvas, so the layout is resolution-independent and the
  * numbers stay comparable to the sheet.
  *
+ * ─── THE CUTOUTS ARE CROPPED TO THEIR CONTENT (4 Sep) ──────────────────────
+ * They were not. The delivery's tiles are 1000x1000 (resized here to 512) with
+ * the garment floating in a large transparent margin — measured, the peplum
+ * knit top occupied 15% of its frame, the clutch 22%, a knee boot 26%. Since a
+ * box here contain-fits a SQUARE, five-sixths of what got laid out was air, and
+ * the plate read as four small things adrift in a lot of paper.
+ *
+ * Every file in assets/garments is now cropped to its alpha bounding box plus
+ * a 3% margin, so a garment's pixels are the garment. They are no longer
+ * square, which is fine and in fact better: `contain` inside a square box means
+ * `flatlay_scale` now sizes the garment's LONGEST side rather than the side of
+ * a mostly-empty frame.
+ *
+ * Re-croppable from the delivery at any time; nothing here depends on the old
+ * dimensions.
+ *
  * ─── flatlay_scale, AND THE ONE JUDGEMENT CALL IN THIS FILE ─────────────────
- * The sheet calls `flatlay_scale` a REQUIRED multiplier, because each delivered
- * tile is framed for legibility — every garment fills its own 1000x1000 frame,
- * so a loafer and a greatcoat arrive the same size. The multiplier is what puts
- * true relative scale back: 1.0 is a full-length coat, 0.104 a pump heel.
+ * The sheet calls `flatlay_scale` a REQUIRED multiplier: it is what puts true
+ * relative scale back, 1.0 being a full-length coat and 0.104 a pump heel.
  *
  * Applied literally against the f=1.0 anchor (the 700-unit outerwear box), a
  * pair of sunglasses at 0.052 lands at 36 canvas units — about 10pt on a phone,
  * which is not a picture of sunglasses, it is a speck. So this floors every
  * piece at MIN_BOX_FRACTION of its own box.
  *
- * ⚠ KATYA'S CALL. The floor is a legibility fix, and it is the reason a shoe
- * reads as roughly a third of the coat here rather than a tenth. Set
- * MIN_BOX_FRACTION to 0 for the sheet's literal true scale and see which one
- * reads as a flat lay — that comparison is one constant, not a rebuild.
+ * ⚠ KATYA'S CALL, and cheaper to judge now. The floor came down from 0.45 to
+ * 0.3 with the crop, because a floored piece is now all garment rather than
+ * mostly margin — so the smallest items stay legible at a truer size. Set
+ * MIN_BOX_FRACTION to 0 for the sheet's literal scale; it is one constant.
  */
 
 import { Image, StyleSheet, Text, View, type ViewStyle } from 'react-native';
@@ -78,7 +92,7 @@ const DRESS: Partial<Record<Slot, Box>> = {
 const SCALE_ANCHOR = STANDARD.Outer!.h;
 
 /** See the header note. 0 gives the sheet's literal true scale. */
-const MIN_BOX_FRACTION = 0.45;
+const MIN_BOX_FRACTION = 0.3;
 
 /** Gap between the two extras when both are in, in canvas units. */
 const EXTRAS_GAP = 20;
@@ -94,8 +108,9 @@ function split(box: Box, n: number): Box[] {
   return Array.from({ length: n }, (_, i) => ({ ...box, x: box.x + i * (w + EXTRAS_GAP), w }));
 }
 
-/** Contain-fit, then true scale, then the legibility floor. Square, because
- *  every delivered cutout is a 1000x1000 frame. */
+/** True scale, then the legibility floor, capped so nothing outgrows its box.
+ *  Returns the side of a SQUARE the garment is contain-fitted into, so for a
+ *  tall piece this is its height and for a wide one its width. */
 function sideFor(box: Box, scale: number): number {
   const fit = Math.min(box.w, box.h);
   return Math.min(fit, Math.max(scale * SCALE_ANCHOR, fit * MIN_BOX_FRACTION));
@@ -173,6 +188,8 @@ export function ComposedFlatLay({
         return (
           <View key={name} style={[s.slot, frame]}>
             {image ? (
+              /* `contain`, so a cropped non-square cutout keeps its proportions
+                 inside the square the scale maths produced. */
               <Image source={image} style={s.image} resizeMode="contain" />
             ) : (
               /* Legacy fixture names carry no cutout — the labelled tile the

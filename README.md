@@ -136,6 +136,23 @@ Two real bugs found and fixed by that pass, both pre-existing:
   render, and it has nowhere to go on a cold load. Now `<Redirect>`.
 - "1 PIECES" on the Saved tab. `pieceLabel` in `state/wardrobe.ts` now handles it.
 
+### The garment cutouts are cropped, and re-croppable
+
+`assets/garments/*.png` are the delivery's tiles resized to 512 and then
+**cropped to their alpha bounding box plus a 3% margin** (4 Sep). The delivery
+ships each garment floating in a large transparent frame — measured, the peplum
+knit top filled 15% of its tile, a knee boot 26% — and since the flat lay
+contain-fits a square box, most of what got laid out was empty space.
+
+Consequence worth knowing: `flatlay_scale` now sizes the garment's **longest
+side** rather than the side of a mostly-empty frame, which is what the delivery
+README's "REQUIRED multiplier" actually means. The legibility floor in
+`ui/ComposedFlatLay.tsx` came down from 0.45 to 0.3 as a result.
+
+To redo it: re-copy from the delivery, `sips -Z 512`, then re-run the alpha-crop
+(the script is not in the repo — it is ~60 lines of pure-Python PNG
+decode/encode, since this machine has no PIL, ffmpeg or ImageMagick).
+
 ## Carried-over known incomplete
 
 - **The magazine filter rail is visually live but does not change the content pool.**

@@ -27,7 +27,6 @@ import { OnboardingFrame } from '@/ui/OnboardingFrame';
 import { Hero, Big, Body, Kick } from '@/ui/text';
 import { palette, border, radius, rotation, useReducedMotion } from '@/theme/tokens';
 import { TONIGHTS_BRIEF } from '@/data/challenges';
-import { MAX_PIECES, MIN_PIECES } from '@/domain/entry';
 import { garment } from '@/data/catalogue';
 
 /** A taste of the rail, not a recommendation — one piece from four different
@@ -85,9 +84,6 @@ export default function FirstChallenge() {
         })}
       </View>
 
-      <Body style={{ marginTop: 14 }}>
-        Next: every garment we have, and you pick {MIN_PIECES} to {MAX_PIECES} of them.
-      </Body>
     </OnboardingFrame>
   );
 }

@@ -25,7 +25,7 @@ import { router } from 'expo-router';
 import { Foot, Header, Screen, Scroll, Strip } from '@/ui/layout';
 import { Bar, Button } from '@/ui/controls';
 import { LookPair, type PickSide } from '@/ui/LookPlate';
-import { Body, Tiny } from '@/ui/text';
+import { Body } from '@/ui/text';
 import { palette } from '@/theme/tokens';
 import { JUDGING_LOOKS } from '@/data/looks';
 import { TONIGHTS_BRIEF } from '@/data/challenges';
@@ -67,9 +67,14 @@ export default function Judging() {
       />
 
       <Scroll bleed>
+        {/* Stacked, not a row (Katya, 4 Sep). The question used to sit out to
+            the right of the challenge name on the same baseline, where it read
+            as a caption on the title rather than as the thing being asked.
+            Under it, at 16px, it is the instruction it actually is — and the
+            wording now matches the magazine's spread card. */}
         <View style={s.q}>
           <Text style={s.qTitle}>{TONIGHTS_BRIEF.shortName}</Text>
-          <Tiny>Which one works?</Tiny>
+          <Body style={s.qAsk}>Which one works better?</Body>
         </View>
 
         {/* Keyed on the call index: a new pair is a fresh mount, which is what
@@ -107,14 +112,7 @@ export default function Judging() {
 }
 
 const s = StyleSheet.create({
-  q: {
-    marginHorizontal: 22,
-    marginTop: 12,
-    marginBottom: 9,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-  },
+  q: { marginHorizontal: 22, marginTop: 12, marginBottom: 11 },
   qTitle: {
     /** disp800 retired — the display face is onboarding-headline + button only now. */
     fontFamily: 'Archivo_900Black',
@@ -122,4 +120,7 @@ const s = StyleSheet.create({
     textTransform: 'uppercase',
     color: palette.ink,
   },
+  /** 16px, which is `Body`'s own size — so this is the app's body copy rather
+   *  than a one-off. Ink, because it is the question, not a footnote. */
+  qAsk: { marginTop: 5, color: palette.ink },
 });

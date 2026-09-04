@@ -39,10 +39,10 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, View, Pressable } from 'react-native';
+import { Platform, StyleSheet, Text, TextInput, View, Pressable, type TextStyle } from 'react-native';
 import { router } from 'expo-router';
 import { OnboardingFrame } from '@/ui/OnboardingFrame';
-import { Big, Body, Tiny, Kick } from '@/ui/text';
+import { Big, Body, Kick } from '@/ui/text';
 import { palette, border, radius } from '@/theme/tokens';
 import { useSession, type Rails } from '@/state/session';
 
@@ -58,6 +58,19 @@ const CHECK_MS = 500;
 
 type Availability = 'idle' | 'checking' | 'available';
 
+/**
+ * The browser draws its own focus ring INSIDE the input on web, which lands a
+ * blue rounded rectangle inside our own field border — two borders, one of them
+ * not ours. Katya, 4 Sep: the focus state belongs on the field.
+ *
+ * `outlineStyle` is a react-native-web style property with no React Native
+ * equivalent, so it is not in the RN types; the cast is the documented way to
+ * pass one. Guarded by platform so nothing odd reaches native.
+ */
+const NO_BROWSER_OUTLINE = (Platform.OS === 'web'
+  ? { outlineStyle: 'none' }
+  : {}) as TextStyle;
+
 export default function Profile() {
   const stored = useSession((s) => s.handle);
   const rails = useSession((s) => s.rails);
@@ -67,6 +80,7 @@ export default function Profile() {
   const [draft, setDraft] = useState(stored);
   const [status, setStatus] = useState<Availability>(stored ? 'available' : 'idle');
   const [error, setError] = useState<string | null>(null);
+  const [focused, setFocused] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   /* One place to drop every pending timer, so a fast typist can't have an
@@ -110,7 +124,9 @@ export default function Profile() {
       topAlign
     >
       <Kick tone="muted">what shall we call you</Kick>
-      <View style={[s.field, !!error && s.fieldError]}>
+      {/* Order matters: an error outranks focus, because "this is wrong" is
+          more use than "you are here". */}
+      <View style={[s.field, focused && s.fieldFocused, !!error && s.fieldError]}>
         <TextInput
           value={draft}
           onChangeText={onChange}
@@ -123,7 +139,9 @@ export default function Profile() {
           maxLength={24}
           returnKeyType="done"
           onSubmitEditing={onContinue}
-          style={s.input}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          style={[s.input, NO_BROWSER_OUTLINE]}
           accessibilityLabel="Your profile name"
         />
         {/* Was the word "Available". Now a tick, per the mockup — and a
@@ -139,9 +157,9 @@ export default function Profile() {
       </View>
 
       {error ? (
-        <Tiny color={palette.ink} style={s.error}>
+        <Text style={s.error} accessibilityRole="alert">
           {error}
-        </Tiny>
+        </Text>
       ) : null}
 
       <Body style={{ marginTop: 7 }}>
@@ -163,7 +181,11 @@ export default function Profile() {
               key={o.key}
               onPress={() => setRails(o.key)}
               accessibilityRole="radio"
-              accessibilityState={{ selected: on }}
+              /* `accessibilityState.selected` maps to aria-selected, which a
+                 radio does not use — without aria-checked a screen reader is
+                 told there are three rails and nothing about which one is on. */
+              aria-checked={on}
+              accessibilityState={{ selected: on, checked: on }}
               style={[s.cat, on && s.catOn]}
             >
               <Text style={s.catName}>{o.name}</Text>
@@ -193,6 +215,9 @@ const s = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
+  /** Focus, in the app's own selected-state language: an ink border at the
+   *  committed weight. Not accent — accent is a fill and would read as "done". */
+  fieldFocused: { borderWidth: border.mid, borderColor: palette.ink },
   /** Red now (Katya, 4 Sep) — `palette.error` is the first hue added since the
    *  v3 collapse and exists for exactly this. Border AND message, so the state
    *  is never carried by colour alone. */
