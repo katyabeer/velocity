@@ -101,8 +101,15 @@ change:
 7. **Sample, don't sort.** Never weight the feed by popularity, reactions, token counts
    or placing. This is the single change that would quietly ruin the product.
 8. **Never a live entry in the feed.** Only settled entries, free posts, house editorial.
+   A live entry is *not reactable*, and if one is ever rendered the reaction
+   cluster must be **absent, not disabled**.
 9. **The room read-out reports movement, never level.**
-10. **Reactions are on looks only**, and never feed the ranking.
+10. **Reactions are on looks only**, and never feed the ranking. Nine values, one
+    per person per look, mutually exclusive — see `domain/reactions.ts`, which
+    carries the whole spec. **No public negative count, ever**: negatives reach
+    the owner alone, only at 5+ reactions, and only as a read ("the room mostly
+    read it as bold"), never as a figure. The feed sampler must never import
+    `domain/reactions` — asserted in `tests/reactions.test.ts`.
 11. **No comments anywhere.** The room votes; that is its entire vocabulary.
 12. **No levels, no XP, no leaderboard.** Six fixed milestones.
 13. **Copy-minting.** Taking a piece mints a copy — the owner loses nothing and is never
@@ -127,7 +134,9 @@ A fresh session will be tempted by several of these. They were tried and rejecte
 - Five magazine content types (cut to three for MVP)
 - Rendering inside Create before submission
 - Reactions on individual garments
-- Red tags (read as aggressive; now green)
+- Red tags (read as aggressive; now green). NOTE: `palette.error` was added
+  4 Sep for form validation and is the only red in the system — it is not a
+  general alert colour and emphatically not for tags
 - Displaying remaining token quota as "pinches earned" (framed depletion as gain)
 - Three progression unlocks
 - "15 is the lowest toll that settles" — wrong, 14 gives 1.07×
@@ -172,7 +181,8 @@ Search for `⚠` to find every one. All are Katya's or Jack's call, not yours.
 
 | where | question |
 |---|---|
-| `domain/economy.ts`, `today/rendering.tsx` | **A** — the Day 1 token grant. CONFIRMED KEPT 3 Sep (the success screen's six depends on it: 3 for entering, 3 for the round) but not closed — the standing alternative is still to drop it. The "eleven-piece capsule" half of the old recommendation is dead: there is no capsule any more |
+| `domain/economy.ts`, `today/rendering.tsx` | **A** — the first-look bonus (was "the Day 1 entry grant"). REFRAMED 4 Sep from "3 tokens for entering" to "3 tokens for your first ever look", which stops the copy having to argue an exception to *no judging, no clothes*. Still open: the standing alternative is to drop it. ⚠ The trigger is still `day === 1`, not "no prior looks" — identical in this prototype, wrong with real accounts |
+| `domain/economy.ts` (`awardsForTonight`) | the success screen itemises what a night paid. Katya has more behaviours "to be defined" — each is one entry in `TOKEN_AWARD_LABELS` plus a line in `awardsForTonight`, and the screen needs no change |
 | `you/index.tsx` (`SHOW_STREAK`) | **B** — `Streak · 9 days`. Recommendation: cut the row, keep the *Week straight* milestone |
 | `today/entered.tsx` | **C** — does "the gap" come back? If yes, this screen is its cheapest home |
 | `onboarding/intro/[step].tsx` | **D** — onboarding never teaches the coupling. A new user is currently never told "no judging, no clothes" |
@@ -180,6 +190,9 @@ Search for `⚠` to find every one. All are Katya's or Jack's call, not yours.
 | `data/challenges.ts`, `create/index.tsx` | Jack 3 — free tags. Suggestion: decoration only |
 | `create/index.tsx` | Jack 4 — layered looks in the renderer |
 | `domain/magazine.ts`, `data/looks.ts` | Jack 5 — per-look settled splits must be stored. **Cannot be backfilled** |
+| `domain/reactions.ts` | reactions-logic.md §11, all five defaults taken as written: keep thumbs as a fast path · reactions feed NO milestone · negative threshold 5 · excluded from both ladders · spreads reactable. Say if any should flip |
+| `domain/reactions.ts`, `ui/Reactions.tsx` | the negative gate is CLIENT-SIDE here because there is no server. §6 requires it server-side. `publicStats` / `ownerStats` is the contract to build the API against |
+| `data/looks.ts` (`mine`) | there is no ownership model — one fixture is flagged as yours so the owner's read is reachable. Create's posts don't enter the feed |
 | `config/app.ts` | the name. Now **Editorial.** (3 Sep), after *quintets.*, after the *Velocity* rejection. STILL no availability or trademark checks on any candidate, and "Editorial" is a common noun in this exact category — the most contested of the three so far |
 
 ---
@@ -285,6 +298,11 @@ npm run typecheck      # tsc --noEmit, strict + noUncheckedIndexedAccess
 npm test               # 61 assertions over the domain layer
 ```
 
+**Motion on the spread card is decoration over settled state.** Calling a look
+records it immediately and the animations run on top — the opposite of the
+judging round, where the exit animation owns the vote and needs a timeout
+fallback. Keep it that way: nothing on the spread should wait for a frame.
+
 **Animation cannot be verified in the Claude preview pane.** That surface renders
 offscreen — `document.visibilityState` is `hidden` and `requestAnimationFrame`
 never fires — so every JS-driven `Animated` value sits at its start value
@@ -304,6 +322,13 @@ broke visually. The known-unverified list is in `README.md`.
 If the footer of a screen floats away from the bottom, it is the flex gotcha: the
 scrolling child needs `flex: 1` *and* `minHeight: 0`. `Scroll` in `ui/layout.tsx` does
 both — a screen that hand-rolls a ScrollView will not.
+
+**`{ someProp: undefined }` does NOT reset a style property.** RN's style
+composition *drops* undefined values, so `[base, { width: undefined }]` keeps
+`base.width`. It bit twice on 4 Sep — a tooltip caret that stayed on the left and
+gained a right offset, and a reaction pill that stayed 44pt wide so any label over
+six characters spilled out through both borders. Write two complete styles and
+pick between them, or use `minWidth`/`maxWidth` so nothing needs overriding.
 
 ---
 

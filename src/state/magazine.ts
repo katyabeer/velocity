@@ -1,6 +1,11 @@
 /**
  * Magazine store — the endless feed, spreads, reactions, and the bottom sheet.
  *
+ * REACTIONS ARE STORED PER CARD INDEX AND READ BY NOTHING ELSE. `cards()` below
+ * builds the list from the cadence and the pool by modulo, and never consults
+ * `reactions` — that is *sample, don't sort*, and reactions-logic.md §0.1 makes
+ * it the first rule of the whole feature.
+ *
  * The feed is an index-driven infinite list: card N's kind comes from the
  * cadence, and its content from the pool by modulo. That is the prototype's
  * behaviour and it is fine for a test build. When the real sampler lands, keep
@@ -10,6 +15,7 @@
 
 import { create } from 'zustand';
 import { SPREADS_PER_DAY, kindAt, type CardKind } from '@/domain/magazine';
+import { nextHeld, type ReactionValue } from '@/domain/reactions';
 
 export type FeedCard =
   | { index: number; kind: 'H' | 'U'; lookIndex: number }
@@ -22,10 +28,23 @@ type MagazineState = {
   spreadsServed: number;
   /** Spread number per card index, so a re-render is stable. */
   spreadIndex: Record<number, number>;
-  /** Which spreads have been called, and therefore revealed. */
-  revealed: Record<number, boolean>;
-  /** Which reaction is active per card index. */
-  reactions: Record<number, number | undefined>;
+  /**
+   * WHICH SIDE was called per card index, or absent if the spread is still
+   * open. It was a boolean until 4 Sep; the side is now needed because calling
+   * one look visibly locks the OTHER, and a card can be scrolled out of the
+   * virtualised list and back, so "which one did I pick" has to survive
+   * unmounting. Presence is what `revealed` used to mean.
+   */
+  calls: Record<number, 'a' | 'b' | undefined>;
+  /**
+   * The ONE reaction this user holds per card index, or undefined.
+   *
+   * One value, not a set: reactions-logic.md §3 makes the nine values mutually
+   * exclusive, so a person can never inflate a look's count. It was a numeric
+   * index into five words before 4 Sep; it is now the value itself, so the
+   * stored thing is meaningful on its own.
+   */
+  reactions: Record<number, ReactionValue | undefined>;
   filter: string;
   /** Card index whose bottom sheet is open, or null. */
   sheet: number | null;
@@ -33,8 +52,8 @@ type MagazineState = {
   focusedPiece: { name: string; from: string; tags: readonly string[] } | null;
 
   extend: (by: number) => void;
-  reveal: (index: number) => void;
-  react: (index: number, reaction: number) => void;
+  call: (index: number, side: 'a' | 'b') => void;
+  react: (index: number, value: ReactionValue) => void;
   setFilter: (f: string) => void;
   openSheet: (index: number) => void;
   closeSheet: () => void;
@@ -49,8 +68,8 @@ const blank = {
   length: 0,
   spreadsServed: 0,
   spreadIndex: {} as Record<number, number>,
-  revealed: {} as Record<number, boolean>,
-  reactions: {} as Record<number, number | undefined>,
+  calls: {} as Record<number, 'a' | 'b' | undefined>,
+  reactions: {} as Record<number, ReactionValue | undefined>,
   filter: 'All',
   sheet: null,
   focusedPiece: null,
@@ -72,14 +91,25 @@ export const useMagazine = create<MagazineState>((set) => ({
       return { length: s.length + by, spreadIndex, spreadsServed };
     }),
 
-  reveal: (index) => set((s) => ({ revealed: { ...s.revealed, [index]: true } })),
+  /** Once called, a spread stays called — there is no re-roll, same as an
+   *  entry. The guard means a second tap on the already-locked pair cannot
+   *  quietly change the answer. */
+  call: (index, side) =>
+    set((s) => (s.calls[index] ? s : { calls: { ...s.calls, [index]: side } })),
 
-  react: (index, reaction) =>
+  /**
+   * Replace, or clear if you tapped what you already held. The rule lives in
+   * `nextHeld` (domain/reactions.ts) rather than here — it is the spec's core
+   * constraint and it is unit-tested there.
+   *
+   * NOTHING ELSE HAPPENS. No token moves (reactions mint nothing), no feed
+   * reordering (the sampler never reads this), no ladder. If a future edit
+   * makes this function call into another store, read domain/reactions.ts §0
+   * first.
+   */
+  react: (index, value) =>
     set((s) => ({
-      reactions: {
-        ...s.reactions,
-        [index]: s.reactions[index] === reaction ? undefined : reaction,
-      },
+      reactions: { ...s.reactions, [index]: nextHeld(s.reactions[index], value) },
     })),
 
   /** Changing the filter rebuilds the feed from card zero. NOTE: the rail is

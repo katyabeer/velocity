@@ -261,13 +261,46 @@ export function LookPair({
   );
 }
 
-/** The settled split reveal — a two-tone bar with labels underneath. */
+/**
+ * The settled split reveal — a two-tone bar with labels underneath.
+ *
+ * THE FILL SWEEPS OUT TO ITS SHARE (Katya, 4 Sep) rather than appearing at
+ * full width. It is the one number on this card that is a quantity, so showing
+ * it arrive as a quantity is worth the movement.
+ *
+ * NO NATIVE DRIVER HERE, deliberately: this animates `width` as a percentage
+ * string, which the native driver cannot handle (it only takes transforms and
+ * opacity). A transform-based version would need a fixed pixel width to scale
+ * from, and the bar is fluid. It is a 700ms decoration on one card, so the JS
+ * driver is the right trade.
+ *
+ * THE LABELS AND THE NUMBER DO NOT ANIMATE, and that is a rule rather than an
+ * omission — see the animation note in CLAUDE.md. A counting-up figure has to
+ * push state from an animation frame, and a starved frame loop would leave the
+ * wrong number on screen. The bar can stall mid-sweep and still be honest; a
+ * number stuck at 0 next to "74%" cannot.
+ */
 export function SplitBar({ share }: { share: number }) {
+  const reduced = useReducedMotion();
+  const grow = useRef(new Animated.Value(reduced ? 1 : 0)).current;
+
+  useEffect(() => {
+    if (reduced) return;
+    Animated.timing(grow, {
+      toValue: 1,
+      duration: 700,
+      delay: 120,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [reduced, grow, share]);
+
+  const fill = grow.interpolate({ inputRange: [0, 1], outputRange: ['0%', `${share}%`] });
+
   return (
     <View>
       <View style={s.split}>
-        <View style={[s.splitA, { width: `${share}%` }]} />
-        <View style={[s.splitB, { width: `${100 - share}%` }]} />
+        <Animated.View style={[s.splitA, { width: fill }]} />
       </View>
       <View style={s.splitLabels}>
         <Text style={s.splitLabel}>Yours · {share}%</Text>
@@ -320,9 +353,17 @@ const s = StyleSheet.create({
     marginTop: 4,
   },
   pair: { flexDirection: 'row', gap: 10, paddingHorizontal: 12 },
-  split: { flexDirection: 'row', height: 28, borderWidth: border.hair, borderColor: palette.ink },
+  /** The track IS the unfilled remainder now, so the fill can sweep across it
+   *  without a second element whose width has to stay in step. */
+  split: {
+    flexDirection: 'row',
+    height: 28,
+    borderWidth: border.hair,
+    borderColor: palette.ink,
+    backgroundColor: palette.creamSunk,
+    overflow: 'hidden',
+  },
   splitA: { height: '100%', backgroundColor: palette.accent },
-  splitB: { height: '100%', backgroundColor: palette.creamSunk },
   splitLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
   splitLabel: {
     fontFamily: 'Archivo_700Bold',

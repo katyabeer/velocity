@@ -19,6 +19,11 @@
  * and note that saving grants nothing: invariant 1 still holds, and the piece
  * only enters the wardrobe when a token is spent on it.
  *
+ * REACTIONS ARE ON THE CARD, NOT BEHIND A BUTTON (Katya, 4 Sep) — the nine
+ * values, per `reactions-logic.md`. The rules live in domain/reactions.ts; the
+ * cluster is ui/Reactions.tsx. This screen only carries the held value from the
+ * store to the card and back. It must never sort by any of it.
+ *
  * ⚠ KNOWN INCOMPLETE, carried over: the filter rail is visually live but does
  * not change the content pool. Do not demo it as working.
  */
@@ -47,12 +52,12 @@ export default function Magazine() {
      reaction tap — exactly the prototype behaviour this screen replaced. */
   const length = useMagazine((s) => s.length);
   const spreadIndex = useMagazine((s) => s.spreadIndex);
-  const revealed = useMagazine((s) => s.revealed);
+  const calls = useMagazine((s) => s.calls);
   const reactions = useMagazine((s) => s.reactions);
   const filter = useMagazine((s) => s.filter);
   const sheet = useMagazine((s) => s.sheet);
   const extend = useMagazine((s) => s.extend);
-  const reveal = useMagazine((s) => s.reveal);
+  const call = useMagazine((s) => s.call);
   const react = useMagazine((s) => s.react);
   const setFilter = useMagazine((s) => s.setFilter);
   const openSheet = useMagazine((s) => s.openSheet);
@@ -136,17 +141,6 @@ export default function Magazine() {
         showsVerticalScrollIndicator={false}
         onEndReachedThreshold={0.6}
         onEndReached={() => extend(NEXT_PAGE)}
-        ListHeaderComponent={
-          tipDismissed ? null : (
-            <View style={{ paddingHorizontal: space.gutter }}>
-              <Tip
-                lead={TIP_LEAD.magazine}
-                body={TIPS.magazine.replace(TIP_LEAD.magazine, '').trim()}
-                onDismiss={() => dismissTip('magazine')}
-              />
-            </View>
-          )
-        }
         ListFooterComponent={
           <Tiny style={{ paddingHorizontal: space.gutter, paddingVertical: 20, textAlign: 'center' }}>
             keep scrolling
@@ -160,8 +154,8 @@ export default function Magazine() {
               <SpreadCard
                 index={item.index}
                 spreadNumber={item.spreadNumber}
-                revealed={!!revealed[item.index]}
-                onCall={() => reveal(item.index)}
+                called={calls[item.index]}
+                onCall={(side) => call(item.index, side)}
               />
             );
           }
@@ -170,9 +164,25 @@ export default function Magazine() {
             <LookCard
               look={look}
               index={item.index}
-              activeReaction={reactions[item.index]}
+              held={reactions[item.index]}
+              /* THE TIP LIVES ON THE FIRST CARD, not above the feed. It is
+                 about where clothes come from, so it points at Save pieces —
+                 caret right, because that tag sits at the image's right edge.
+                 Card 0 only: it is a walkthrough note, not a per-card label. */
+              tip={
+                item.index === 0 && !tipDismissed ? (
+                  <View style={{ paddingHorizontal: space.gutter, paddingTop: 4 }}>
+                    <Tip
+                      notch="right"
+                      lead={TIP_LEAD.magazine}
+                      body={TIPS.magazine.replace(TIP_LEAD.magazine, '').trim()}
+                      onDismiss={() => dismissTip('magazine')}
+                    />
+                  </View>
+                ) : undefined
+              }
               onOpenSheet={() => openSheet(item.index)}
-              onReact={(j) => react(item.index, j)}
+              onReact={(v) => react(item.index, v)}
               onTag={(t) => {
                 setFilter(t);
                 extend(FIRST_PAGE);

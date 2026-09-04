@@ -7,10 +7,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  TOKENS_FOR_FIRST_LOOK,
   TOKENS_PER_DISTINCT_TAKER,
   TOKENS_PER_JUDGING_ROUND,
+  TOKEN_AWARD_LABELS,
   TOKEN_COST_PER_TAKE,
   WARDROBE_CAP,
+  awardsForTonight,
+  awardsTotal,
   canTake,
   completeJudgingRound,
   returnGarment,
@@ -82,4 +86,44 @@ test('no operation mutates the ledger it was given', () => {
   completeJudgingRound(l);
   returnGarment(l, 'tote');
   assert.equal(JSON.stringify(l), snapshot);
+});
+
+/* ─── What a night paid out (reactions-logic is elsewhere; this is the economy) ─ */
+
+test('a night always pays the challenge, and the first-look bonus only once', () => {
+  const plain = awardsForTonight({ firstLook: false });
+  assert.deepEqual(
+    plain.map((a) => a.kind),
+    ['challenge'],
+    'no bonus unless the ledger says it was paid',
+  );
+  assert.equal(awardsTotal(plain), TOKENS_PER_JUDGING_ROUND);
+
+  const firstNight = awardsForTonight({ firstLook: true });
+  assert.deepEqual(firstNight.map((a) => a.kind), ['challenge', 'first-look']);
+  assert.equal(awardsTotal(firstNight), TOKENS_PER_JUDGING_ROUND + TOKENS_FOR_FIRST_LOOK);
+});
+
+test('the itemised total is the sum of its lines — the screen never adds up wrong', () => {
+  for (const firstLook of [true, false]) {
+    const awards = awardsForTonight({ firstLook });
+    assert.equal(
+      awardsTotal(awards),
+      awards.reduce((n, a) => n + a.amount, 0),
+    );
+  }
+});
+
+test('every award kind has a reason to print beside its amount', () => {
+  awardsForTonight({ firstLook: true }).forEach((a) =>
+    assert.ok(TOKEN_AWARD_LABELS[a.kind]?.length, `${a.kind} needs a label`),
+  );
+});
+
+test('overnight takings are NOT a night’s award — they are balance, not earnings', () => {
+  /* A list headed "tokens earned" must not credit tonight's work with what
+     landed while you slept. If a `takers` kind ever appears in here, that is
+     the regression. */
+  const kinds = awardsForTonight({ firstLook: true }).map((a) => a.kind);
+  assert.equal(kinds.includes('takers' as never), false);
 });

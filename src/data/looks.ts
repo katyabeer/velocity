@@ -14,6 +14,7 @@
 
 import type { ImageSourcePropType } from 'react-native';
 import type { PlateTint } from '@/theme/tokens';
+import type { LookKind, ReactionTally } from '@/domain/reactions';
 
 export type Look = {
   tint: PlateTint;
@@ -121,17 +122,38 @@ export const JUDGING_LOOKS: readonly Look[] = [
   },
 ];
 
-/** Feed looks. `house: true` is house editorial; otherwise it came from the room. */
+/**
+ * Feed looks.
+ *
+ * `kind` replaced the old `house: boolean` on 4 Sep, because reactions need
+ * three cases rather than two (reactions-logic.md §1): an editorial accrues to
+ * nobody and feeds only the reactor's own fingerprint, a settled entry and a
+ * freestyle post both accrue to their owner. `house` is derived from it.
+ *
+ * `mine` marks the one fixture standing in for a look YOU posted, so the
+ * owner's read-only cluster and the negative threshold are both reachable in a
+ * test session. ⚠ Katya — there is no real ownership model here; the magazine
+ * pool is a fixture and Create's posts don't enter it. This flag is the cheapest
+ * honest stand-in, not a feature.
+ *
+ * `reactions` is a tally over the nine-value vocabulary. NEVER read by the feed
+ * sampler — see domain/reactions.ts §0.1. Negative values are seeded on the
+ * owned look only, since they are the only ones anyone will ever see, and only
+ * the owner will see them.
+ */
 export type FeedLook = {
   tint: PlateTint;
   by: string;
-  house: boolean;
+  kind: LookKind;
+  /** True for the one look the session treats as the user's own. */
+  mine?: boolean;
   tags: readonly string[];
   pieces: readonly string[];
-  /** Reaction counts, in REACTIONS order. Display only — never feeds ranking. */
-  reactionCounts: readonly [number, number, number, number, number];
+  reactions: ReactionTally;
   image?: ImageSourcePropType;
 };
+
+export const isEditorial = (l: FeedLook): boolean => l.kind === 'editorial';
 
 /**
  * Day 1 magazine pool — real photos, from `delivery_sheet_looks.csv`
@@ -144,127 +166,135 @@ export const FEED_LOOKS: readonly FeedLook[] = [
   {
     tint: 't0',
     by: 'House',
-    house: true,
+    kind: 'editorial',
     tags: ['fashion week', 'fire', 'cold'],
     pieces: ['leopard faux fur coat', 'black fine turtleneck', 'low rise stirrup trouser', 'glove pump heel', 'shield sunglasses'],
-    reactionCounts: [5, 8, 3, 12, 58],
+    reactions: { bold: 12, iconic: 5, thumbs_up: 8 },
     image: require('../../assets/looks/d1/look_d1_mag_01.jpg'),
   },
   {
     tint: 't1',
     by: 'House',
-    house: true,
+    kind: 'editorial',
     tags: ['night out', 'brave', 'rain'],
     pieces: ['black lace gothic dress', 'cape detail wool coat', 'glove pump heel', 'east west shoulder bag'],
-    reactionCounts: [9, 3, 14, 71, 6],
+    reactions: { iconic: 9, creative: 6, thumbs_up: 4 },
     image: require('../../assets/looks/d1/look_d1_mag_02.jpg'),
   },
   {
     tint: 't2',
     by: 'House',
-    house: true,
+    kind: 'editorial',
     tags: ['fashion week', 'bold', 'between'],
     pieces: ['suede jacket', 'crisp poplin shirt', 'oversized plaid trouser', 'chunky lug loafer', 'bowler bag'],
-    reactionCounts: [63, 10, 15, 5, 8],
+    reactions: { creative: 11, bold: 7, thumbs_up: 5 },
     image: require('../../assets/looks/d1/look_d1_mag_03.jpg'),
   },
   {
     tint: 't3',
     by: 'House',
-    house: true,
+    kind: 'editorial',
     tags: ['travel', 'clean', 'cold'],
     pieces: ['shearling collar coat', 'fair isle cable jumper', 'dark indigo straight jean', 'clean riding boot', 'fur trapper hat'],
-    reactionCounts: [6, 55, 9, 3, 2],
+    reactions: { fresh: 8, thumbs_up: 6, iconic: 2 },
     image: require('../../assets/looks/d1/look_d1_mag_04.jpg'),
   },
   {
     tint: 't4',
     by: '@perrin',
-    house: false,
+    kind: 'settled_entry',
     tags: ['nowhere', 'clean', 'between'],
     pieces: ['belted double breasted overcoat', 'black fine turtleneck', 'dark indigo straight jean', 'chunky lug loafer', 'supersized tote'],
-    reactionCounts: [4, 49, 7, 2, 3],
+    reactions: { fresh: 4, thumbs_up: 3 },
     image: require('../../assets/looks/d1/look_d1_mag_05.jpg'),
   },
   {
     tint: 't5',
-    by: '@kaze_',
-    house: false,
+    /* THE ONE LOOK THE SESSION TREATS AS YOURS. Deliberately at index 5: the
+       cadence (H U S U H U S U) makes card 5 a user card, so it renders on the
+       first page and the owner's read-only state is actually reachable in a
+       test. Index 6 is a spread slot and would not have shown until ~21 cards
+       had loaded. */
+    by: 'katya.b',
+    kind: 'freestyle',
+    mine: true,
     tags: ['travel', 'clean', 'between'],
     pieces: ['suede jacket', 'argyle drop shoulder sweater', 'wide leg wool trouser', 'chocolate suede boot', 'maxi wrap scarf'],
-    reactionCounts: [3, 44, 8, 5, 2],
+    /* Past the five-reaction threshold and carrying negatives, so the owner's
+       read — the only place a negative is ever visible — is demonstrable. */
+    reactions: { bold: 6, iconic: 4, thumbs_up: 3, clashing: 2, too_safe: 1, thumbs_down: 1 },
     image: require('../../assets/looks/d1/look_d1_mag_06.jpg'),
   },
   {
     tint: 't0',
     by: '@lunaw',
-    house: false,
+    kind: 'settled_entry',
     tags: ['night out', 'bold', 'between'],
     pieces: ['velvet jewel tone dress', 'black leather biker jacket', 'mesh ballet flat', 'useless belt'],
-    reactionCounts: [57, 6, 9, 18, 22],
+    reactions: { iconic: 7, bold: 3 },
     image: require('../../assets/looks/d1/look_d1_mag_07.jpg'),
   },
   {
     tint: 't1',
     by: '@edo8',
-    house: false,
+    kind: 'settled_entry',
     tags: ['night out', 'sharp', 'between'],
     pieces: ['Le Smoking tuxedo jacket', 'silk charmeuse blouse', 'drop waist pencil skirt', 'embellished kitten heel', 'jewelled evening clutch'],
-    reactionCounts: [8, 5, 61, 4, 12],
+    reactions: { iconic: 7, bold: 3 },
     image: require('../../assets/looks/d1/look_d1_mag_08.jpg'),
   },
   {
     tint: 't2',
     by: '@strut_',
-    house: false,
+    kind: 'settled_entry',
     tags: ['nowhere', 'clean', 'rain'],
     pieces: ['structured trench coat', 'crisp poplin shirt', 'pleated wool trouser', 'slim penny loafer', 'leather gloves'],
-    reactionCounts: [2, 52, 6, 3, 1],
+    reactions: { fresh: 9, thumbs_up: 4, creative: 2 },
     image: require('../../assets/looks/d1/look_d1_mag_09.jpg'),
   },
   {
     tint: 't3',
     by: '@nightowl',
-    house: false,
+    kind: 'settled_entry',
     tags: ['fashion week', 'bold', 'cold'],
     pieces: ['funnel neck wool coat', 'boxy broad shoulder knit', 'pleated wool trouser', 'chocolate suede boot', 'shield sunglasses'],
-    reactionCounts: [49, 7, 11, 9, 15],
+    reactions: { bold: 8, creative: 5 },
     image: require('../../assets/looks/d1/look_d1_mag_10.jpg'),
   },
   {
     tint: 't4',
     by: '@finch',
-    house: false,
+    kind: 'settled_entry',
     tags: ['travel', 'clean', 'rain'],
     pieces: ['plaid check overcoat', 'sweater dress', 'clean riding boot', 'supersized tote'],
-    reactionCounts: [5, 41, 4, 6, 2],
+    reactions: { thumbs_up: 2, fresh: 1 },
     image: require('../../assets/looks/d1/look_d1_mag_11.jpg'),
   },
   {
     tint: 't5',
     by: '@rho',
-    house: false,
+    kind: 'settled_entry',
     tags: ['nowhere', 'clean', 'between'],
     pieces: ['black leather biker jacket', 'crisp poplin shirt', 'dark indigo straight jean', 'slim penny loafer', 'bowler bag'],
-    reactionCounts: [3, 58, 5, 2, 4],
+    reactions: { creative: 6, iconic: 3, thumbs_up: 4 },
     image: require('../../assets/looks/d1/look_d1_mag_12.jpg'),
   },
   {
     tint: 't0',
     by: '@pact_',
-    house: false,
+    kind: 'settled_entry',
     tags: ['fashion week', 'brave', 'cold'],
     pieces: ['charcoal suit jacket', 'boxy broad shoulder knit', 'dark indigo straight jean', 'chunky lug loafer', 'east west shoulder bag'],
-    reactionCounts: [11, 4, 7, 66, 9],
+    reactions: { bold: 10, thumbs_up: 6, iconic: 3 },
     image: require('../../assets/looks/d1/look_d1_mag_13.jpg'),
   },
   {
     tint: 't1',
     by: '@isla9',
-    house: false,
+    kind: 'settled_entry',
     tags: ['night out', 'fire', 'between'],
     pieces: ['belted double breasted overcoat', 'black fine turtleneck', 'statement fringe midi skirt', 'glove pump heel', 'colourful tights'],
-    reactionCounts: [8, 3, 5, 14, 72],
+    reactions: { iconic: 5, fresh: 4, thumbs_up: 2 },
     image: require('../../assets/looks/d1/look_d1_mag_14.jpg'),
   },
 ];

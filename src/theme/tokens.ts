@@ -66,6 +66,24 @@ export const palette = {
   /** Escape hatch, legal only at ≥18.66px bold or ≥24px regular (large-text AA). */
   linkLg: '#6D8810',
 
+  /**
+   * THE ONLY HUE ADDED SINCE THE v3 COLLAPSE. Katya's explicit call, 4 Sep:
+   * form validation needed red and there was none in the system — the header
+   * note above says a new hue "needs a new token from Katya", and this is that.
+   *
+   * FOR VALIDATION AND NOTHING ELSE. It is not a general alert colour: wardrobe
+   * full, loan warnings and the day-one notice all still read via ink + border
+   * + copy, and they should stay that way. It is emphatically NOT for tags —
+   * red tags were tried, read as aggressive, and were reversed to green (see
+   * the do-not-re-propose list). A field that is empty when it must not be is a
+   * different thing from a person's work being judged.
+   *
+   * 6.25:1 on `bg`, 6.37 on `creamRaised`, 5.90 on `cream`, 5.40 on
+   * `creamSunk` — AA at any size on every ground in the system, which is why
+   * this value and not a brighter one.
+   */
+  error: '#B3261E',
+
   /** Not in quintets.css — reasonable AA-safe defaults kept consistent with
    *  its own contrast discipline, since disabled states aren't specced there. */
   disabledFill: '#EAEAE1',

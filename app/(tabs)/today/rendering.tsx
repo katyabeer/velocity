@@ -27,9 +27,18 @@
  * ⚠ THE DAY 1 TOKEN GRANT FIRES HERE — an exception to "no judging, no
  * clothes", still open question A, and CONFIRMED KEPT on 3 Sep because the
  * success screen's six-token total depends on it (three here, three for the
- * round). It is stated in the copy rather than slipped in silently: a tester
- * who sees the balance move without being told is being taught the wrong rule
- * by accident, which is worse than being taught an exception on purpose.
+ * round).
+ *
+ * IT IS EXPLAINED ON THE SUCCESS SCREEN, NOT HERE (Katya, 4 Sep). The grant
+ * still fires on this screen — it has to, so the badge reads 3 while you vote —
+ * but the panel that says what it is moved to today/settled.tsx, where the
+ * other tokens land and where a sentence about the economy has something to
+ * attach itself to. This screen is a hand-off; it was carrying the longest
+ * paragraph in the flow.
+ *
+ * It is still STATED rather than slipped in silently: a tester who sees the
+ * balance move without ever being told is being taught the wrong rule by
+ * accident, which is worse than being taught an exception on purpose.
  *
  * What it still costs: a new player who learns on day one that clothes arrive
  * for ENTERING reads the judging toll as a downgrade on day two. The standing
@@ -38,13 +47,12 @@
 
 import { useEffect } from 'react';
 import { router } from 'expo-router';
-import { View } from 'react-native';
 import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
 import { Big, Body, Kick, B } from '@/ui/text';
 import { Button } from '@/ui/controls';
-import { palette, border } from '@/theme/tokens';
-import { dayConfig } from '@/config/testState';
-import { DAY_ONE_ENTRY_GRANT_ENABLED } from '@/domain/economy';
+import { StepRibbonBleed, statesFor } from '@/ui/StepRibbon';
+import { ENTRY_STEPS } from '@/domain/entry';
+import { FIRST_LOOK_BONUS_ENABLED, TOKENS_FOR_FIRST_LOOK } from '@/domain/economy';
 import { useEntry } from '@/state/entry';
 import { useEconomy } from '@/state/economy';
 import { useSession } from '@/state/session';
@@ -60,8 +68,9 @@ export default function Rendering() {
   const submit = useSubmission((s) => s.submit);
   const adoptLook = useWardrobe((s) => s.adoptLook);
 
-  const entryGrant = dayConfig(1).entryGrant;
-  const granted = day === 1 && DAY_ONE_ENTRY_GRANT_ENABLED;
+  /* One number, from the domain. `dayConfig(1).entryGrant` used to hold a
+     second copy of it, which is one place too many for a value the copy quotes. */
+  const granted = day === 1 && FIRST_LOOK_BONUS_ENABLED;
 
   /* Everything irreversible happens once, on arrival. The store guards are all
      idempotent (enter() no-ops once entered, adoptLook skips what's already
@@ -71,7 +80,7 @@ export default function Rendering() {
     const names = picks.map((p) => p.name);
     enter();
     adoptLook(names);
-    if (granted) grant(entryGrant);
+    if (granted) grant(TOKENS_FOR_FIRST_LOOK);
     submit('brief', {
       destination: 'brief',
       picks: names,
@@ -90,6 +99,18 @@ export default function Rendering() {
     <Screen>
       <Header title="In · can’t be changed" />
 
+      {/* THE RIBBON IS BACK (Katya, 4 Sep). It was dropped when this stopped
+          being a wait screen, which lost the one thing that tells you the day
+          is not over: Vote is step 4, and it is the reason the button below
+          says "last step". Pick and Look are done; Render is where you are. */}
+      <StepRibbonBleed
+        steps={statesFor(
+          ENTRY_STEPS.map((e) => ({ label: e.label, hint: e.hint })),
+          3,
+          [true, true],
+        )}
+      />
+
       <Scroll>
         <Kick>we&apos;re on it</Kick>
         <Big style={{ marginTop: 7 }}>
@@ -100,17 +121,6 @@ export default function Rendering() {
           don&apos;t have to sit here for it — <B>go and vote</B>, and we&apos;ll put a dot on Today
           the moment it&apos;s ready.
         </Body>
-
-        {granted ? (
-          <View style={s.grantNote}>
-            <Kick tone="alert">first day only</Kick>
-            <Body style={{ marginTop: 5 }}>
-              <B>{entryGrant} tokens</B> for entering, so you have something to spend tonight. After
-              today, tokens only come from judging — and the {picks.length} pieces you just used are
-              yours to keep either way.
-            </Body>
-          </View>
-        ) : null}
 
         <Gap />
       </Scroll>
@@ -124,14 +134,3 @@ export default function Rendering() {
   );
 }
 
-const s = {
-  /** No alert hue survives the v3 collapse (see tokens.ts) — ink border on the
-   *  sunk ground is the day-one notice's only distinction now. */
-  grantNote: {
-    marginTop: 16,
-    borderWidth: border.mid,
-    borderColor: palette.ink,
-    backgroundColor: palette.creamSunk,
-    padding: 13,
-  },
-} as const;

@@ -9,18 +9,27 @@
  * asks you to call one every few pages, hands you the split and the reason
  * immediately, and scores your eye without settling anything.
  *
- * REACTIONS ARE ON LOOKS ONLY, never on individual garments, and per R-F4 they
- * NEVER FEED THE RANKING — they are for the maker. Jack has flagged REACT as the
- * cheapest mechanic to cut, so test it rather than defend it.
+ * REACTIONS ARE ON LOOKS ONLY, never on individual garments, and they NEVER
+ * FEED THE RANKING. The nine-value system replaced five display-only words on
+ * 4 Sep — see domain/reactions.ts, which carries the whole spec, and
+ * ui/Reactions.tsx for the cluster.
  *
  * TO TAKE A GARMENT: tap the look → bottom sheet. That is the only route.
  *
- * v3 restyle (a5 · Magazine — the feed.pdf, 2 Sep 2026): feed images now tilt
+ * "RATE LOOK" IS GONE (Katya, 4 Sep). It collapsed the reactions behind a tap,
+ * which cost two taps for the common case and — the real problem — left a card
+ * showing no sign that anyone had reacted at all. The one signal a maker gets
+ * was invisible unless you went looking for it. The cluster and the look's
+ * count are on the card now, always.
+ *
+ * THE TIP POINTS AT SAVE PIECES. It used to sit above the whole feed as a list
+ * header with its caret aimed at the filter rail, which is not where clothes
+ * come from — the Save pieces tag is. It now renders inside the first card,
+ * directly under the image, caret at the right, pointing up at the tag.
+ *
+ * v3 restyle (a5 · Magazine — the feed.pdf, 2 Sep 2026): feed images tilt
  * and round per quintets.css's rotation/radius tokens; the old "N pieces →"
- * corner chip is now the `.qt-cta-pieces` "Save pieces" tag; the always-open
- * five-reaction row collapses behind a "Rate look" button (tap to reveal) so
- * the card matches the PDF's cleaner default state — REACTIONS THEMSELVES
- * ARE UNCHANGED, still five words, still display-only, never ranking. The
+ * corner chip is the `.qt-cta-pieces` "Save pieces" tag. The
  * PDF's "Follow" button on non-house cards is NOT implemented — onboarding's
  * handle screen says explicitly "no followers, there's nowhere to put them,"
  * and there's no follow relationship anywhere in state. Flagging the
@@ -28,44 +37,53 @@
  * it — Katya's call whether followers are actually coming back.
  */
 
-import { useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { palette, border, radius, rotation, tintFor, useReducedMotion } from '@/theme/tokens';
-import { REACTIONS, shareForTierGap, splitVerdict } from '@/domain/magazine';
+import { shareForTierGap, splitVerdict } from '@/domain/magazine';
+import { ownerStats, publicStats, type ReactionValue } from '@/domain/reactions';
 import { LookPlate, SplitBar } from './LookPlate';
-import { Button } from './controls';
+import { LockIcon } from './TabIcon';
+import { OwnReactionRead, ReactionCluster } from './Reactions';
 import { Hero, Tiny } from './text';
-import type { FeedLook } from '@/data/looks';
+import { isEditorial, type FeedLook } from '@/data/looks';
 import { JUDGING_LOOKS } from '@/data/looks';
 
-/** A look card: a tilted, rounded plate; tags; five reaction words behind
- *  "Rate look". No longer literally edge-to-edge — quintets.css's rounded
- *  feed-image treatment needs an inset to actually read as rounded. */
+/** A look card: a tilted, rounded plate; tags; the reaction cluster. No longer
+ *  literally edge-to-edge — quintets.css's rounded feed-image treatment needs
+ *  an inset to actually read as rounded. */
 export function LookCard({
   look,
   index,
-  activeReaction,
+  held,
   onOpenSheet,
   onReact,
   onTag,
+  tip,
 }: {
   look: FeedLook;
   /** Feed position — alternates the image tilt direction, left/right. */
   index: number;
-  activeReaction?: number;
+  /** The one reaction this user holds on this look, if any. */
+  held?: ReactionValue;
   onOpenSheet: () => void;
-  onReact: (i: number) => void;
+  onReact: (v: ReactionValue) => void;
   onTag: (tag: string) => void;
+  /** Rendered directly under the image, pointing up at Save pieces. Only the
+   *  first card in the feed passes one. */
+  tip?: React.ReactNode;
 }) {
-  const [rating, setRating] = useState(false);
   const reducedMotion = useReducedMotion();
+  const editorial = isEditorial(look);
   const tilt = reducedMotion ? 0 : index % 2 === 0 ? -rotation.r1 : rotation.r1;
 
   return (
     <View style={s.card}>
       <View style={s.head}>
-        <Text style={s.handle}>{look.house ? '@house' : look.by}</Text>
-        <Text style={s.headMeta}>{look.house ? 'editorial' : 'from the room'}</Text>
+        <Text style={s.handle}>{editorial ? '@house' : look.by}</Text>
+        <Text style={s.headMeta}>
+          {editorial ? 'editorial' : look.mine ? 'yours' : 'from the room'}
+        </Text>
       </View>
 
       <Pressable onPress={onOpenSheet} accessibilityRole="button">
@@ -86,6 +104,10 @@ export function LookCard({
         </View>
       </Pressable>
 
+      {/* Directly under the image so the caret points up at the Save pieces
+          tag, which sits at the image's bottom-right. */}
+      {tip}
+
       <View style={s.tagRow}>
         {look.tags.map((t) => (
           <Text key={t} style={s.tag} onPress={() => onTag(t)}>
@@ -94,28 +116,34 @@ export function LookCard({
         ))}
       </View>
 
-      {rating ? (
-        <View style={s.reactRow}>
-          {REACTIONS.map((r, j) => {
-            const on = activeReaction === j;
-            return (
-              <Pressable
-                key={r}
-                onPress={() => onReact(j)}
-                style={[s.react, on && s.reactOn]}
-                accessibilityRole="button"
-                accessibilityState={{ selected: on }}
-              >
-                <Text style={[s.reactLabel, on && { color: palette.ink }]}>{r}</Text>
-                <Text style={s.reactCount}>{(look.reactionCounts[j] ?? 0) + (on ? 1 : 0)}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+      {/* YOUR OWN LOOK GETS NO TAP TARGET (spec §1) — a read-only panel of the
+          positives you received, and the room's read once five people have
+          weighed in. Everyone else's look gets the cluster.
+
+          Note which stats function each branch calls: `publicStats` returns a
+          type with no negative field on it at all, so the non-owner branch
+          cannot render one even by mistake. */}
+      {look.mine ? (
+        <OwnReactionRead
+          view={ownerStats(look.reactions)}
+          tally={look.reactions}
+          /* ⚠ No declared word exists for a brief entry — locked decision 18
+             removed the tag step, and open question C is whether it returns.
+             Freestyle posts do carry an occasion, but the feed fixture does not
+             record which one, so the gap sentence degrades to the room's read
+             alone rather than inventing half of it. */
+          declared={null}
+        />
       ) : (
-        <View style={{ paddingHorizontal: 22, paddingTop: 11 }}>
-          <Button label="Rate look" variant="ghost" onPress={() => setRating(true)} />
-        </View>
+        /* NEGATIVES ARE STRIPPED HERE, at the boundary, so the cluster is
+           never handed a number it must not render. `positiveBreakdown` is all
+           it needs, and §6's rule then holds by construction rather than by
+           the component remembering to be careful. */
+        <ReactionCluster
+          seeded={publicStats(look.reactions).positiveBreakdown}
+          held={held}
+          onReact={onReact}
+        />
       )}
     </View>
   );
@@ -127,19 +155,71 @@ export function LookCard({
  *
  * SPREADS ARE CAPPED AT SIX A DAY. They are scored, so uncapped they are
  * grindable — and a scored mechanic you can grind stops measuring anything.
+ *
+ * ─── CALLING ONE LOCKS THE OTHER (Katya, 4 Sep) ─────────────────────────────
+ * The plate you did not pick dims, settles back and takes a padlock; the one
+ * you did keeps its full weight and says so. Neither is tappable afterwards —
+ * there is no re-roll on a scored call, same as an entry, and the store
+ * refuses a second call on the same spread even if a tap got through.
+ *
+ * THE LOCK IS NOT JUST AN OPACITY. §"never by colour alone" applies to state
+ * generally: a dimmed plate could read as loading. The padlock says which of
+ * the two things happened, and `LockIcon` already exists for the month-ahead
+ * list, so it is the app's established mark for "closed".
+ *
+ * ─── NONE OF THIS GATES THE CALL ────────────────────────────────────────────
+ * `onCall` fires on touch and the store records it immediately. Every animation
+ * here is decoration layered over state that has already changed — the exact
+ * opposite of the judging round, where the exit animation owns the vote and
+ * needed a timeout fallback (see ui/LookPlate.tsx). Nothing to lose to a
+ * starved frame loop, so nothing to guard.
  */
 export function SpreadCard({
   index,
   spreadNumber,
-  revealed,
+  called,
   onCall,
 }: {
   index: number;
   spreadNumber: number;
-  revealed: boolean;
-  onCall: () => void;
+  /** Which side was called, or undefined while the spread is still open. */
+  called?: 'a' | 'b';
+  onCall: (side: 'a' | 'b') => void;
 }) {
   const reducedMotion = useReducedMotion();
+  const revealed = !!called;
+
+  /* Was this card ALREADY called when it mounted? The feed is virtualised, so
+     scrolling a settled spread back into view remounts it — replaying the
+     reveal there would animate something the user settled ten cards ago. */
+  const wasCalledOnMount = useRef(revealed);
+  const reveal = useRef(new Animated.Value(revealed ? 1 : 0)).current;
+
+  useEffect(() => {
+    if (!revealed || wasCalledOnMount.current) return;
+    if (reducedMotion) {
+      reveal.setValue(1);
+      return;
+    }
+    Animated.timing(reveal, {
+      toValue: 1,
+      duration: 380,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [revealed, reducedMotion, reveal]);
+
+  /** The plate you didn't pick: dimmed and settled back. Driven off the same
+   *  value as the reveal so the lock and the result arrive together. */
+  const lockStyle = {
+    opacity: reveal.interpolate({ inputRange: [0, 1], outputRange: [1, 0.4] }),
+    transform: [{ scale: reveal.interpolate({ inputRange: [0, 1], outputRange: [1, 0.96] }) }],
+  };
+
+  const resultStyle = {
+    opacity: reveal,
+    transform: [{ translateY: reveal.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }],
+  };
   const left = JUDGING_LOOKS[(index * 2) % JUDGING_LOOKS.length]!;
   const right = JUDGING_LOOKS[(index * 2 + 1) % JUDGING_LOOKS.length]!;
   /** Stand-in for a real per-look settled split (Jack's open question 5) —
@@ -155,22 +235,44 @@ export function SpreadCard({
       </View>
 
       <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 12 }}>
-        <View style={{ flex: 1, transform: [{ rotate: `${-tilt}deg` }] }}>
-          <LookPlate {...left} height={300} onPress={revealed ? undefined : onCall} />
-          {!revealed ? (
-            <View style={s.votePill}>
-              <Text style={s.votePillLabel}>Vote A</Text>
-            </View>
-          ) : null}
-        </View>
-        <View style={{ flex: 1, transform: [{ rotate: `${tilt}deg` }] }}>
-          <LookPlate {...right} height={300} onPress={revealed ? undefined : onCall} />
-          {!revealed ? (
-            <View style={s.votePill}>
-              <Text style={s.votePillLabel}>Vote B</Text>
-            </View>
-          ) : null}
-        </View>
+        {(['a', 'b'] as const).map((side) => {
+          const look = side === 'a' ? left : right;
+          const locked = revealed && called !== side;
+          const rotate = side === 'a' ? -tilt : tilt;
+          return (
+            <Animated.View
+              key={side}
+              style={[
+                { flex: 1, transform: [{ rotate: `${rotate}deg` }] },
+                locked && lockStyle,
+              ]}
+            >
+              <LookPlate
+                {...look}
+                height={300}
+                /* No tap target once called, on EITHER plate — the call is made
+                   and there is no re-roll. */
+                onPress={revealed ? undefined : () => onCall(side)}
+              />
+
+              {!revealed ? (
+                <View style={s.votePill}>
+                  <Text style={s.votePillLabel}>{side === 'a' ? 'Vote A' : 'Vote B'}</Text>
+                </View>
+              ) : locked ? (
+                /* The padlock, not just the dimming — a dimmed plate on its own
+                   could read as still loading. */
+                <Animated.View style={[s.lockPill, { opacity: reveal }]}>
+                  <LockIcon open={false} />
+                </Animated.View>
+              ) : (
+                <Animated.View style={[s.callPill, { opacity: reveal }]}>
+                  <Text style={s.votePillLabel}>Your call</Text>
+                </Animated.View>
+              )}
+            </Animated.View>
+          );
+        })}
       </View>
 
       {!revealed ? (
@@ -181,7 +283,7 @@ export function SpreadCard({
           </Tiny>
         </View>
       ) : (
-        <View style={{ paddingHorizontal: 22, paddingTop: 14 }}>
+        <Animated.View style={[{ paddingHorizontal: 22, paddingTop: 14 }, resultStyle]}>
           {/* Used to go klein when share >= 50 — no accent-as-text option
               survives the v3 collapse (accent is illegible on cream), so
               this majority cue is gone unless Katya wants it back some
@@ -194,7 +296,7 @@ export function SpreadCard({
             <SplitBar share={share} />
           </View>
           <Tiny style={{ marginTop: 9 }}>{splitVerdict(share)}</Tiny>
-        </View>
+        </Animated.View>
       )}
     </View>
   );
@@ -323,6 +425,31 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   savePiecesCountLabel: { fontFamily: 'Archivo_700Bold', fontSize: 9, color: palette.cream },
+  /** The padlock on the plate you didn't pick. Same corner as the vote pill it
+   *  replaces, so the two read as one slot changing state. */
+  lockPill: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: palette.cream,
+    borderWidth: border.hair,
+    borderColor: palette.rule,
+    borderRadius: radius.xs,
+    paddingHorizontal: 5,
+    paddingVertical: 3,
+  },
+  /** And on the one you did — accent, because this is the answer you gave. */
+  callPill: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: palette.accent,
+    borderWidth: border.hair,
+    borderColor: palette.accentEdge,
+    borderRadius: radius.xs,
+    paddingHorizontal: 5,
+    paddingVertical: 3,
+  },
   /** `.qt-pill` — the Vote A / Vote B overlay on the spread pair. */
   votePill: {
     position: 'absolute',
@@ -343,27 +470,6 @@ const s = StyleSheet.create({
   tagRow: { flexDirection: 'row', gap: 11, flexWrap: 'wrap', paddingHorizontal: 22, paddingTop: 11 },
   /** `.qt-tag` — hashtags are interactive text, link-green. */
   tag: { fontFamily: 'Archivo_600SemiBold', fontSize: 12, lineHeight: 14.4, color: palette.link },
-  reactRow: { flexDirection: 'row', gap: 5, paddingHorizontal: 22, paddingTop: 11 },
-  react: {
-    flex: 1,
-    height: 40,
-    borderWidth: border.hair,
-    borderColor: palette.rule,
-    backgroundColor: palette.cream,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 4,
-  },
-  reactOn: { borderWidth: border.mid, borderColor: palette.ink, backgroundColor: palette.creamSunk },
-  reactLabel: {
-    fontFamily: 'Archivo_700Bold',
-    fontSize: 9,
-    letterSpacing: 0.9,
-    textTransform: 'uppercase',
-    color: palette.grey,
-  },
-  reactCount: { fontFamily: 'Archivo_400Regular', fontSize: 8, color: palette.greyMute },
   spreadLine: {
     fontFamily: 'Archivo_600SemiBold',
     fontSize: 14,

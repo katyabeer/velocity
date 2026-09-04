@@ -122,19 +122,29 @@ export function Milestones({ earned }: { earned: number }) {
   );
 }
 
-/** The walkthrough tooltip. Klein, with a notch, dismissible. */
+/**
+ * The walkthrough tooltip. Accent fill, a notch, dismissible.
+ *
+ * `notch` moved from a fixed left offset to an alignment (4 Sep) because a tip
+ * has to be able to point at the thing it is about. The magazine's tip points
+ * at the Save pieces tag, which sits at the RIGHT edge of the feed image — a
+ * caret pinned 26pt from the left was pointing at nothing.
+ */
 export function Tip({
   lead,
   body,
   onDismiss,
+  notch = 'left',
 }: {
   lead: string;
   body: string;
   onDismiss: () => void;
+  /** Which end of the tip the caret sits at, and therefore what it points at. */
+  notch?: 'left' | 'right';
 }) {
   return (
     <View style={s.tip}>
-      <View style={s.tipNotch} />
+      <View style={[s.tipNotch, notch === 'right' ? s.tipNotchRight : s.tipNotchLeft]} />
       <Text style={s.tipText}>
         <Text style={s.tipLead}>{lead}</Text> {body}
       </Text>
@@ -384,10 +394,15 @@ const s = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 13,
   },
+  /** Two complete positions rather than one overriding the other: RN style
+   *  composition DROPS an `undefined` value rather than resetting the property,
+   *  so `{ left: undefined, right: 26 }` layered over `{ left: 26 }` left the
+   *  caret on the left and silently added a right offset too. */
+  tipNotchLeft: { left: 26 },
+  tipNotchRight: { right: 26 },
   tipNotch: {
     position: 'absolute',
     top: -6,
-    left: 26,
     width: 12,
     height: 12,
     backgroundColor: palette.accent,

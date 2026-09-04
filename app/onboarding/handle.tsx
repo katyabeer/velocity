@@ -193,15 +193,19 @@ const s = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  /** No alert hue survives the v3 token collapse (see tokens.ts) — an ink
-   *  border at the selected weight is the only emphasis available, and it is
-   *  enough next to a message that says what to do. */
-  fieldError: { borderWidth: border.mid, borderColor: palette.ink },
+  /** Red now (Katya, 4 Sep) — `palette.error` is the first hue added since the
+   *  v3 collapse and exists for exactly this. Border AND message, so the state
+   *  is never carried by colour alone. */
+  fieldError: { borderWidth: border.mid, borderColor: palette.error },
   input: {
     flex: 1,
     minWidth: 0,
     fontFamily: 'Archivo_500Medium',
-    fontSize: 14,
+    /** 16px (Katya, 4 Sep). It is the one field in the app anyone types into,
+     *  and 14 left the row feeling cramped against a 50pt field. 16 is also the
+     *  threshold below which mobile Safari zooms the viewport on focus, which
+     *  is its own reason to sit here rather than under it. */
+    fontSize: 16,
     color: palette.ink,
     /* RN adds its own vertical padding on Android; zero it so the text sits on
        the row's centre line like every other label in the app. */
@@ -232,7 +236,17 @@ const s = StyleSheet.create({
     lineHeight: 14,
     color: palette.ink,
   },
-  error: { marginTop: 7, fontFamily: 'Archivo_700Bold' },
+  /** 14px minimum, per Katya — a validation message that is smaller than the
+   *  body copy around it is the one piece of text guaranteed to be read under
+   *  pressure. Bold and red, and it says what to do rather than what went
+   *  wrong. */
+  error: {
+    marginTop: 8,
+    fontFamily: 'Archivo_700Bold',
+    fontSize: 14,
+    lineHeight: 19,
+    color: palette.error,
+  },
   row: { flexDirection: 'row', gap: 7, marginTop: 9 },
   cat: {
     flex: 1,

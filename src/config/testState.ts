@@ -30,8 +30,12 @@ export const DAY_CONFIG = {
     profileMeta: 'katya.b · day one · nothing entered yet',
     startingTokens: 0,
     overnightTokens: 0,
-    /** Day 1 only. See DAY_ONE_ENTRY_GRANT in domain/economy.ts — unresolved. */
-    entryGrant: 3,
+    /**
+     * The first-look bonus is NOT configured here any more. It was a second
+     * copy of `TOKENS_FOR_FIRST_LOOK` in domain/economy.ts, which is one place
+     * too many for a number the success screen quotes. See open question A.
+     */
+    entryGrant: 0,
     onboarding: true,
     /** ABSENT ENTIRELY, not an empty state. Do not add a placeholder. */
     yesterday: 'none',

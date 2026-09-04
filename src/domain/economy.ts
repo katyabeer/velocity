@@ -108,21 +108,68 @@ export const tokensFromTakers = (distinctTakers: number): number =>
   distinctTakers * TOKENS_PER_DISTINCT_TAKER;
 
 /**
- * OPEN QUESTION A — the Day 1 token grant.
+ * OPEN QUESTION A — the first-look bonus, formerly "the Day 1 entry grant".
  *
- * The prototype grants 3 tokens for *entering* on day one, so a tester who
- * enters at 19:40 has something to do before judging opens. It is an exception
- * to "no judging, no clothes", and the coupling is the cleanest thing in
- * version A.
+ * REFRAMED 4 Sep (Katya). It used to be three tokens for *entering* on day one,
+ * which strained "no judging, no clothes": entering is not judging, so the
+ * copy was explaining an exception to the rule the whole economy rests on. It
+ * is now three tokens for YOUR FIRST EVER LOOK — a one-off, bounded, plainly
+ * an achievement rather than a second route to clothes.
  *
- * Recommendation on the table: DROP IT, and make the starter capsule eleven
- * pieces instead of eight. Same outcome for the tester, no exception, no
- * unearned token in the counter, one number changes.
+ * That is a better frame, not a resolution. Question A is still open: the
+ * standing alternative is to drop it entirely. What has changed is that the
+ * exception no longer has to be argued for in the copy.
  *
- * Flip this to `false` and set STARTER_CAPSULE_SIZE to 11 to take that path.
- * Katya's call — do not decide it in code.
+ * ⚠ THE TRIGGER STILL SAYS DAY ONE, not "you have no prior looks". In this
+ * prototype those are the same thing — day one IS the first look — so nothing
+ * is wrong on screen. With real accounts it would need to read the looks
+ * archive instead. See today/rendering.tsx, which fires it.
+ *
+ * Flip ENABLED to `false` to take the drop-it path. Katya's call — do not
+ * decide it in code.
  */
-export const DAY_ONE_ENTRY_GRANT_ENABLED = true;
-export const DAY_ONE_ENTRY_GRANT = 3;
+export const FIRST_LOOK_BONUS_ENABLED = true;
+export const TOKENS_FOR_FIRST_LOOK = 3;
+
+/** Legacy capsule sizes. The capsule picker was cut on 3 Sep, but
+ *  data/capsules.ts survives as the Day 2 fixture source and its test asserts
+ *  this size, so the constant is still load-bearing there. */
 export const STARTER_CAPSULE_SIZE = 8;
-export const STARTER_CAPSULE_SIZE_IF_GRANT_DROPPED = 11;
+
+/**
+ * ═══ WHAT A NIGHT PAID OUT ══════════════════════════════════════════════════
+ * The success screen itemises it, so the sources are data rather than three
+ * hard-coded lines of copy. Adding a behaviour later — Katya has more to
+ * define — is a new entry in `TOKEN_AWARD_LABELS` plus a line in
+ * `awardsForTonight`, and the screen needs no change at all.
+ *
+ * ONLY WHAT WAS EARNED TONIGHT belongs in here. Tokens that arrived overnight
+ * from other people taking pieces are part of the BALANCE, not of this
+ * challenge — putting them in a list headed "tokens earned" would credit
+ * tonight's work with something last night's did.
+ */
+export type TokenAwardKind = 'challenge' | 'first-look';
+
+/** The reason, as it appears after the amount: "+3 tokens completed challenge". */
+export const TOKEN_AWARD_LABELS: Record<TokenAwardKind, string> = {
+  challenge: 'completed challenge',
+  'first-look': 'for the first ever look created',
+};
+
+export type TokenAward = { kind: TokenAwardKind; amount: number };
+
+/**
+ * The night's awards, in the order they were earned. `firstLook` is whether the
+ * first-look bonus actually fired — the caller reads it off the ledger rather
+ * than re-deriving "is it day one", so the screen can never claim a bonus that
+ * was not paid.
+ */
+export function awardsForTonight({ firstLook }: { firstLook: boolean }): TokenAward[] {
+  return [
+    { kind: 'challenge' as const, amount: TOKENS_PER_JUDGING_ROUND },
+    firstLook ? { kind: 'first-look' as const, amount: TOKENS_FOR_FIRST_LOOK } : null,
+  ].filter((a): a is TokenAward => a !== null);
+}
+
+export const awardsTotal = (awards: readonly TokenAward[]): number =>
+  awards.reduce((n, a) => n + a.amount, 0);

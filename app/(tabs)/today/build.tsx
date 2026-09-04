@@ -146,25 +146,29 @@ export default function Build() {
           return router.canGoBack() ? router.back() : router.replace('/(tabs)/today');
         }}
         title={step === 1 ? 'Pick your pieces' : 'Have a look'}
-        right={
-          step === 1 ? (
-            <Tiny color={palette.ink} style={{ fontFamily: 'Archivo_700Bold' }}>
-              {picks.length} of {MAX_PIECES}
-            </Tiny>
-          ) : undefined
-        }
+        /* The count used to sit here. It moved into the slot strip (Katya,
+           4 Sep), which is the thing it counts — in the header it was a number
+           floating next to the token badge with nothing to attach itself to. */
       />
 
       <StepRibbonBleed steps={ribbon} />
 
-      <View style={{ paddingHorizontal: 22, paddingTop: 13 }}>
+      {/* paddingBottom, not just paddingTop: the brief and the slot strip were
+          touching, so the job and the thing you build it with read as one
+          block. */}
+      <View style={{ paddingHorizontal: 22, paddingTop: 13, paddingBottom: 18 }}>
         <Lede>{TONIGHTS_BRIEF.title}</Lede>
         <Body style={{ marginTop: 6 }}>{TONIGHTS_BRIEF.note}</Body>
       </View>
 
       {step === 1 ? (
         <Pinned>
-          <Kick>your look</Kick>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <Kick>your look</Kick>
+            <Tiny color={palette.ink} style={{ fontFamily: 'Archivo_700Bold' }}>
+              {picks.length} of {MAX_PIECES}
+            </Tiny>
+          </View>
           <View style={{ marginTop: 8 }}>
             <SlotStrip slots={strip} onClear={(name: string) => putBack(name)} />
           </View>
@@ -238,16 +242,19 @@ export default function Build() {
       ) : (
         <Scroll>
           <Hero>Together.</Hero>
+          {/* Both lines sit together above the plate (Katya, 4 Sep). What this
+              screen is, then what committing to it costs — then the thing
+              itself, with nothing after it to scroll for. */}
           <Body style={{ marginTop: 7 }}>
             Not a render — the actual pieces, laid out. No body, no fit.
           </Body>
-          <View style={{ marginTop: 14 }}>
-            <ComposedFlatLay pieces={picks.map((p) => p.name)} />
-          </View>
-          <Body style={{ marginTop: 12 }}>
+          <Body style={{ marginTop: 10 }}>
             Once you enter, <B>nothing can be changed</B>. The render comes after, and at 8pm you
             judge the field alongside everyone else.
           </Body>
+          <View style={{ marginTop: 16 }}>
+            <ComposedFlatLay pieces={picks.map((p) => p.name)} />
+          </View>
           <Gap />
         </Scroll>
       )}
