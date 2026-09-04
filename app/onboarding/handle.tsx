@@ -10,17 +10,23 @@
  * this screen exists to collect. The session's default is empty on day one for
  * the same reason (see state/session.ts).
  *
- * THE AVAILABILITY CHECK IS A MOCK, and it always says yes. It debounces, shows
- * a checking state, then a tick — the shape of the real thing, so a session can
- * see whether people wait for it or ignore it.
- *   ⚠ There is NO taken-handle path. Nothing here can say "that one's gone",
- *   which means the test cannot observe how someone reacts to being refused
- *   their first choice — arguably the more interesting moment. Say if you want
- *   a reserved-names list to make that reachable.
+ * THE AVAILABILITY CHECK IS STILL A MOCK, but it can now say no. It debounces,
+ * shows a checking state, then either a tick or the refusal — the shape of the
+ * real thing, so a session can see whether people wait for it or ignore it.
  *
- * VALIDATION IS EMPTY-ONLY, per the ask. No length rule, no character rule, no
- * profanity list. A one-character handle passes. Worth deciding before this is
- * in front of anyone, because it is the field that becomes public.
+ * IT REFUSES A TAKEN HANDLE, which it could not before (4 Sep). The old note
+ * here said "there is NO taken-handle path… the test cannot observe how someone
+ * reacts to being refused their first choice — arguably the more interesting
+ * moment". `TAKEN` in domain/handle.ts is the reserved list that makes that
+ * moment reachable; you-brief AC 2 requires the refusal to be INLINE AND
+ * IMMEDIATE rather than on submit, which is why it lands with the debounce and
+ * not with the button.
+ *
+ * VALIDATION IS REAL NOW, and it lives in domain/handle.ts because it is a rule
+ * about a public identifier, not a detail of this screen: 3–20 characters,
+ * unicode letters and digits and `_`, no leading digit, case-preserved for
+ * display and case-insensitive for uniqueness. It was empty-only — a
+ * one-character handle passed — on a field that becomes public.
  *
  * LOCKED DECISION 16 — the rails question is Men's / Women's / Both, SOFT,
  * default Both.
@@ -45,6 +51,12 @@ import { OnboardingFrame } from '@/ui/OnboardingFrame';
 import { Big, Body, Kick } from '@/ui/text';
 import { palette, border, radius } from '@/theme/tokens';
 import { useSession, type Rails } from '@/state/session';
+import {
+  HANDLE_MAX_LENGTH,
+  handleRejection,
+  handleRejectionMessage,
+  shapeRejection,
+} from '@/domain/handle';
 
 const OPTIONS: readonly { key: Rails; name: string; note: string }[] = [
   { key: 'mens', name: "Men's", note: 'Mostly menswear' },
@@ -101,13 +113,39 @@ export default function Profile() {
 
     if (!cleaned.trim()) return setStatus('idle');
 
+    /* SHAPE FIRST, and it does NOT wait for the debounce. Telling someone
+       their handle is taken when it was never a legal handle sends them
+       looking for a different name instead of a different character, so the
+       two checks run at different moments: shape on the keystroke, uniqueness
+       after the pause. */
+    const shape = shapeRejection(cleaned);
+    if (shape) {
+      setStatus('idle');
+      /* Length, only while they are still typing towards it, is not an error —
+         it is a state. Everything else is worth saying at once. */
+      if (shape.reason !== 'short') setError(handleRejectionMessage(shape));
+      return;
+    }
+
     setStatus('checking');
-    timers.current.push(setTimeout(() => setStatus('available'), DEBOUNCE_MS + CHECK_MS));
+    timers.current.push(
+      setTimeout(() => {
+        /* INLINE AND IMMEDIATE, not on submit (AC 2). */
+        const taken = handleRejection(cleaned);
+        if (taken) {
+          setStatus('idle');
+          setError(handleRejectionMessage(taken));
+          return;
+        }
+        setStatus('available');
+      }, DEBOUNCE_MS + CHECK_MS),
+    );
   };
 
   const onContinue = () => {
-    if (!draft.trim()) {
-      setError('Pick a name first — this is the one thing we need.');
+    const rejection = handleRejection(draft);
+    if (rejection) {
+      setError(handleRejectionMessage(rejection));
       return;
     }
     setHandle(draft.trim());
@@ -136,7 +174,7 @@ export default function Profile() {
           autoCorrect={false}
           autoComplete="off"
           spellCheck={false}
-          maxLength={24}
+          maxLength={HANDLE_MAX_LENGTH}
           returnKeyType="done"
           onSubmitEditing={onContinue}
           onFocus={() => setFocused(true)}

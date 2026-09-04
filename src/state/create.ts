@@ -99,6 +99,22 @@ type CreateState = {
   /** Set by the step-2 commit. Past this the flow cannot be abandoned to
    *  `available`: the allowance is spent. */
   committed: boolean;
+  /**
+   * EVERY TAG YOU HAVE EVER PUBLISHED, newest first. Two jobs, both cheap:
+   *
+   *   · "Your words" on the You screen — your five most-used tags, which is a
+   *     genuine self-portrait at no computational cost now that Create takes
+   *     free text.
+   *   · the ONLY legitimate source for autocomplete, if one is ever built.
+   *     Never a global popular-tag list — that converges everyone's vocabulary
+   *     and is popularity-weighting through the back door. See
+   *     OWN_HISTORY_ONLY in domain/tags.ts.
+   *
+   * ⚠ MODERATION: a shadow-hidden tag must never resurface here. There is no
+   * report queue yet (Katya q3), so nothing hides anything; when there is, it
+   * filters on the way IN to this list, not on the way out.
+   */
+  tagHistory: readonly string[];
   /** TWO SEPARATE ALLOWANCES, keyed by kind, never one shared counter. The
    *  brief's lives here too so the 07:00 rollover happens in one place — but
    *  they are distinct records and spending one leaves the other. */
@@ -144,6 +160,7 @@ const today = () => dayKey(new Date());
 
 export const useCreate = create<CreateState>((set, get) => ({
   ...blank,
+  tagHistory: [],
   allowance: {
     brief: freshAllowance(today()),
     freestyle: freshAllowance(today()),
@@ -196,7 +213,14 @@ export const useCreate = create<CreateState>((set, get) => ({
     /* No "you're in" toast any more. It used to say "we'll tell you when it's
        ready", which was the whole message of a screen the user is now looking
        at — the render step IS the notification. */
-    set({ step: 4 });
+    set({
+      step: 4,
+      /* The tags are frozen from here (invariant: no back-out after publish),
+         so this is the last moment they can still change and the right one to
+         file them. Newest first, and a re-render files nothing — it is the
+         same post, not a second one. */
+      tagHistory: [...s.tags, ...s.tagHistory],
+    });
   },
 
   rerender: () => {
@@ -225,6 +249,9 @@ export const useCreate = create<CreateState>((set, get) => ({
     set({ allowance: { ...s.allowance, brief: consume(s.allowance.brief, day) } });
   },
 
+  /* `blank` deliberately excludes tagHistory and allowance — starting a new
+     look does not un-say the words you have already published, and it does not
+     hand back today's render. */
   startAgain: () => set(blank),
 }));
 

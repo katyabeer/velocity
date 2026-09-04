@@ -63,6 +63,16 @@ type SessionState = {
   yesterday: YesterdayState;
   handle: string;
   rails: Rails;
+  /**
+   * WHEN THE FIRST ENTRY LANDED, or null. Drives "just joined" → tenure, and
+   * it is deliberately not a login date: someone who signs up at 21:00 and
+   * cannot enter until tomorrow is still just joined, correctly. See
+   * `descriptor` in domain/you.ts.
+   */
+  firstEntryAt: number | null;
+  /** The ordinal day of use, 1 being the day you joined. Seeded per test day —
+   *  there is no real account age in a prototype that reboots on save. */
+  dayNumber: number;
   capsule: CapsuleKey | null;
   casting: Casting;
   renderMode: RenderMode;
@@ -73,6 +83,8 @@ type SessionState = {
   setPhase: (p: Phase) => void;
   setRails: (r: Rails) => void;
   setHandle: (h: string) => void;
+  /** Idempotent — the FIRST entry, not the latest. */
+  markFirstEntry: () => void;
   setCapsule: (c: CapsuleKey) => void;
   setCasting: <K extends keyof Casting>(key: K, value: Casting[K]) => void;
   setRenderMode: (m: RenderMode) => void;
@@ -89,13 +101,21 @@ const initial = (day: TestDay) => {
     yesterday: cfg.yesterday as YesterdayState,
     /* EMPTY on day one — the profile screen's field starts blank and the user
        types their own. Days 2 and 3 are returning users, who already have one. */
-    handle: day === 1 ? '' : 'katya.b',
+    /* `katya_b`, not `katya.b` — a dot is not a handle character, so the old
+       seed was a handle the app's own validator would refuse (domain/handle.ts).
+       A fixture that cannot pass validation is a fixture that hides a bug. */
+    handle: day === 1 ? '' : 'katya_b',
     /* WOMEN'S BY DEFAULT (Katya, 4 Sep). Locked decision 16 said Both; this
        overrides that default and nothing else about it. The question stays
        SOFT — `cataloguePool` sorts and never filters — so the invariant that
        matters (a hard filter splits the room and triples the cold-start floor)
        is untouched. It is a starting position, not a restriction. */
     rails: 'womens' as Rails,
+    /* Day 1 has entered nothing yet. Days 2 and 3 are returning users whose
+       first entry is behind them, so the descriptor reads tenure rather than
+       "just joined" without waiting for them to enter again. */
+    firstEntryAt: day === 1 ? null : Date.now(),
+    dayNumber: cfg.dayNumber,
     /** Day 1 has no capsule until o6. Days 2 and 3 assume the first one. */
     capsule: (day === 1 ? null : 'quiet') as CapsuleKey | null,
     casting: {
@@ -116,6 +136,7 @@ export const useSession = create<SessionState>((set) => ({
   setPhase: (phase) => set({ phase }),
   setRails: (rails) => set({ rails }),
   setHandle: (handle) => set({ handle }),
+  markFirstEntry: () => set((s) => (s.firstEntryAt ? s : { firstEntryAt: Date.now() })),
   setCapsule: (capsule) => set({ capsule }),
   setCasting: (key, value) => set((s) => ({ casting: { ...s.casting, [key]: value } })),
   setRenderMode: (renderMode) => set({ renderMode }),

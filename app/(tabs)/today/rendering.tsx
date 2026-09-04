@@ -68,6 +68,7 @@ export default function Rendering() {
   const grant = useEconomy((s) => s.grantDayOneTokens);
   const submit = useSubmission((s) => s.submit);
   const spendBrief = useCreate((s) => s.spendBrief);
+  const markFirstEntry = useSession((s) => s.markFirstEntry);
   const adoptLook = useWardrobe((s) => s.adoptLook);
 
   /* One number, from the domain. `dayConfig(1).entryGrant` used to hold a
@@ -81,6 +82,11 @@ export default function Rendering() {
   useEffect(() => {
     const names = picks.map((p) => p.name);
     enter();
+    /* THE FIRST ENTRY, and it is what flips the You descriptor off "just
+       joined". Not a login date: someone who signs up at 21:00 and cannot
+       enter until tomorrow is still just joined, correctly. Idempotent, so a
+       remount cannot re-date it. */
+    markFirstEntry();
     adoptLook(names);
     if (granted) grant(TOKENS_FOR_FIRST_LOOK);
     submit('brief', {

@@ -143,8 +143,14 @@ change:
 24. **Free-text tags, on freestyle looks only.** Max 5, normalised, not clickable, not
     filterable, and they must NEVER reach the feed sampler — a tag filter is a sort, and
     invariant 7 is sample-don't-sort. Amended 4 Sep (Katya), reversing D-brief invariant 8.
-    The accepted consequence: **the gap is now brief-only**, because the builder keeps its
-    single closed declared word and a freestyle look has none to compare a read against.
+    The accepted consequence was meant to be *the gap is now brief-only*. It is worse
+    than that: **the gap has no input at all**, because the builder has no declared word
+    either (locked decision 18 removed its tag step). See the open question below.
+25. **You never invents.** A section on a10 appears only when it has something
+    true to say — and "we'll tell you about your eye later" is an IOU against
+    the most expensive computation in the product, so `Just for you` is ABSENT
+    rather than empty. A `Weakness` tip never renders alone; it is held, not
+    dropped.
 
 ## Reversed. Do not re-propose.
 
@@ -208,6 +214,22 @@ A fresh session will be tempted by several of these. They were tried and rejecte
 - Clearing the create submission lane on a17's mount. It used to be correct; it
   now throws away `publishedAt` and `rerenderUsed`, which ARE the re-render
   window, and read on screen as "Not published yet". `markSeen` clears the dot
+- `profileMeta`, a pre-baked descriptor string on You. Cut 4 Sep. It is why the
+  header read "@katyabeer · just joined · 0 looks" above a body reporting 74
+  jobs entered — the descriptor was a fixture, wired to nothing
+- `brave` and `sharp` on You ("the room reads you as brave", "sharp most read").
+  Cut 4 Sep: both are the OLD REGISTER LIST, in neither vocabulary, so the
+  screen could say "you build quiet and the room reads you as sharp" out of
+  words it does not have. Every word for how the room read you now comes from
+  the reaction vocabulary
+- Three tips as a fixed trio on You. They are a POOL with entry thresholds, and
+  the section renders only what qualifies — one tip is a valid section, and the
+  Strength/Weakness/Try-this labels are roles, not slots
+- A day-one grid of zeros under Stats. An empty state that names a future is
+  fine; one that names an absence is not. Milestones is the roadmap; zeros are
+  an accusation
+- `youSections` in testState, which let the day fixture decide what You was
+  allowed to say. The sections derive themselves now
 
 ---
 
@@ -235,6 +257,10 @@ Search for `⚠` to find every one. All are Katya's or Jack's call, not yours.
 | `state/create.ts` | the create brief contradicts itself on when the allowance is spent (§6's `building` says step 3 is still unspent; §3, §4 and AC 2 put the spend at step 2). Resolved in favour of the acceptance criteria — say if you meant it the other way |
 | `domain/renders.ts` | **Jack 1** — worst case is now THREE renders per user per day (brief · freestyle · freestyle re-render). Lands on the render cost curve, which is the variable cost that grows as the product succeeds. His sign-off, not ours |
 | `state/submission.ts` (`SIMULATED_FAILURE`) | **Jack 2** — render latency and failure rate. Decides whether `rendering` is a spinner or a state people live in for hours. Built as the latter, because that shape survives either answer |
+| `domain/you.ts`, `domain/entry.ts` | **THE GAP HAS NO INPUT ANYWHERE.** Both the create brief and the you-brief say it "survives on brief entries, because Build step 3 keeps its single closed declared word" — that step does not exist (locked decision 18 removed it; handover open question C asks whether it returns). Consequence, built strictly: a negative read may appear in the sentence ONLY in gap form, gap form is unreachable, so NO negative reaches the You sentence at all. Katya's you-brief q3 ("set Build's declared words to the four positive reaction words") has nothing to set them on |
+| `domain/you.ts` (`SUPPRESS_ZERO_STATS`) | **you-brief q1** — day-one stats: suppress zeros, or the full grid? Recommendation taken (suppress). One line to flip |
+| `domain/handle.ts` (`TAKEN`) | **you-brief q2** — is the handle on magazine cards, or is the magazine anonymous? If anonymous, the handle only ever appears on your own You screen and barely earns its onboarding step. Recommendation: attributed |
+| `domain/you.ts` (`TIPS`) | **you-brief q4** — the tip thresholds (10 looks · 10 settled · 20 close calls) are ESTIMATES, not measured. They need a pass against real distributions |
 | `data/looks.ts` (`mine`) | there is no ownership model — one fixture is flagged as yours so the owner's read is reachable. Create's posts don't enter the feed |
 | `config/app.ts` | the name. Now **Editorial.** (3 Sep), after *quintets.*, after the *Velocity* rejection. STILL no availability or trademark checks on any candidate, and "Editorial" is a common noun in this exact category — the most contested of the three so far |
 
@@ -293,6 +319,9 @@ src/
               tags.ts     free-text tags + the reversal of "no free text anywhere"
               renders.ts  the two allowances, the 07:00 day, the re-render window,
                           and the Create tab's six-state machine
+              you.ts      what a10 is ALLOWED to say, and when. Empty states,
+                          the descriptor ladder, the tip thresholds
+              handle.ts   the public identifier: shape, uniqueness, the @
   data/       fixtures — looks, capsules, challenges, inventory
   state/      six zustand stores, one per domain
   theme/      tokens.ts (colours, spacing) · type.ts (the four typefaces)
@@ -346,7 +375,7 @@ The overnight roundel is hidden because a zero there would be a lie. The shuffle
 
 ```
 npm run typecheck      # tsc --noEmit, strict + noUncheckedIndexedAccess
-npm test               # 140 assertions over the domain layer
+npm test               # 170 assertions over the domain layer
 ```
 
 **Motion on the spread card is decoration over settled state.** Calling a look

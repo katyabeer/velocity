@@ -193,3 +193,24 @@ export const ARCHIVE_ESTABLISHED: readonly ArchiveEntry[] = [
   { job: 'Dinner', band: 'Lower half', when: 'last week', note: 'went for sharp, read as fussy' },
   { job: 'Nowhere', band: 'Upper half', when: 'last week', note: 'only one' },
 ];
+
+/**
+ * ⚠ FIXTURE, ESTABLISHED ONLY. "Your words" on the You screen is your five
+ * most-used tags, counted from what you have actually published (`tagHistory`
+ * in state/create.ts) — which is real and live on days 1 and 2.
+ *
+ * Established claims 44 freestyle posts, and there is no way to have written
+ * 44 posts' worth of tags in a prototype that reboots on save, so this stands
+ * in for their history. Repeats are the point: the counts are what rank them.
+ *
+ * Real tags typed this session rank ALONGSIDE these rather than replacing
+ * them, so the section still responds to what you do.
+ */
+export const TAG_HISTORY_ESTABLISHED: readonly string[] = [
+  'secondhand', 'secondhand', 'secondhand', 'secondhand', 'secondhand',
+  'tailoring', 'tailoring', 'tailoring', 'tailoring',
+  'coldfield', 'coldfield', 'coldfield',
+  'toomuchonpurpose', 'toomuchonpurpose',
+  'wedding', 'wedding',
+  'tuesday',
+];

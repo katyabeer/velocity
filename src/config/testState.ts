@@ -27,7 +27,16 @@ export const DAY_CONFIG = {
   1: {
     dayName: 'Wednesday',
     subtitle: 'Your first job is open',
-    profileMeta: 'katya.b · day one · nothing entered yet',
+    /**
+     * NOT A PRE-BAKED DESCRIPTOR ANY MORE. `profileMeta` used to be this
+     * string, and the You screen printed it verbatim — which is why the header
+     * read "@katyabeer · just joined · 0 looks" above a body reporting 74 jobs
+     * entered: the descriptor was a fixture, not a reading of anything.
+     *
+     * It is now the one input the ladder needs (`descriptor` in domain/you.ts);
+     * the handle comes from the session and the look count from the archive.
+     */
+    dayNumber: 1,
     startingTokens: 0,
     overnightTokens: 0,
     /**
@@ -56,13 +65,26 @@ export const DAY_CONFIG = {
     /** Day 1 is six unearned milestones and nothing else. A sentence needs
      *  looks, a strength needs three results, and inventing either is what that
      *  page exists not to do. */
-    youSections: ['milestones'],
+    /**
+     * NOT A LIST ANY MORE. `youSections` used to name which of You's five
+     * sections rendered per test day, which meant the day fixture decided
+     * what the screen was allowed to say. It now decides itself from the
+     * rollup — `visibleSections` in domain/you.ts — so the sections respond to
+     * what you have actually done rather than to which day is booted.
+     *
+     * Kept as a comment because the old list is still the best one-line
+     * summary of what each day SHOULD produce, and it is worth being able to
+     * check the derivation against it:
+     *   day 1        milestones only
+     *   day 2        posts · stats · milestones
+     *   established  all five
+     */
     milestonesEarned: 0,
   },
   2: {
     dayName: 'Thursday',
     subtitle: 'Your first result is in',
-    profileMeta: 'katya.b · day two · 1 look',
+    dayNumber: 2,
     startingTokens: 2,
     overnightTokens: 2,
     entryGrant: 0,
@@ -71,13 +93,12 @@ export const DAY_CONFIG = {
     wardrobeCount: 11,
     showOvernightRoundel: true,
     showTryTheseRail: true,
-    youSections: ['posts', 'stats', 'milestones'],
     milestonesEarned: 1,
   },
   3: {
     dayName: 'Thursday',
     subtitle: 'The room settled overnight',
-    profileMeta: 'katya.b · four months · 118 looks',
+    dayNumber: 124,
     startingTokens: 2,
     overnightTokens: 2,
     entryGrant: 0,
@@ -86,7 +107,6 @@ export const DAY_CONFIG = {
     wardrobeCount: 96,
     showOvernightRoundel: true,
     showTryTheseRail: true,
-    youSections: ['sentence', 'justForYou', 'posts', 'stats', 'milestones'],
     milestonesEarned: 3,
   },
 } as const;
