@@ -86,6 +86,12 @@ export default function RootLayout() {
           <Stack.Screen name="index" />
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="(tabs)" />
+          {/* Create is a root route, not a tab (4 Sep). It is entered from the
+              banner at the top of the Wardrobe and left again, which is a flow
+              — the same shape as casting. See (tabs)/_layout.tsx for the two
+              hidden-tab approaches that were tried first and why both trapped
+              the user on it. */}
+          <Stack.Screen name="create" />
           <Stack.Screen
             name="casting"
             options={{ presentation: 'modal', animation: 'slide_from_bottom' }}

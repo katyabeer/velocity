@@ -103,7 +103,7 @@ export default function Entered() {
           />
         ) : (
           <Button
-            label="Last step · vote on tonight’s looks"
+            label="Vote now"
             onPress={() => {
               setPhase('judging');
               router.push('/(tabs)/today/judging');

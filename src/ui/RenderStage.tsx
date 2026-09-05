@@ -78,7 +78,7 @@ export function RenderStage({
         </Svg>
         <View style={s.caption}>
           <Text style={s.captionText}>
-            {placed >= pieces.length ? 'AI render · done' : 'AI render · in progress'}
+            {placed >= pieces.length ? 'AI generation · done' : 'AI generation · in progress'}
           </Text>
         </View>
       </View>

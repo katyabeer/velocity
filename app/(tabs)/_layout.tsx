@@ -18,7 +18,7 @@
  */
 
 import { Tabs } from 'expo-router';
-import type { NavigationState, ParamListBase, RouteProp } from '@react-navigation/native';
+import type { ParamListBase, RouteProp } from '@react-navigation/native';
 import { StyleSheet } from 'react-native';
 import { TabIcon, TAB_ORDER, type TabKey } from '@/ui/TabIcon';
 import { palette, border } from '@/theme/tokens';
@@ -35,12 +35,37 @@ import { useRenderBadge, type RenderLane } from '@/state/submission';
 const META: Record<TabKey, { label: string; lane?: RenderLane }> = {
   today: { label: 'Today', lane: 'brief' },
   magazine: { label: 'Magazine' },
-  create: { label: 'Create', lane: 'create' },
-  wardrobe: { label: 'Wardrobe' },
+  /* Not in the bar any more — kept so the record stays exhaustive over
+     TabKey, and so its label is there if it ever comes back. */
+  create: { label: 'Create' },
+  /* CARRIES THE CREATE LANE'S BADGE. The dot means "the look you made is
+     ready", and the badge has to sit on the tab that leads to it — which is
+     Wardrobe now, because the banner at the top of it is the only way into
+     Create. Without this the async freestyle render would finish with nothing
+     anywhere to say so, which is the one thing the badge exists for. */
+  wardrobe: { label: 'Wardrobe', lane: 'create' },
   you: { label: 'You' },
 };
 
 const TABS = TAB_ORDER.map((key) => ({ name: key, key, label: META[key].label, lane: META[key].lane }));
+
+/**
+ * ══ CREATE IS NOT IN THIS FOLDER ANY MORE (Katya, 4 Sep) ══
+ *
+ * It moved to `app/create/`, a root-stack route alongside `casting` — because
+ * a flow you enter from a banner and leave again is not a tab, and pretending
+ * otherwise did not work. Both ways of keeping it here as a hidden tab FAILED
+ * THE SAME WAY, and the failure is worth recording so nobody retries them:
+ *
+ *   · `href: null` — the screen renders when pushed, but the bar can no longer
+ *     transition away from it.
+ *   · `tabBarItemStyle: { display: 'none' }` — identical symptom.
+ *
+ * In both cases pressing another tab changed the URL and left the Create
+ * screen on screen, every tab dead. A user who opened Create was TRAPPED. It
+ * is not the `tabPress` listener below: the same thing happens with the
+ * listener removed entirely.
+ */
 
 /**
  * PRESSING A TAB TAKES YOU TO THAT TAB'S HOME. Every tab has one, and this is
@@ -60,10 +85,24 @@ const TABS = TAB_ORDER.map((key) => ({ name: key, key, label: META[key].label, l
  * the wrong navigator entirely. Navigating to a route already in the stack
  * unwinds to it, which is the same outcome by a safer route.
  *
- * Works from ANOTHER tab too, so it is one press to switch and come home rather
- * than one to switch and a second to unwind. And it defers to the default when
- * the tab is already at its root, so a press there still does the ordinary
- * thing.
+ * ══ IT CAME BACK, AND THE LISTENER WAS ONLY HALF THE FIX (4 Sep) ══
+ *
+ * Katya hit the same dead Today tab on the same screen. The listener was fine;
+ * the LINK underneath it was not. React Navigation builds each tab's `href`
+ * from that tab's remembered route, so after the evening's replace chain the
+ * Today tab rendered as `<a href="/today/rendering">` — a link pointing into
+ * the middle of its own stack. Clicking it was a no-op: the target is already
+ * inside the focused tab, so nothing moved, and the press never reached the
+ * listener because the anchor handled it.
+ *
+ * Two changes, and both are needed:
+ *   · `href` is PINNED to the tab's root below, so the link can never address
+ *     an inner screen however the stack was reshaped.
+ *   · the listener no longer returns early when `nested.index` is falsy. That
+ *     guard existed to "defer to the default at the root", but it also meant
+ *     one bad read of a partial state left the press unhandled. Navigating to
+ *     `index` when already on `index` is a no-op, so there is nothing to
+ *     defer to and nothing to lose.
  */
 function homeOnTabPress({
   navigation,
@@ -74,10 +113,8 @@ function homeOnTabPress({
 }) {
   return {
     tabPress: (e: { preventDefault: () => void }) => {
-      /* `state` is undefined until that tab's stack has mounted, and
-         `index === 0` means it is already home — leave both to the default. */
-      const nested = (route as { state?: NavigationState }).state;
-      if (!nested || !nested.index) return;
+      /* Unconditional. Going to `index` when already on `index` does nothing,
+         which is cheaper than reading a partial state to find out. */
       e.preventDefault();
       navigation.navigate(route.name, { screen: 'index' });
     },
@@ -111,6 +148,11 @@ export default function TabsLayout() {
           listeners={homeOnTabPress}
           options={{
             title: t.label,
+            /* PINNED. Without this the bar renders whatever route the tab
+               happens to be showing — `/today/rendering` after the evening's
+               replace chain — and the link then points inside the tab it is
+               meant to reset. */
+            href: `/(tabs)/${t.name}`,
             tabBarIcon: ({ focused }) => (
               <TabIcon name={t.key} focused={focused} badge={badgeFor(t.lane)} />
             ),

@@ -36,7 +36,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, Header, LogoBlock, Pinned, Screen, Scroll } from '@/ui/layout';
-import { Hero, Big, Body, Tiny, Kick, B } from '@/ui/text';
+import { Hero, Big, Body, Tiny, Kick } from '@/ui/text';
 import { Bar, Button, ChipRow } from '@/ui/controls';
 import { StepRibbonBleed, statesFor } from '@/ui/StepRibbon';
 import { GarmentGrid, SlotStrip } from '@/ui/pieces';
@@ -67,6 +67,18 @@ import { useCreate, useFreestyleLeft } from '@/state/create';
 import { useSubmission } from '@/state/submission';
 import { useSession } from '@/state/session';
 import { useWardrobe } from '@/state/wardrobe';
+
+/**
+ * THE WAY OUT OF CREATE. It moved out of the tab bar on 4 Sep, so there is no
+ * bar underneath its home states to leave by — this is the only exit, and
+ * every screen wearing the masthead has to offer it.
+ *
+ * Falls back to the Wardrobe rather than failing silently: a cold deep link
+ * straight to `/create` has nothing to pop, and the Wardrobe is where the door
+ * in is. Same defensive shape as the builder's chevron.
+ */
+const leaveCreate = () =>
+  router.canGoBack() ? router.back() : router.replace('/(tabs)/wardrobe');
 
 export default function Create() {
   const c = useCreate();
@@ -115,12 +127,16 @@ export default function Create() {
   /* Casting has no segment, so the ribbon reads the step directly — which is
      the point of taking Model out of it. */
   const ribbon = statesFor(
-    CREATE_RIBBON.map((s) => ({ label: s.label, hint: s.hint })),
+    CREATE_RIBBON.map((s) => ({ label: s.label })),
     c.step,
   );
 
   const canAdvance = c.picks.length >= MIN_PIECES;
-  const titles = ['Pick your pieces', 'Have a look', 'Tag it'] as const;
+  /* Step 2's title follows its heading, which became a question on 4 Sep —
+     "Have a look" described a screen that now asks whether you are ready to
+     spend the day's generation. It matches the builder's equivalent step,
+     which is the same moment in the other flow. */
+  const titles = ['Pick your pieces', 'Preview your look', 'Tag it'] as const;
 
   /* Step 2 is the only place the chevron can lose work, so it is the only
      place that asks. Step 3 is PAST the commit and has nothing to go back to,
@@ -145,7 +161,7 @@ export default function Create() {
           number three lines above the first, which is the same mistake the
           builder's "0 of 6" made before it moved into the slot strip. */}
       {c.step === 1 ? (
-        <LogoBlock title="Create" />
+        <LogoBlock title="Create" onBack={leaveCreate} />
       ) : (
         <Header onBack={onBack} title={titles[c.step - 1]} />
       )}
@@ -216,14 +232,22 @@ export default function Create() {
       {/* ── 2 · LOOK — ⚑ the commit ─────────────────────────────────────── */}
       {c.step === 2 ? (
         <Scroll>
-          <Hero>Together.</Hero>
-          <Body style={{ marginTop: 7 }}>
-            Not a render — the actual pieces, laid out. No body, no fit.
-          </Body>
-          <Body style={{ marginTop: 10 }}>
-            The next tap <B>spends today&apos;s render</B> and posts it. You tag it and cast it
-            after, but the look itself is fixed from here.
-          </Body>
+          {/* "Together." became a question (Katya, 4 Sep). This is the commit
+              screen, and a statement about the pieces was the wrong register
+              for the one tap that cannot be undone — the heading should ask
+              for the decision it is about to take.
+
+              "Not a render — the actual pieces, laid out. No body, no fit."
+              came off earlier the same day, for the same reason the plate's
+              own caption bar went on 3 Sep: the picture below is a picture of
+              clothes, and a sentence stating what it ISN'T is the loudest
+              thing on the screen. */}
+          <Hero>{'Ready to\ngenerate\nthis look?'}</Hero>
+          {/* The rule, once, here — and NOT again above the button. It used to
+              be both: this line explained the spend and the footer repeated it
+              in a kicker plus a `Lede`. Two statements of one rule on one
+              screen is how a rule stops being read. */}
+          <Body style={{ marginTop: 10 }}>{ONE_A_DAY_AT_COMMIT}</Body>
           <View style={{ marginTop: 16 }}>
             <ComposedFlatLay pieces={c.picks.map((p) => p.name)} />
           </View>
@@ -235,17 +259,20 @@ export default function Create() {
       {c.step === 3 ? (
         <Scroll>
           <Hero>Tag it.</Hero>
-          <Body style={{ marginTop: 7 }}>
-            Add up to {MAX_TAGS} — think occasion, style, mood, trend. Your words, not ours.
-          </Body>
-          {/* Optional, and said plainly. Mandatory free text produces #asdf,
-              and absence is better data than garbage. */}
-          <Body style={{ marginTop: 10 }}>
-            Skip it if you like — a look with no tags is a perfectly good look. What you write
-            here <B>cannot be changed once it posts</B>.
-          </Body>
+          {/* THE INSTRUCTION SITS ON THE FIELD, not at the top of the screen
+              (Katya, 4 Sep). It tells you what to type, so it belongs where
+              you type — two paragraphs above the input it was a preamble, and
+              the cap it names is enforced by the input's own "n of 5".
 
+              The paragraph that was here — "skip it if you like… cannot be
+              changed once it posts" — came off with it. Both facts are still
+              true and both are still enforced (zero tags publishes fine;
+              TAGS_EDITABLE_AFTER_PUBLISH is false), they are just no longer
+              argued at someone who has not typed anything yet. */}
           <View style={{ marginTop: 20 }}>
+            <Body style={{ marginBottom: 10 }}>
+              Add up to {MAX_TAGS} — think occasion, style, mood, trend. Your words, not ours.
+            </Body>
             <TagInput
               tags={c.tags}
               draft={c.draft}
@@ -259,13 +286,12 @@ export default function Create() {
             />
           </View>
 
-          <View style={s_paid}>
-            <Kick tone="muted">already paid for</Kick>
-            <Body style={{ marginTop: 6 }}>
-              Today&apos;s render is spent. Nothing left to decide — pick who wears it and it
-              posts itself.
-            </Body>
-          </View>
+          {/* The "already paid for" panel came off (Katya, 4 Sep). It said the
+              generation was spent and there was nothing left to decide — on
+              the screen that is asking you to decide something. The
+              irreversibility is stated at the commit, which is where it costs
+              something; repeating it afterwards only makes the remaining steps
+              feel like paperwork. */}
           <Gap />
         </Scroll>
       ) : null}
@@ -286,17 +312,29 @@ export default function Create() {
         {/* ONE action, not two. The private-save half is deleted: render or
             nothing (§2.2).
 
-            Placement 2 of the one-a-day rule (§7), and the load-bearing one:
-            the rule at the moment it costs something. It sits IN THE FOOTER
-            rather than above the plate because the plate is tall enough to
-            push anything above it off screen — and a rule about spending that
-            is not visible when you spend is not a placement. Kept verbatim
-            from the prototype's #crendnote; the wording is doing real work. */}
+            Placement 2 of the one-a-day rule, and the load-bearing one: the
+            rule at the moment it costs something. It sits IN THE FOOTER rather
+            than above the plate because the plate is tall enough to push
+            anything above it off screen — a rule about spending that is not
+            visible when you spend is not a placement.
+
+            IT IS NO LONGER A LINE OF SMALL PRINT (Katya, 4 Sep). It was the
+            prototype's #crendnote verbatim — "rendering is the expensive bit,
+            so it is one a day, and only rendered looks can go in the
+            magazine" — set in `Tiny` above the button, which is the size the
+            eye skips at exactly the moment it must not. Now a kicker naming
+            the rule and one short line at `Lede`, so the constraint is read
+            rather than available to be read.
+
+            The magazine clause went with it. It was true when an unrendered
+            look could be saved instead; §2.2 deleted that path, so it now
+            distinguishes rendered looks from nothing at all. */}
         {c.step === 2 ? (
-          <>
-            <Tiny style={{ marginBottom: 10 }}>{ONE_A_DAY_AT_COMMIT}</Tiny>
-            <Button label="Render it and post it" onPress={c.commit} />
-          </>
+          /* The one-a-day rule moved INTO the body copy above (Katya, 4 Sep),
+             so the footer is the action alone. It was a kicker plus a `Lede`
+             directly under a body line making the same point — the second
+             telling was the one people stopped reading. */
+          <Button label="Generate it and post it" onPress={c.commit} />
         ) : null}
 
         {/* Not "CREATE A LOOK". The create decision happened at step 2, and
@@ -320,7 +358,7 @@ export default function Create() {
         visible={leaving}
         kick="nothing is kept"
         question={LEAVE_WITHOUT_RENDERING}
-        note="Your pieces go back to the wardrobe. Today's render is still yours to spend."
+        note="Your pieces go back to the wardrobe. Today's generation is still yours to spend."
         confirmLabel="Leave it"
         cancelLabel="Keep going"
         onConfirm={() => {
@@ -377,11 +415,11 @@ function Rendering() {
 
   return (
     <Screen>
-      <Header title={ready ? 'Posted' : 'Rendering'} />
+      <Header title={ready ? 'Posted' : 'Generating'} />
 
       <StepRibbonBleed
         steps={statesFor(
-          CREATE_RIBBON.map((st) => ({ label: st.label, hint: st.hint })),
+          CREATE_RIBBON.map((st) => ({ label: st.label })),
           4,
           [true, true, true],
         )}
@@ -392,18 +430,21 @@ function Rendering() {
         <Body style={{ marginTop: 7 }}>
           {ready
             ? 'Posted itself, exactly as committed.'
-            : 'It posts itself when it lands. Go and do something else — the dot on this tab will tell you.'}
+            : /* "the dot on this tab" was true while Create was a tab. It came
+                 out of the bar on 4 Sep, so the dot is on Wardrobe now — which
+                 is also where the way back in is (ui/CreateBanner.tsx). */
+              'It posts itself when it lands. Go and do something else — the dot on Wardrobe will tell you.'}
         </Body>
 
         {/* The same strip the Today challenge card uses, so the two async
             renders read alike. */}
         <View style={{ marginTop: 14 }}>
           <RenderStrip
-            ready={ready}
+            status={ready ? 'ready' : 'pending'}
             pendingNote="A few seconds"
             onPress={() => {
               markSeen('create');
-              router.push('/(tabs)/create/posted');
+              router.push('/create/posted');
             }}
           />
         </View>
@@ -426,7 +467,7 @@ function Rendering() {
           onPress={() => {
             if (ready) {
               markSeen('create');
-              router.push('/(tabs)/create/posted');
+              router.push('/create/posted');
             } else {
               router.push('/(tabs)/magazine');
             }
@@ -475,7 +516,7 @@ function Spent() {
     <Screen>
       {/* The tab's masthead, not an in-flow header — this is where Create
           lives for most of the day, so it is a place, not a step. */}
-      <LogoBlock title="Create" subtitle="today’s render" />
+      <LogoBlock title="Create" subtitle="today’s generation" onBack={leaveCreate} />
 
       <Scroll>
         {/* §6.1's ORDER, and it is the whole point of the screen: the render
@@ -511,11 +552,11 @@ function Spent() {
         </View>
 
         <View style={s_paid}>
-          <Kick tone="muted">one more go at the render</Kick>
+          <Kick tone="muted">one more go at it</Kick>
           <Body style={{ marginTop: 6 }}>{RERENDER_NOTE}</Body>
           {verdict.allowed ? (
             <Button
-              label="Render it again"
+              label="Generate it again"
               variant="ghost"
               style={{ marginTop: 12 }}
               onPress={c.rerender}
@@ -546,12 +587,12 @@ function Failed() {
 
   return (
     <Screen>
-      <LogoBlock title="Create" />
+      <LogoBlock title="Create" onBack={leaveCreate} />
       <Scroll>
         <EmptyState
-          kick="that didn’t render"
+          kick="that didn’t generate"
           body="Something went wrong at our end, not yours."
-          note="Your render is back. Nothing was charged for the attempt."
+          note="Your generation is back. Nothing was charged for the attempt."
         >
           <Button label="Start again" style={{ marginTop: 12 }} onPress={refundFailure} />
         </EmptyState>
@@ -597,7 +638,7 @@ function Failed() {
 function Insufficient() {
   return (
     <Screen>
-      <LogoBlock title="Create" />
+      <LogoBlock title="Create" onBack={leaveCreate} />
       <Scroll>
         <Card style={{ marginTop: 4 }}>
           {/* The state, named before the pitch — so the disabled button below

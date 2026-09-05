@@ -40,6 +40,43 @@ export const canEnterAt = (date: Date): boolean => phaseAt(date) === 'entry';
 export const canJudgeAt = (date: Date): boolean => phaseAt(date) === 'judging';
 
 /**
+ * THE NEXT 07:00, and everything that counts down to it.
+ *
+ * There is ONE day boundary in this product and this is it — the result lands,
+ * the job opens, and the render allowances reset, all at the same hour. Two
+ * different day boundaries in one app is a bug generator, so the render
+ * allowance in domain/renders.ts delegates here rather than computing its own.
+ */
+export function nextResultAt(now: Date): Date {
+  const at = new Date(now);
+  at.setHours(RESULT_HOUR, 0, 0, 0);
+  if (at <= now) at.setDate(at.getDate() + 1);
+  return at;
+}
+
+/** Rounded UP, so "in 1 hour" never appears with fifty minutes left on it. */
+export const hoursUntilResult = (now: Date): number =>
+  Math.ceil((nextResultAt(now).getTime() - now.getTime()) / 3_600_000);
+
+/** `7am`. One spelling of the hour, everywhere it is said out loud. */
+export const RESULT_LABEL = `${RESULT_HOUR}am`;
+
+/**
+ * "Results in 11 hours" — the whole of what happens next, in three words.
+ *
+ * Falls back to the hour itself when the wait is long enough that a count of
+ * hours stops being a countdown and starts being arithmetic: nobody reads
+ * "in 23 hours" as sooner than "tomorrow at 7am", and the second is easier to
+ * hold. Twelve is the crossover because it is the point where "later today"
+ * stops being true.
+ */
+export function resultCountdown(now: Date): string {
+  const h = hoursUntilResult(now);
+  if (h > 12) return `Results tomorrow at ${RESULT_LABEL}`;
+  return `Results in ${h} ${h === 1 ? 'hour' : 'hours'}`;
+}
+
+/**
  * TODAY'S ORDER IS FIXED, and was corrected once:
  *   1. yesterday's result  — it is the reason you came back, so it comes FIRST
  *   2. today's job         — the hero

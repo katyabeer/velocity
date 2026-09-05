@@ -22,20 +22,33 @@ export type TabKey = 'today' | 'magazine' | 'create' | 'wardrobe' | 'you';
  * the magazine's take-a-piece animation flies a thumbnail at the Wardrobe tab,
  * and it works out where that tab is from this array's index. Two hard-coded
  * orders would drift apart the first time a tab moved.
+ *
+ * ══ CREATE IS NOT IN THE BAR (Katya, 4 Sep) ══
+ *
+ * It is FOUR TABS now. Create moved OUT of the tabs group entirely, to
+ * `app/create/` — it is entered from a banner at the top of the Wardrobe,
+ * which is where the pieces you build from already live. Keeping it as a
+ * hidden tab was tried twice and trapped the user on it both times; see
+ * (tabs)/_layout.tsx.
+ *
+ * This list is the VISIBLE bar, so removing it here is what moves the flying
+ * thumbnail: `tabCentreFraction` divides by this length, and Wardrobe went
+ * from column 4 of 5 to column 3 of 4. Nothing needed to be told that
+ * separately, which is the reason the order lives in one place.
  */
-export const TAB_ORDER: readonly TabKey[] = [
-  'today',
-  'magazine',
-  'create',
-  'wardrobe',
-  'you',
-];
+/** The keys that are actually IN the bar. Narrower than `TabKey`, which still
+ *  carries `create` because the icon set and the route name do — typing the
+ *  order as plain `TabKey[]` let the layout build an href for a tab that no
+ *  longer exists, and expo-router's typed routes caught it. */
+export type VisibleTabKey = Exclude<TabKey, 'create'>;
+
+export const TAB_ORDER: readonly VisibleTabKey[] = ['today', 'magazine', 'wardrobe', 'you'];
 
 /** Horizontal centre of a tab, as a fraction of screen width. The bar lays its
  *  items out in equal flex columns, so the centre of column i of n is
  *  (i + 0.5) / n — no measurement needed, and it cannot fall out of step with
  *  the bar because both read TAB_ORDER. */
-export const tabCentreFraction = (key: TabKey): number => {
+export const tabCentreFraction = (key: VisibleTabKey): number => {
   const i = TAB_ORDER.indexOf(key);
   return (i < 0 ? 0 : i + 0.5) / TAB_ORDER.length;
 };

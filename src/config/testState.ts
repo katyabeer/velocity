@@ -18,6 +18,8 @@
  * dev-only overlay gated on __DEV__ — not as a panel beside the phone.
  */
 
+import type { Phase } from '@/domain/clock';
+
 export type TestDay = 1 | 2 | 3;
 
 export const ACTIVE_DAY: TestDay = 1;
@@ -127,3 +129,20 @@ export const dayConfig = (day: TestDay): DayConfig => DAY_CONFIG[day];
  * false for anything a participant will see.
  */
 export const SIMULATED_FAILURE = false;
+
+/**
+ * ⚠ WHICH PHASE THE APP BOOTS IN. `null` reads the real clock (`phaseAt` in
+ * domain/clock.ts): entry 07:00–20:00, judging from 20:00, settling until 07:00.
+ *
+ * The clock is the design (locked decision 2) and until 4 Sep the app did not
+ * actually keep it — `phase` started at `entry` and only ever advanced when the
+ * flow itself pushed it, which is why the card's "closed, now judging" copy was
+ * unreachable to anyone who did not enter.
+ *
+ * THIS OVERRIDE EXISTS BECAUSE MODERATED SESSIONS DO NOT HAPPEN AT LUNCHTIME.
+ * A session at 21:00 would otherwise boot into `judging` and the participant
+ * could not build a look at all — which is the one thing the session is for.
+ * Set it to `'entry'` for an evening session, and put it back to `null`
+ * afterwards. Same class of thing as ACTIVE_DAY: a build constant, not a HUD.
+ */
+export const FORCE_PHASE: Phase | null = null;

@@ -25,6 +25,7 @@ import { EmptyState, NewBox } from '@/ui/cards';
 import { InventoryTile } from '@/ui/pieces';
 import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
 import { ConfirmSheet } from '@/ui/ConfirmSheet';
+import { CreateBanner } from '@/ui/CreateBanner';
 import { garmentImage } from '@/data/catalogue';
 import { palette, border, space } from '@/theme/tokens';
 import { CATEGORIES, type Category } from '@/domain/garments';
@@ -34,12 +35,15 @@ import { groupByCategory, pieceLabel, useWardrobe, type WardrobeView } from '@/s
 import { useEconomy } from '@/state/economy';
 import { useSession } from '@/state/session';
 import { useEntry } from '@/state/entry';
+import { useRenderBadge, useSubmission } from '@/state/submission';
 
 export default function Wardrobe() {
   const day = useSession((s) => s.day);
   const cfg = dayConfig(day);
 
   const w = useWardrobe();
+  const createReady = useRenderBadge('create');
+  const markSeen = useSubmission((st) => st.markSeen);
   const entered = useEntry((s) => s.entered);
   const starred = useEconomy((s) => s.starred);
   const held = useEconomy((s) => s.held);
@@ -58,6 +62,28 @@ export default function Wardrobe() {
       <LogoBlock title="Wardrobe" subtitle={pieceLabel(w.count)} />
 
       <Scroll>
+        {/* THE DOOR INTO CREATE, above the segmented control — Create left the
+            tab bar on 4 Sep and this is the only way in. Above rather than
+            below the filter because it is about the whole wardrobe, not about
+            whichever of the three views you happen to be in. */}
+        <CreateBanner
+          ready={createReady}
+          onPress={() => {
+            if (createReady) {
+              markSeen('create');
+              return router.push('/create/posted');
+            }
+            router.push('/create');
+          }}
+        />
+
+        {/* 20pt between the banner and the filters (Katya, 4 Sep). They were
+            8 apart, which read as one stacked control — an accent panel
+            directly above a segmented control looks like its header. The gap
+            is what separates "a door out of this screen" from "a filter on
+            this screen". */}
+        <View style={{ height: 20 }} />
+
         <Segmented
           items={[
             { key: 'pieces', label: 'Pieces' },
@@ -152,13 +178,13 @@ export default function Wardrobe() {
               <EmptyState
                 kick="no looks yet"
                 body="Every look you enter is kept here for good, with what it earned attached."
-                note="Combinations you save in Create land here too — no render, no score, just a set of pieces waiting for the right job."
+                note="Combinations you save in Create land here too — no generation, no score, just a set of pieces waiting for the right job."
               >
                 <Button
                   label="Make something"
                   variant="quiet"
                   style={{ marginTop: 12 }}
-                  onPress={() => router.push('/(tabs)/create')}
+                  onPress={() => router.push('/create')}
                 />
               </EmptyState>
             ) : (
@@ -192,7 +218,7 @@ export default function Wardrobe() {
                       ]}
                     >
                       {a.band === 'flat'
-                        ? 'not rendered'
+                        ? 'not generated'
                         : a.band === 'live'
                           ? 'settles 7am'
                           : a.band}

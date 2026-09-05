@@ -94,13 +94,31 @@ export function LogoBlock({
   title,
   subtitle,
   right,
+  onBack,
 }: {
   title: string;
   subtitle?: string;
   right?: React.ReactNode;
+  /**
+   * A way out, above the masthead. Only for a screen that wears the masthead
+   * but is NOT a tab home — Create, since it moved out of the tab bar (4 Sep)
+   * and so has no bar underneath it to leave by. A tab home must not pass
+   * this: there is nothing behind it.
+   */
+  onBack?: () => void;
 }) {
   return (
     <View style={s.logo}>
+      {onBack ? (
+        <Text
+          onPress={onBack}
+          style={s.logoBack}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+        >
+          ‹
+        </Text>
+      ) : null}
       <View style={s.logoRow}>
         <View style={{ flex: 1 }}>
           <PageTitle>{title}</PageTitle>
@@ -244,6 +262,10 @@ const s = StyleSheet.create({
     backgroundColor: palette.cream,
   },
   back: { fontSize: 19, lineHeight: 22, color: palette.ink },
+  /** Its own line above the title, not beside it — the masthead is the widest
+   *  thing on the screen and a chevron sharing its row would either shrink it
+   *  or float unattached to anything. */
+  logoBack: { fontSize: 22, lineHeight: 24, color: palette.ink, marginBottom: 2, width: 22 },
   strip: {
     backgroundColor: palette.ink,
     paddingHorizontal: space.gutter,

@@ -77,8 +77,13 @@ export function OnboardingFrame({
           )}
           {onBack && label ? <Kick>{label}</Kick> : null}
           {onSkip ? (
-            <Pressable onPress={onSkip} accessibilityRole="button">
-              <Tiny>Skip</Tiny>
+            /* 14px minimum (Katya, 4 Sep). It was `Tiny` at 10 — and Skip is
+               not decoration, it is the way out of the carousel for anyone who
+               has seen it before. A control set smaller than the body copy
+               around it is a control people give up looking for. `Tiny`'s
+               muted colour is still right; only the size was wrong. */
+            <Pressable onPress={onSkip} accessibilityRole="button" hitSlop={10}>
+              <Tiny style={s.skip}>Skip</Tiny>
             </Pressable>
           ) : (
             <View style={{ width: 10 }} />
@@ -97,6 +102,7 @@ export function OnboardingFrame({
 }
 
 const s = StyleSheet.create({
+  skip: { fontSize: 14, lineHeight: 18, letterSpacing: 0.2 },
   frame: { flex: 1, paddingHorizontal: 24, paddingTop: 6, paddingBottom: 18 },
   top: {
     flexDirection: 'row',

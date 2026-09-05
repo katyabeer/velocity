@@ -7,14 +7,20 @@
  *
  * The handover: "A can't ship without this."
  *
- * Note the hint at the bottom. It names what you are thin on across the twelve,
+ * Note the hint at the bottom. It names what you are thin on across the month,
  * never what tonight needs. That distinction is the whole mechanism.
+ *
+ * A DEEPER SCREEN, NOT A TOP-LEVEL ONE (Katya, 4 Sep). It wore the `LogoBlock`
+ * masthead that every tab home wears, which made it read as somewhere you had
+ * arrived rather than somewhere you had gone — and it offered no way back
+ * except the tab bar. It is pushed from Today's card, so it gets Today's
+ * chevron: the in-flow `Header`, and back returns to the day.
  */
 
 import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { Foot, Gap, LogoBlock, Screen, Scroll } from '@/ui/layout';
-import { Body, Tiny, B } from '@/ui/text';
+import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
+import { Body, Tiny, Kick, B } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { LockIcon } from '@/ui/TabIcon';
 import { palette, border } from '@/theme/tokens';
@@ -26,10 +32,17 @@ export default function Challenges() {
 
   return (
     <Screen>
-      <LogoBlock title="Challenges" subtitle="Twelve this month, in no particular order" />
+      <Header
+        onBack={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/today'))}
+        title="Challenges"
+      />
 
       <Scroll>
-        <Body>
+        {/* The count is derived — it said "Twelve this month" while the list
+            held fourteen, which is the kind of number that goes wrong quietly
+            every time a job is added. */}
+        <Kick tone="muted">{CHALLENGES.length} this month, in no particular order</Kick>
+        <Body style={{ marginTop: 8 }}>
           You won&apos;t know which lands when. Worth a read anyway — it&apos;s how you work out what
           to go and keep from the magazine before you need it.
         </Body>

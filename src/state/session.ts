@@ -15,8 +15,8 @@
  */
 
 import { create } from 'zustand';
-import { ACTIVE_DAY, dayConfig, type TestDay } from '@/config/testState';
-import type { Phase, YesterdayState } from '@/domain/clock';
+import { ACTIVE_DAY, FORCE_PHASE, dayConfig, type TestDay } from '@/config/testState';
+import { phaseAt, type Phase, type YesterdayState } from '@/domain/clock';
 import type { CapsuleKey } from '@/data/capsules';
 
 /** o5 asks which rails to show. SOFT, default Both.
@@ -97,7 +97,12 @@ const initial = (day: TestDay) => {
   const cfg = dayConfig(day);
   return {
     day,
-    phase: 'entry' as Phase,
+    /* THE CLOCK, not a flag that starts open. `setPhase` still exists and the
+       flow still advances to judging on submit — that is correct within a
+       session — but the day now genuinely shuts at 20:00 for someone who never
+       enters. FORCE_PHASE overrides it for a moderated session held in the
+       evening; see config/testState.ts. */
+    phase: (FORCE_PHASE ?? phaseAt(new Date())) as Phase,
     yesterday: cfg.yesterday as YesterdayState,
     /* EMPTY on day one — the profile screen's field starts blank and the user
        types their own. Days 2 and 3 are returning users, who already have one. */
@@ -145,7 +150,20 @@ export const useSession = create<SessionState>((set) => ({
   resetToDay: (day) => set(initial(day)),
 }));
 
-/** The three walkthrough tips, copy ported verbatim. */
+/**
+ * The walkthrough tips, copy ported verbatim.
+ *
+ * ⚠ NOTHING RENDERS THESE ANY MORE (4 Sep). Both remaining placements came off
+ * on Katya's call — the magazine's "this is where clothes come from" and
+ * Today's "build first, judge after" — for the same reason the builder's "no
+ * hints, on purpose" went on 3 Sep: each explained, in the biggest accent
+ * panel on its screen, a thing the screen directly beneath it already showed.
+ *
+ * They are kept, with `dismissedTips`/`dismissTip` and `ui/cards.tsx`'s `Tip`,
+ * because the component and its caret are a designed piece worth having if a
+ * tip is ever wanted again — not because anything is waiting on them. If you
+ * are reading this and none has come back, delete the lot.
+ */
 export const TIPS: Record<TipKey, string> = {
   today:
     'Build first, judge after. At 8pm the job shuts and the judging opens — which is also how you unlock tokens.',

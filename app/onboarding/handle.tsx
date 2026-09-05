@@ -48,7 +48,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, Text, TextInput, View, Pressable, type TextStyle } from 'react-native';
 import { router } from 'expo-router';
 import { OnboardingFrame } from '@/ui/OnboardingFrame';
-import { Big, Body, Kick } from '@/ui/text';
+import { Body, Kick } from '@/ui/text';
 import { palette, border, radius } from '@/theme/tokens';
 import { useSession, type Rails } from '@/state/session';
 import {
@@ -204,12 +204,13 @@ export default function Profile() {
         This is your profile name that will be visible to other users when you publish looks.
       </Body>
 
+      {/* "Which rails do you want to shop?" came off (Katya, 4 Sep). The
+          kicker already asks the question, and the three named options answer
+          it — a headline restating it made the second question on the screen
+          twice the size of the first one, which is the one that matters. */}
       <Kick tone="muted" style={{ marginTop: 24 }}>
         and what shall we show you
       </Kick>
-      <Big size={20} style={{ marginTop: 7 }}>
-        Which rails do you want to shop?
-      </Big>
 
       <View style={s.row}>
         {OPTIONS.map((o) => {

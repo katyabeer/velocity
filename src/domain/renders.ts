@@ -46,8 +46,7 @@
  * product succeeds. Needs his sign-off, not ours.
  */
 
-import { RESULT_HOUR } from './clock';
-import { MAX_PIECES, MIN_PIECES } from './entry';
+import { RESULT_HOUR, nextResultAt } from './clock';
 
 export const RENDER_KINDS = ['brief', 'freestyle'] as const;
 export type RenderKind = (typeof RENDER_KINDS)[number];
@@ -77,20 +76,17 @@ export function dayKey(now: Date): string {
   return `${shifted.getFullYear()}-${shifted.getMonth() + 1}-${shifted.getDate()}`;
 }
 
-/** The next 07:00 strictly after `now`. */
-export function nextReset(now: Date): Date {
-  const at = new Date(now);
-  at.setHours(RESULT_HOUR, 0, 0, 0);
-  if (at <= now) at.setDate(at.getDate() + 1);
-  return at;
-}
+/** The next 07:00 strictly after `now`. DELEGATED, not reimplemented — the
+ *  allowance reset and the result landing are the same moment, and two
+ *  implementations of one boundary is how they drift apart. */
+export const nextReset = nextResultAt;
 
 /**
  * Phrased as the next thing rather than the absence of this one (§6.1):
  * "Next render at 7am", never "no renders left". Same sentence all day, so it
  * does not read as a countdown someone is meant to wait out.
  */
-export const NEXT_RENDER_LINE = 'Next render at 7am';
+export const NEXT_RENDER_LINE = 'Next generation at 7am';
 
 /** How long until the reset, for the one place that wants a duration rather
  *  than a time — kept separate so NEXT_RENDER_LINE stays the default. */
@@ -175,14 +171,14 @@ export function rerenderVerdict(look: {
 /** What the screen says when the window has shut. Each one states the reason,
  *  because "unavailable" with no reason reads as a fault. */
 export const RERENDER_BLOCK_LINES: Record<RerenderBlock, string> = {
-  used: 'You have used your one re-render on this look.',
-  reacted: 'Someone has reacted — the render stands as it is.',
-  expired: 'The re-render window has closed.',
+  used: 'You have used your one re-generation on this look.',
+  reacted: 'Someone has reacted — the generation stands as it is.',
+  expired: 'The re-generation window has closed.',
   'not-published': 'Not published yet.',
 };
 
 export const RERENDER_NOTE =
-  'Same pieces, same tags, same model — a different render of the identical look. One only, and only until someone reacts.';
+  'Same pieces, same tags, same model — a different generation of the identical look. One only, and only until someone reacts.';
 
 /* ───────────────────── the Create tab state machine ───────────────────── */
 
@@ -247,31 +243,54 @@ export function createTabState(input: {
  *  it. Four segments means the header's "of 4" is finally true, and "four
  *  steps, one chassis" survives. */
 export const CREATE_RIBBON = [
-  { key: 'pick', label: 'Pick', hint: `${MIN_PIECES} to ${MAX_PIECES}` },
-  { key: 'look', label: 'Look', hint: 'the commit' },
-  { key: 'tag', label: 'Tag', hint: 'your words' },
-  { key: 'render', label: 'Render', hint: 'one a day' },
+  { key: 'pick', label: 'Pick' },
+  { key: 'look', label: 'Look' },
+  { key: 'tag', label: 'Tag' },
+  { key: 'render', label: 'Generate' },
 ] as const;
 
 /** Placement 1 of the one-a-day rule (§7): ambient, under the masthead.
  *  Present, not argued. Never in onboarding — onboarding shows, it does not
  *  explain, and this is learned in context. */
-export const ONE_A_DAY_AMBIENT = 'One render a day.';
+export const ONE_A_DAY_AMBIENT = 'One generation a day.';
 
-/** Placement 2: at the commit. This is the load-bearing one and the sentence
- *  is kept verbatim from the prototype's `#crendnote` — it is doing real work
- *  at exactly the right moment. */
+/**
+ * Placement 2: at the commit. The load-bearing one — and it was FAILING at it.
+ *
+ * It used to be the prototype's `#crendnote` verbatim: "Rendering is the
+ * expensive bit, so it is one a day — and only rendered looks can go in the
+ * magazine." Two problems, both fixed here (Katya, 4 Sep):
+ *
+ *   IT WAS SMALL PRINT. Twenty-one words set in `Tiny` above the button is the
+ *   size and shape the eye skips, at exactly the moment it must not. The rule
+ *   is now a kicker plus one short line at `Lede`, so it is read rather than
+ *   merely available to be read.
+ *
+ *   THE MAGAZINE CLAUSE WAS STALE. It distinguished rendered looks from
+ *   unrendered ones back when a look could be saved without rendering. §2.2
+ *   deleted that path, so the clause now separates rendered looks from nothing
+ *   at all — an argument against an option that no longer exists.
+ *
+ * IT IS THE BODY COPY NOW, not a line above the button (Katya, 4 Sep). The
+ * commit screen used to say the rule twice — once in its body and once in a
+ * kicker plus `Lede` in the footer — and the second telling is the one people
+ * stopped reading. One statement, in the sentence under the heading.
+ *
+ * Kept here rather than inlined in the screen because §7's three placements
+ * are a rule about the product, not about one file: this is placement 2, and
+ * the test that guards it needs something to point at.
+ */
 export const ONE_A_DAY_AT_COMMIT =
-  'Rendering is the expensive bit, so it is one a day — and only rendered looks can go in the magazine.';
+  'You can only generate and publish one look a day.';
 
 /** Placement 3: the spent state, where the rule stops being information and
  *  becomes the situation. This is where it is actually learned. */
 export const ONE_A_DAY_WHEN_SPENT =
-  'That was today’s render. Rendering is the expensive bit, so it is one a day.';
+  'That was today’s generation. Generating is the expensive bit, so it is one a day.';
 
 /** §2.2 consequence 2: with no save path, abandonment is lossy, so it needs a
  *  quiet confirm. One line, not a modal ceremony. */
-export const LEAVE_WITHOUT_RENDERING = 'Leave without rendering? Nothing is kept.';
+export const LEAVE_WITHOUT_RENDERING = 'Leave without generating? Nothing is kept.';
 
 /**
  * NOTHING ABOUT CREATE IS A BRIEF. No brief title, no slots against a brief,

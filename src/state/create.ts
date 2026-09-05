@@ -140,6 +140,13 @@ type CreateState = {
   rerender: () => void;
   /** System failure only. Hands the allowance back and clears the flow. */
   refundFailure: () => void;
+  /** System failure only, and the mirror of `refundFailure` for the other
+   *  lane. Clears the dead job so the card can leave `failed`, and hands the
+   *  allowance back.
+   *    ⚠ `useBriefRendersLeft` is read by NOTHING, so the brief allowance
+   *  currently gates no behaviour — this is for symmetry between the lanes,
+   *  not because anything would break without it. */
+  refundBrief: () => void;
   /** Marks the brief's allowance spent. Called when the day's job is entered,
    *  so the two counters stay independent but roll over together. */
   spendBrief: () => void;
@@ -228,7 +235,7 @@ export const useCreate = create<CreateState>((set, get) => ({
     const day = today();
     if (rerendersLeft(s.allowance.freestyle, 'freestyle', day) <= 0) return;
     useSubmission.getState().rerender('create');
-    useToast.getState().show('Rendering it again — same look, different render.');
+    useToast.getState().show('Generating it again — same look, different result.');
     set({ allowance: { ...s.allowance, freestyle: consumeRerender(s.allowance.freestyle, day) } });
   },
 
@@ -240,6 +247,13 @@ export const useCreate = create<CreateState>((set, get) => ({
       ...blank,
       allowance: { ...s.allowance, freestyle: refund(s.allowance.freestyle, day) },
     });
+  },
+
+  refundBrief: () => {
+    const s = get();
+    const day = today();
+    useSubmission.getState().clear('brief');
+    set({ allowance: { ...s.allowance, brief: refund(s.allowance.brief, day) } });
   },
 
   spendBrief: () => {

@@ -229,9 +229,25 @@ export function SpreadCard({
 
   return (
     <View style={s.spread}>
+      {/* SWAPPED AND CENTRED (Katya, 4 Sep), the same way the judging screen's
+          pair was. The question is what each spread is asking; "Train your eye"
+          is the section's name and is identical on every one of them, so
+          setting it largest made the loudest line the one that never changes.
+          Centred, because the two plates below are symmetrical and a
+          left-aligned head over them pulls the eye off the axis the comparison
+          happens on. */}
       <View style={s.spreadHead}>
-        <Text style={s.spreadTitle}>Train your eye</Text>
-        <Text style={s.spreadSub}>which one works better?</Text>
+        {/* The section name reads FIRST (Katya, 4 Sep) — kicker above the
+            question, which is the order every other kicker in the app uses.
+            The sizes stay as they are: "Train your eye" names the section and
+            is identical on every spread, so the question is still the line
+            set large. Only the vertical order changed. */}
+        <Text style={s.spreadSub}>train your eye</Text>
+        <Text style={s.spreadTitle}>Which one works better?</Text>
+        {/* The brief moved ABOVE the plates. It is the condition both looks
+            are being judged against, so it has to be read before they are —
+            underneath, it was an explanation arriving after the decision. */}
+        <Text style={s.briefLabel}>Brief: {left.occasion}</Text>
       </View>
 
       <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 12 }}>
@@ -275,14 +291,12 @@ export function SpreadCard({
         })}
       </View>
 
-      {!revealed ? (
-        <View style={{ paddingHorizontal: 22, paddingTop: 14 }}>
-          <Text style={s.briefLabel}>Brief: {left.occasion}</Text>
-          <Tiny style={{ marginTop: 8 }}>
-            Which one works? Tap it — the room has already voted.
-          </Tiny>
-        </View>
-      ) : (
+      {/* Nothing under the plates until a call is made. "Which one works? Tap
+          it — the room has already voted." came off (Katya, 4 Sep): the head
+          now asks the question, the Vote A / Vote B pills say how to answer,
+          and the second half was telling you the result exists before you had
+          given an answer to compare it with. */}
+      {!revealed ? null : (
         <Animated.View style={[{ paddingHorizontal: 22, paddingTop: 14 }, resultStyle]}>
           {/* Used to go klein when share >= 50 — no accent-as-text option
               survives the v3 collapse (accent is illegible on cream), so
@@ -353,26 +367,36 @@ const s = StyleSheet.create({
     color: palette.greyMute,
     marginTop: 2,
   },
-  spreadHead: { paddingHorizontal: 22, marginBottom: 12 },
+  spreadHead: { paddingHorizontal: 22, marginBottom: 12, alignItems: 'center' },
+  /** The question now carries the weight the section name had. Bigger than the
+   *  14 it replaced, because it is a heading rather than a label — and it is
+   *  the only line on the card anyone needs to read before tapping. */
   spreadTitle: {
     fontFamily: 'Archivo_700Bold',
-    fontSize: 14,
-    lineHeight: 16.8,
+    fontSize: 19,
+    lineHeight: 23,
+    textAlign: 'center',
     color: palette.ink,
   },
+  /** Demoted to the kicker it always was, and now sitting above the question
+   *  like every other kicker in the app. No top margin — it is the first
+   *  thing in the head. */
   spreadSub: {
     fontFamily: 'Archivo_700Bold',
     fontSize: 9,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
+    textAlign: 'center',
     color: palette.greyMute,
-    marginTop: 3,
+    marginBottom: 5,
   },
   briefLabel: {
-    fontFamily: 'Archivo_700Bold',
-    fontSize: 14,
-    lineHeight: 16.8,
-    color: palette.ink,
+    fontFamily: 'Archivo_600SemiBold',
+    fontSize: 12.5,
+    lineHeight: 16,
+    textAlign: 'center',
+    color: palette.grey,
+    marginTop: 8,
   },
   /** `.qt-img-feed` — rounded, tilted. Overflow hidden so the ghost watermark
    *  and tag both clip to the rounded corners even under rotation. */

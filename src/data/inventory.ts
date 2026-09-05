@@ -183,7 +183,7 @@ export const ARCHIVE_DAY_TWO: readonly ArchiveEntry[] = [
 ];
 
 export const ARCHIVE_ESTABLISHED: readonly ArchiveEntry[] = [
-  { job: 'Dinner, unrendered', band: 'flat', when: 'today', note: '4 pieces · saved as a set' },
+  { job: 'Dinner, not generated', band: 'flat', when: 'today', note: '4 pieces · saved as a set' },
   { job: 'The interview', band: 'Upper half', when: 'yesterday', note: '9 took a piece' },
   { job: 'Airport', band: 'Top of the room', when: '2 days ago', note: '14 took a piece' },
   { job: 'Night out', band: 'Lower half', when: '3 days ago', note: 'read as safe' },

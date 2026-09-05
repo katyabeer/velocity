@@ -158,31 +158,83 @@ export function compose(pieces: readonly string[]): {
   return { template: isDressLook ? 'dress' : 'standard', placements };
 }
 
+/**
+ * HOW CLOSE THE PIECES SIT. 0 is the delivery template's own geometry; 1 is as
+ * close as the arrangement goes before pieces start hiding each other.
+ *
+ * Two things happen together, and it needs both (Katya, 4 Sep: "force the
+ * items to overlap slightly so they look closer together"):
+ *
+ *   GROW — each piece's square expands about its own centre, so it fills more
+ *   of the gutter the template left around it.
+ *   PULL — each square's centre moves toward the centroid of all of them, so
+ *   the whole arrangement converges instead of just fattening.
+ *
+ * Growing alone was not enough, which is worth knowing before someone "simplifies"
+ * this back to a scale factor: the template's boxes are far apart by design and
+ * every cutout is `contain`-fit inside its square, so a tall narrow garment
+ * leaves most of a bigger box empty and the gap barely closes. The pull is what
+ * actually brings a bag up beside a skirt.
+ *
+ * The ceilings are deliberately modest. Past them the extras start sitting on
+ * top of the shoes, and a flat lay whose pieces occlude each other stops being
+ * a readable list of what you picked — which is the one job it has.
+ */
+const MAX_GROW = 0.3;
+const MAX_PULL = 0.34;
+
+export const TIGHTEN_DEFAULT = 0;
+export const TIGHTEN_PREVIEW = 1;
+
 export function ComposedFlatLay({
   pieces,
   caption,
   showCaption = false,
+  tighten = TIGHTEN_DEFAULT,
   style,
 }: {
   pieces: readonly string[];
   caption?: string;
   showCaption?: boolean;
+  /** 0–1. See TIGHTEN_DEFAULT — 0 leaves the delivery template alone. */
+  tighten?: number;
   style?: ViewStyle;
 }) {
   const { placements } = compose(pieces);
   const label = showCaption ? caption : undefined;
 
+  const t = Math.max(0, Math.min(1, tighten));
+  const grow = 1 + MAX_GROW * t;
+  const pull = MAX_PULL * t;
+
+  /* The centroid of the pieces actually placed — NOT the canvas centre. A
+     three-piece look sits in one corner of the template, and pulling it toward
+     the middle of an empty canvas would slide the whole arrangement rather
+     than close it up. */
+  const centres = placements.map(({ box }) => ({ x: box.x + box.w / 2, y: box.y + box.h / 2 }));
+  const hub = {
+    x: centres.reduce((n, c) => n + c.x, 0) / (centres.length || 1),
+    y: centres.reduce((n, c) => n + c.y, 0) / (centres.length || 1),
+  };
+
   return (
     <View style={[s.stage, style]}>
       {placements.map(({ name, box, side }) => {
         const image = garment(name)?.image;
+        const grown = side * grow;
+        /* Move the box's centre toward the hub, then draw the square around
+           wherever it ended up. */
+        const cx = box.x + box.w / 2;
+        const cy = box.y + box.h / 2;
+        const x = cx + (hub.x - cx) * pull;
+        const y = cy + (hub.y - cy) * pull;
         /* Percentages of the two canvas axes. The stage's aspect ratio is the
            canvas's, so a square in canvas units renders square on screen. */
         const frame = {
-          left: `${((box.x + (box.w - side) / 2) / CANVAS_W) * 100}%`,
-          top: `${((box.y + (box.h - side) / 2) / CANVAS_H) * 100}%`,
-          width: `${(side / CANVAS_W) * 100}%`,
-          height: `${(side / CANVAS_H) * 100}%`,
+          left: `${((x - grown / 2) / CANVAS_W) * 100}%`,
+          top: `${((y - grown / 2) / CANVAS_H) * 100}%`,
+          width: `${(grown / CANVAS_W) * 100}%`,
+          height: `${(grown / CANVAS_H) * 100}%`,
         } as const;
 
         return (

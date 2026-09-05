@@ -43,7 +43,7 @@ import { Hero, Lede, Body, Tiny, Kick, B } from '@/ui/text';
 import { Bar, Button, ChipRow } from '@/ui/controls';
 import { StepRibbonBleed, statesFor } from '@/ui/StepRibbon';
 import { GarmentGrid, SlotStrip } from '@/ui/pieces';
-import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
+import { ComposedFlatLay, TIGHTEN_PREVIEW } from '@/ui/ComposedFlatLay';
 import { palette, border } from '@/theme/tokens';
 import { CATEGORIES, categoryOf, slotOf, type Category } from '@/domain/garments';
 import {
@@ -119,7 +119,7 @@ export default function Build() {
   }));
 
   const ribbon = statesFor(
-    ENTRY_STEPS.map((s) => ({ label: s.label, hint: s.hint })),
+    ENTRY_STEPS.map((s) => ({ label: s.label })),
     step,
     [false, false, entered, callsCast >= quota],
   );
@@ -145,7 +145,7 @@ export default function Build() {
              is most likely to want out of. */
           return router.canGoBack() ? router.back() : router.replace('/(tabs)/today');
         }}
-        title={step === 1 ? 'Pick your pieces' : 'Have a look'}
+        title={step === 1 ? 'Pick your pieces' : 'Preview your look'}
         /* The count used to sit here. It moved into the slot strip (Katya,
            4 Sep), which is the thing it counts — in the header it was a number
            floating next to the token badge with nothing to attach itself to. */
@@ -156,10 +156,20 @@ export default function Build() {
       {/* paddingBottom, not just paddingTop: the brief and the slot strip were
           touching, so the job and the thing you build it with read as one
           block. */}
-      <View style={{ paddingHorizontal: 22, paddingTop: 13, paddingBottom: 18 }}>
-        <Lede>{TONIGHTS_BRIEF.title}</Lede>
-        <Body style={{ marginTop: 6 }}>{TONIGHTS_BRIEF.note}</Body>
-      </View>
+      {/* The job, and only the job. Its explainer line ("Cold field, warm
+          marquee…") came off on 4 Sep — the brief is the title, and the
+          sentence under it was being read once and then occupying the top of
+          the screen for the rest of the session. It is still the first thing a
+          new user meets, on the first-challenge screen.
+
+          STEP 1 ONLY. Step 2 now states the job itself, under its own kicker
+          and below its headline, so leaving this here printed the same title
+          twice on one screen — once above the fold and once below it. */}
+      {step === 1 ? (
+        <View style={{ paddingHorizontal: 22, paddingTop: 13, paddingBottom: 18 }}>
+          <Lede>{TONIGHTS_BRIEF.title}</Lede>
+        </View>
+      ) : null}
 
       {step === 1 ? (
         <Pinned>
@@ -241,19 +251,29 @@ export default function Build() {
         </Scroll>
       ) : (
         <Scroll>
-          <Hero>Together.</Hero>
-          {/* Both lines sit together above the plate (Katya, 4 Sep). What this
-              screen is, then what committing to it costs — then the thing
-              itself, with nothing after it to scroll for. */}
-          <Body style={{ marginTop: 7 }}>
-            Not a render — the actual pieces, laid out. No body, no fit.
-          </Body>
+          {/* RESTRUCTURED, 4 Sep. It was "Together." over two lines, one of
+              which said what the picture ISN'T — the same sentence that came
+              off Create's Look step and off the plate's own caption bar before
+              that. Now: what the screen is, what it costs, and which job it is
+              answering, in that order.
+
+              The brief title sits BELOW the body rather than above it because
+              the screen's own name has to come first — you arrive here from a
+              grid of clothes, and "which job was this again" is the second
+              question, not the first. */}
+          <Hero>{'Preview\nyour look.'}</Hero>
           <Body style={{ marginTop: 10 }}>
-            Once you enter, <B>nothing can be changed</B>. The render comes after, and at 8pm you
-            judge the field alongside everyone else.
+            Once you enter, <B>nothing can be changed</B>. The generation comes after, and at 8pm
+            you judge the field alongside everyone else.
           </Body>
+          <View style={{ marginTop: 14, paddingTop: 12, borderTopWidth: border.hair, borderTopColor: palette.rule }}>
+            <Kick tone="muted">tonight&apos;s job</Kick>
+            <Lede style={{ marginTop: 5 }}>{TONIGHTS_BRIEF.title}</Lede>
+          </View>
           <View style={{ marginTop: 16 }}>
-            <ComposedFlatLay pieces={picks.map((p) => p.name)} />
+            {/* Tightened, so the pieces read as one arrangement rather than a
+                grid of separate photographs. See TIGHTEN_PREVIEW. */}
+            <ComposedFlatLay pieces={picks.map((p) => p.name)} tighten={TIGHTEN_PREVIEW} />
           </View>
           <Gap />
         </Scroll>
@@ -263,7 +283,7 @@ export default function Build() {
         <Button
           label={
             step === 2
-              ? 'Enter · no changes after this'
+              ? 'Submit'
               : canAdvance
                 ? 'See them together →'
                 : `At least ${MIN_PIECES} pieces (${picks.length} of ${MAX_PIECES})`

@@ -40,6 +40,7 @@ import {
   rerenderVerdict,
 } from '../src/domain/renders.ts';
 import { MIN_PIECES } from '../src/domain/entry.ts';
+import { REVEAL_NEXT_BRIEF, YESTERDAYS_BRIEF, nextChallenge } from '../src/data/challenges.ts';
 import { RESULT_HOUR } from '../src/domain/clock.ts';
 
 const DAY = '2026-9-4';
@@ -112,7 +113,7 @@ test('a stale allowance reads as full without anything having to write first', (
 
 test('the spent line names the next render, never the absence of one', () => {
   /* §6.1: phrased as the next thing rather than the absence of this one. */
-  assert.equal(NEXT_RENDER_LINE, 'Next render at 7am');
+  assert.equal(NEXT_RENDER_LINE, 'Next generation at 7am');
   assert.doesNotMatch(NEXT_RENDER_LINE, /no |none|left|out of/i);
 });
 
@@ -268,7 +269,7 @@ test('AC 19 · nothing in Create renders before the step-2 commit', () => {
      Asserted positionally against the source because it is a structural claim,
      not a value: RenderStrip must live inside the `Rendering` component and
      nowhere else in the file. */
-  const src = readFileSync(new URL('../app/(tabs)/create/index.tsx', import.meta.url), 'utf8');
+  const src = readFileSync(new URL('../app/create/index.tsx', import.meta.url), 'utf8');
   const renderingFn = src.indexOf('function Rendering()');
   const strips = [...src.matchAll(/<RenderStrip/g)].map((m) => m.index!);
 
@@ -282,7 +283,7 @@ test('AC 20 · no brief data appears anywhere in Create', () => {
      voting. Two flows sharing a chassis makes sharing the copy with it
      perpetually tempting, so this is checked rather than trusted. */
   assert.equal(CREATE_HAS_NO_BRIEF, true);
-  for (const f of ['../app/(tabs)/create/index.tsx', '../app/(tabs)/create/posted.tsx']) {
+  for (const f of ['../app/create/index.tsx', '../app/create/posted.tsx']) {
     const src = readFileSync(new URL(f, import.meta.url), 'utf8');
     assert.equal(/TONIGHTS_BRIEF/.test(src), false, `${f} must not read the brief`);
     assert.equal(/domain\/bands|BandLadder|settlement/.test(src), false, `${f} must not band it`);
@@ -309,7 +310,7 @@ test('reactions are live on a freestyle look from publish', () => {
 test('the ribbon is four segments and casting is not one of them', () => {
   assert.deepEqual(
     CREATE_RIBBON.map((s) => s.label),
-    ['Pick', 'Look', 'Tag', 'Render'],
+    ['Pick', 'Look', 'Tag', 'Generate'],
   );
   assert.equal(
     CREATE_RIBBON.some((s) => /model|cast/i.test(s.label)),
@@ -318,11 +319,41 @@ test('the ribbon is four segments and casting is not one of them', () => {
   );
 });
 
-test('the commit-point sentence is kept verbatim — it is the load-bearing one', () => {
-  /* §7 placement 2. The prototype's #crendnote was doing real work at exactly
-     the right moment, so the wording is not ours to tidy. */
-  assert.equal(
-    ONE_A_DAY_AT_COMMIT,
-    'Rendering is the expensive bit, so it is one a day — and only rendered looks can go in the magazine.',
-  );
+test('the rule at the commit is SHORT, and says the one thing that matters', () => {
+  /* §7 placement 2, the load-bearing one — and this test used to pin the
+     prototype's #crendnote verbatim on the grounds that the wording was not
+     ours to tidy. Katya replaced it on 4 Sep: twenty-one words in `Tiny` above
+     the button is the size and shape the eye skips at exactly the moment it
+     must not.
+
+     So the assertion moved from the exact string to the properties that made
+     it load-bearing. Short enough to be read at a glance, and it still names
+     the constraint rather than the cost. */
+  assert.ok(ONE_A_DAY_AT_COMMIT.split(/\s+/).length <= 12, 'small print is not a placement');
+  assert.match(ONE_A_DAY_AT_COMMIT, /one look a day/i);
+
+  /* The magazine clause is gone and must not come back: it distinguished
+     rendered looks from unrendered ones, and §2.2 deleted the unrendered
+     path — so it now argues against an option that does not exist. */
+  assert.doesNotMatch(ONE_A_DAY_AT_COMMIT, /magazine/i);
+});
+
+/* ══════════════ a1 · the locked next-challenge card ══════════════ */
+
+test('tomorrow’s job is never the one already played', () => {
+  /* The first version returned CHALLENGES[1], which is The interview — the job
+     the result card directly above it is reporting the result OF. A preview of
+     tomorrow that shows yesterday is worse than no preview. */
+  const next = nextChallenge();
+  assert.notEqual(next.name, YESTERDAYS_BRIEF);
+  assert.notEqual(next.open, true, 'nor the one open right now');
+});
+
+test('the preview reveals the month’s order, and that is one flag', () => {
+  /* ⚠ data/challenges.ts withholds the order on purpose — "publish the month's
+     jobs, withhold the order… browsing gets a purpose without becoming
+     shopping for tonight". Naming tomorrow's job hands someone the evening to
+     go and acquire for it. Katya's call, 4 Sep; this asserts the off-switch
+     still exists rather than asserting which way it is set. */
+  assert.equal(typeof REVEAL_NEXT_BRIEF, 'boolean');
 });

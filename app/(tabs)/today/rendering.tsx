@@ -120,7 +120,7 @@ export default function Rendering() {
           says "last step". Pick and Look are done; Render is where you are. */}
       <StepRibbonBleed
         steps={statesFor(
-          ENTRY_STEPS.map((e) => ({ label: e.label, hint: e.hint })),
+          ENTRY_STEPS.map((e) => ({ label: e.label })),
           3,
           [true, true],
         )}
@@ -143,7 +143,7 @@ export default function Rendering() {
       <Foot>
         {/* Vote is the fourth step on the ribbon, so the judging round reads as
             the END OF THE JOB rather than a separate errand. */}
-        <Button label="Last step · vote on tonight’s looks" onPress={toJudging} />
+        <Button label="Vote now" onPress={toJudging} />
       </Foot>
     </Screen>
   );

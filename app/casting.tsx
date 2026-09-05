@@ -7,7 +7,7 @@
  * The full matrix is 108 combinations, but only THREE RENDERS are needed for the
  * test — variants of the participant's own look. Everyone else gets one model.
  *
- * "Changes the render, not the clothes." That line is doing real work: casting
+ * "Changes the generation, not the clothes." That line is doing real work: casting
  * is a production decision, not a self-description, which is what keeps it
  * consistent with *no bodies-as-you, no fit*.
  *
@@ -54,7 +54,7 @@ export default function CastingScreen() {
          only spent on success, a user could start a render, kill the app and
          start again, which is a reroll through the back door. */
       startCreateRender();
-      router.replace('/(tabs)/create');
+      router.replace('/create');
     } else {
       router.replace('/(tabs)/today/rendering');
     }
@@ -83,12 +83,12 @@ export default function CastingScreen() {
       <StepRibbonBleed
         steps={
           origin === 'create'
-            ? statesFor(CREATE_RIBBON.map((s) => ({ label: s.label, hint: s.hint })), 4, [
+            ? statesFor(CREATE_RIBBON.map((s) => ({ label: s.label })), 4, [
                 true,
                 true,
                 true,
               ])
-            : statesFor(ENTRY_STEPS.map((s) => ({ label: s.label, hint: s.hint })), 3, [
+            : statesFor(ENTRY_STEPS.map((s) => ({ label: s.label })), 3, [
                 true,
                 true,
               ])
@@ -101,7 +101,7 @@ export default function CastingScreen() {
           Changes the render, not the clothes. Set it once and reuse it.
           {origin === 'brief'
             ? ' The next tap enters your look — nothing can be changed after it.'
-            : ' The next tap starts the render — it posts itself when it lands.'}
+            : ' The next tap starts the generation — it posts itself when it lands.'}
         </Tiny>
 
         <View style={{ marginTop: 16 }}>
@@ -136,7 +136,7 @@ export default function CastingScreen() {
         {/* The brief's button has to say what it commits to. "Render it" is
             true for Create, where nothing is entered into anything; here the
             same tap is the point of no return (invariant 4). */}
-        <Button label={origin === 'brief' ? 'Build and submit' : 'Render it'} onPress={go} />
+        <Button label={origin === 'brief' ? 'Build and submit' : 'Generate it'} onPress={go} />
       </Foot>
     </Screen>
   );

@@ -159,10 +159,10 @@ export function slotStrip(picks: readonly Pick[]): { slot: Slot; pick?: Pick }[]
  * screen AFTER the render lands, not a step before entry.
  */
 export const ENTRY_STEPS = [
-  { key: 'pick', label: 'Pick', hint: `3 to ${MAX_PIECES}` },
-  { key: 'look', label: 'Look', hint: 'together' },
-  { key: 'render', label: 'Render', hint: 'after entering' },
-  { key: 'vote', label: 'Vote', hint: 'from 8pm' },
+  { key: 'pick', label: 'Pick' },
+  { key: 'look', label: 'Look' },
+  { key: 'render', label: 'Generate' },
+  { key: 'vote', label: 'Vote' },
 ] as const;
 
 export type EntryStepKey = (typeof ENTRY_STEPS)[number]['key'];

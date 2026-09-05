@@ -64,6 +64,7 @@ import {
   View,
   type View as RNView,
 } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { palette, border, radius } from '@/theme/tokens';
 import {
   NOT_ENOUGH_READS,
@@ -93,27 +94,32 @@ const ANCHOR_GAP = 8;
 
 type Anchor = { x: number; y: number; w: number; h: number };
 
-function Icon({
-  glyph,
-  label,
-  held,
-  onPress,
-}: {
-  glyph: string;
-  label: string;
-  held: boolean;
-  onPress: () => void;
-}) {
+/**
+ * THE LIKE, AS A HEART (Katya, 4 Sep). Outline until you tap it, filled after —
+ * the fill IS the held state, so the icon carries its own selected-ness and
+ * needs no second treatment around it.
+ *
+ * It replaced a 👍 emoji. Two reasons that matters beyond taste: an emoji
+ * renders in the platform's font, so it was the one glyph in the app that
+ * looked different on every device and could not take the ink colour; and a
+ * thumb only reads as pressed via the border, which is the same border the
+ * `add reaction` control uses for a different meaning.
+ *
+ * Ink, not accent or red. Accent is a fill that means "yours" on cards, and
+ * `palette.error` is validation-only — the do-not-re-propose list is explicit
+ * that red on a reaction reads as aggressive.
+ */
+function Heart({ filled, size = 19 }: { filled: boolean; size?: number }) {
   return (
-    <Pressable
-      onPress={onPress}
-      style={[s.icon, held && s.iconHeld]}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ selected: held }}
-    >
-      <Text style={s.glyph}>{glyph}</Text>
-    </Pressable>
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path
+        d="M12 20.5 4.2 13a5 5 0 0 1 7.1-7l.7.7.7-.7a5 5 0 1 1 7.1 7Z"
+        fill={filled ? palette.ink : 'none'}
+        stroke={palette.ink}
+        strokeWidth={filled ? 1.6 : 1.8}
+        strokeLinejoin="round"
+      />
+    </Svg>
   );
 }
 
@@ -166,21 +172,49 @@ export function ReactionCluster({
      rule is what makes it safe — it can only ever add one. */
   const shown = publicStats(withOwnReaction(seeded, held));
 
+  const liked = held === 'thumbs_up';
+
   return (
     <View style={s.wrap}>
       <View style={s.row}>
-        <Icon
-          glyph="👍"
-          label={REACTION_LABELS.thumbs_up}
-          held={held === 'thumbs_up'}
+        {/* THE HEART AND ITS COUNT ARE ONE CONTROL. The count used to sit at
+            the far end of the row under a list of words, which made it read as
+            a property of the card rather than of the thing being counted.
+            Inside the same target, the number is plainly "how many of these". */}
+        <Pressable
           onPress={() => commit('thumbs_up')}
-        />
-        <Icon
-          glyph="👎"
-          label={REACTION_LABELS.thumbs_down}
-          held={held === 'thumbs_down'}
-          onPress={() => commit('thumbs_down')}
-        />
+          style={[s.icon, s.heart, liked && s.iconHeld]}
+          accessibilityRole="button"
+          accessibilityLabel={
+            shown.positiveCount > 0
+              ? `${REACTION_LABELS.thumbs_up}. ${shown.positiveCount} so far`
+              : REACTION_LABELS.thumbs_up
+          }
+          /* `aria-pressed`, not `accessibilityState.selected`. This is a
+             TOGGLE — pressed is the role-correct state for one, selected is
+             for an item within a set — and the accessibility state does not
+             reach the DOM on react-native-web anyway, the same gap that left
+             off-variant buttons without `aria-disabled` (see ui/controls.tsx).
+             Verified in the rendered attributes rather than trusted. */
+          aria-pressed={liked}
+          accessibilityState={{ selected: liked }}
+        >
+          <Heart filled={liked} />
+          {shown.positiveCount > 0 ? (
+            <Text style={s.heartCount}>{shown.positiveCount}</Text>
+          ) : null}
+        </Pressable>
+
+        {/* THUMBS DOWN IS GONE FROM THE UI (Katya, 4 Sep): "we decided not to
+            capture negative sentiments like that". It stays in the vocabulary
+            — `valenceOf` and the owner-only read still know what it means, and
+            any already stored stays readable — but nothing in the app can cast
+            one any more.
+              ⚠ THE PANEL'S THREE NEGATIVES ARE STILL THERE (clashing ·
+            overdone · too safe). They are a different mechanism: never public,
+            never a figure, released to the owner alone at 5+ reactions and only
+            as a sentence. Say if those were meant to go too — that would be
+            §6 of reactions-logic removed, not a control hidden. */}
 
         <Pressable
           ref={sparkRef}
@@ -202,15 +236,11 @@ export function ReactionCluster({
           )}
         </Pressable>
 
-        {/* The look's own reads, as words. Never a table of numbers (§6). */}
-        {shown.positiveCount > 0 ? (
-          <View style={s.tally}>
-            <Text style={s.tallyCount}>{shown.positiveCount}</Text>
-            <Text style={s.tallyWords} numberOfLines={1}>
-              {breakdownWords(shown.positiveBreakdown, 2).join(' · ')}
-            </Text>
-          </View>
-        ) : null}
+        {/* "BOLD · LIKED IT" IS GONE (Katya, 4 Sep). The row used to end with
+            the count and the top two reads as words. It restated on every card
+            what the panel already says when you open it, and on a feed of
+            cards it was the same two or three words repeating down the page.
+            The count moved into the heart; the words are not replaced. */}
       </View>
 
       {anchor ? (
@@ -359,6 +389,19 @@ const s = StyleSheet.create({
    *  pairing. Accent fill would read as "yours" (see the token rules). */
   iconHeld: { borderWidth: border.mid, borderColor: palette.ink, backgroundColor: palette.creamSunk },
   glyph: { fontSize: 17, lineHeight: 21, color: palette.ink },
+  /** The heart's target grows to fit its count; `minWidth` keeps it square
+   *  when there is none. Not `width: undefined` on a variant — RN drops
+   *  undefined rather than resetting, which has bitten this file before. */
+  heart: { flexDirection: 'row', gap: 6, paddingHorizontal: 11 },
+  heartCount: {
+    fontFamily: 'Archivo_900Black',
+    fontSize: 14,
+    lineHeight: 16,
+    color: palette.ink,
+  },
+  /** Matched to the heart (Katya, 4 Sep): same height, same border, same
+   *  radius, same padding. They are two ways to say something about the same
+   *  look, so they should read as one pair of controls. */
   spark: { paddingHorizontal: 11 },
   sparkHeld: { borderWidth: border.mid, borderColor: palette.ink, backgroundColor: palette.creamSunk },
   sparkWord: {

@@ -1,6 +1,5 @@
 /**
- * The async render's read-out: "rendering in progress", then "your look is
- * ready".
+ * The async render's read-out: generating → ready, or generating → failed.
  *
  * An ink strip, which is the app's existing device for stating a fact about the
  * round that is not up for negotiation (see `Strip` in ui/layout.tsx). This one
@@ -19,30 +18,55 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { palette, border, radius } from '@/theme/tokens';
 import { type as T } from '@/theme/type';
 
+/**
+ * ONE `status`, NOT TWO BOOLEANS (4 Sep). It was `ready: boolean`, which had no
+ * way to say the job died — the card fell back to "generating your look"
+ * forever. A second `failed` flag alongside `ready` could contradict it; a
+ * single value matching `RenderStatus` minus `'none'` cannot.
+ */
+export type StripStatus = 'pending' | 'ready' | 'failed';
+
 export function RenderStrip({
-  ready,
+  status,
   onPress,
   pendingNote = 'About a minute',
 }: {
-  ready: boolean;
+  status: StripStatus;
+  /** Tapping through on `ready` is the only thing that clears the tab's dot;
+   *  on `failed` it is the retry. */
   onPress: () => void;
   pendingNote?: string;
 }) {
+  /* Both live reads take the accent; only the pending one is muted. A failure
+     the user can act on should look no quieter than a success — it is the one
+     of the three that needs a tap. */
+  const lit = status !== 'pending';
+
   const body = (
-    <View style={[s.strip, ready && s.stripReady]}>
-      <Text style={[s.label, ready && { color: palette.ink }]}>
-        {ready ? 'your look is ready' : 'rendering in progress'}
+    <View style={[s.strip, lit && s.stripReady]}>
+      <Text style={[s.label, lit && { color: palette.ink }]}>
+        {status === 'ready'
+          ? 'your look is ready'
+          : status === 'failed'
+            ? 'that didn’t generate'
+            : 'generating your look'}
       </Text>
-      <Text style={[s.value, ready && { color: palette.ink }]}>
-        {ready ? 'Take a look →' : pendingNote}
+      <Text style={[s.value, lit && { color: palette.ink }]}>
+        {status === 'ready' ? 'Take a look →' : status === 'failed' ? 'Try again →' : pendingNote}
       </Text>
     </View>
   );
 
-  if (!ready) return body;
+  /* TAPPABLE ONLY WHEN THERE IS SOMETHING TO DO. A progress strip that responds
+     to a tap while it is still working is a lie about what the tap will do. */
+  if (status === 'pending') return body;
 
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel="See your look">
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={status === 'failed' ? 'Try generating again' : 'See your look'}
+    >
       {body}
     </Pressable>
   );

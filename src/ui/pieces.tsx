@@ -281,7 +281,12 @@ const s = StyleSheet.create({
   strip: { flexDirection: 'row', gap: 4 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   cell: {
-    width: '31.5%',
+    /** TWO ACROSS (Katya, 4 Sep). It was three, at 31.5%. The wardrobe made
+     *  the same move on 3 Sep for the same reason — a third of the width holds
+     *  about thirteen characters, so the longer AW26 names truncated, and the
+     *  photograph got a third of a phone to be legible in. Two across doubles
+     *  the area of every cutout, which is the thing the screen exists to show. */
+    width: '48.5%',
     borderWidth: border.hair,
     borderColor: palette.rule,
     borderRadius: radius.sm,

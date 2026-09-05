@@ -60,21 +60,33 @@ export default function Judging() {
         title={`Vote ${Math.min(callsCast + 1, quota)} of ${quota}`}
       />
 
+      {/* "41 answers to it, yours among them." came off (Katya, 4 Sep). The
+          field's size is not something a voter needs while voting — it frames
+          the round as a scale to be got through rather than a pair to be
+          read — and the count was a fixture anyway. The result time stays,
+          because it is the one fact about what happens after. */}
       <Strip
         kick="job 2 of 2 · entry closed 8pm"
-        value="41 answers to it, yours among them. Results at 7am."
+        value="Results at 7am."
         right={`${Math.min(callsCast + 1, quota)}/${quota}`}
       />
 
       <Scroll bleed>
-        {/* Stacked, not a row (Katya, 4 Sep). The question used to sit out to
-            the right of the challenge name on the same baseline, where it read
-            as a caption on the title rather than as the thing being asked.
-            Under it, at 16px, it is the instruction it actually is — and the
-            wording now matches the magazine's spread card. */}
+        {/* SWAPPED AND CENTRED (Katya, 4 Sep). The question was underneath the
+            challenge name in body copy; it is now the headline, in the display
+            treatment the challenge name had, with the challenge name demoted
+            beneath it.
+
+            That is the right way round: the challenge name is CONSTANT for the
+            whole round — ten pairs of the same job — so setting it largest
+            made the loudest thing on screen the one thing that never changes.
+            The question is what each pair is actually asking. Centred, because
+            the two plates below it are symmetrical and a left-aligned title
+            over a symmetrical pair pulls the eye off the axis the comparison
+            happens on. */}
         <View style={s.q}>
+          <Text style={s.qAsk}>Which one works better?</Text>
           <Text style={s.qTitle}>{TONIGHTS_BRIEF.shortName}</Text>
-          <Body style={s.qAsk}>Which one works better?</Body>
         </View>
 
         {/* Keyed on the call index: a new pair is a fresh mount, which is what
@@ -112,15 +124,27 @@ export default function Judging() {
 }
 
 const s = StyleSheet.create({
-  q: { marginHorizontal: 22, marginTop: 12, marginBottom: 11 },
-  qTitle: {
+  q: { marginHorizontal: 22, marginTop: 12, marginBottom: 11, alignItems: 'center' },
+  /** The question now wears the display treatment the challenge name had —
+   *  same face, same size, same caps. Nothing new was invented for it; the two
+   *  simply swapped places. */
+  qAsk: {
     /** disp800 retired — the display face is onboarding-headline + button only now. */
     fontFamily: 'Archivo_900Black',
     fontSize: 24,
+    lineHeight: 27,
     textTransform: 'uppercase',
+    textAlign: 'center',
     color: palette.ink,
   },
-  /** 16px, which is `Body`'s own size — so this is the app's body copy rather
-   *  than a one-off. Ink, because it is the question, not a footnote. */
-  qAsk: { marginTop: 5, color: palette.ink },
+  /** Demoted to the label it is: which job these ten pairs belong to, stated
+   *  once and then not competing for attention again. */
+  qTitle: {
+    marginTop: 6,
+    fontFamily: 'Archivo_600SemiBold',
+    fontSize: 13,
+    letterSpacing: 0.6,
+    textAlign: 'center',
+    color: palette.grey,
+  },
 });

@@ -101,10 +101,10 @@ export default function Posted() {
         </Body>
 
         <View style={s_block}>
-          <Kick tone="muted">one more go at the render</Kick>
+          <Kick tone="muted">one more go at it</Kick>
           <Body style={{ marginTop: 6 }}>{RERENDER_NOTE}</Body>
           {verdict.allowed ? (
-            <Button label="Render it again" variant="ghost" style={{ marginTop: 12 }} onPress={rerender} />
+            <Button label="Generate it again" variant="ghost" style={{ marginTop: 12 }} onPress={rerender} />
           ) : (
             <Tiny style={{ marginTop: 10 }}>{RERENDER_BLOCK_LINES[verdict.because]}</Tiny>
           )}
@@ -120,7 +120,7 @@ export default function Posted() {
             this disappears — there is nothing to go back to. */}
         {!entered ? (
           <Button
-            label={phase === 'entry' ? "Enter today's job" : "Vote on tonight's looks"}
+            label={phase === 'entry' ? "Enter today's job" : 'Vote now'}
             variant="ghost"
             style={{ marginTop: 8 }}
             onPress={() =>
@@ -138,7 +138,7 @@ export default function Posted() {
           style={{ marginTop: 14, textAlign: 'center', fontFamily: 'Archivo_700Bold' }}
           onPress={() => {
             startAgain();
-            router.replace('/(tabs)/create');
+            router.replace('/create');
           }}
         >
           Back to Create →

@@ -46,10 +46,9 @@ import { router } from 'expo-router';
 import { Foot, Gap, Screen, Scroll } from '@/ui/layout';
 import { Hero, Big, Body, Tiny, Kick, B } from '@/ui/text';
 import { Button } from '@/ui/controls';
-import { Card } from '@/ui/cards';
+
 import { palette, border } from '@/theme/tokens';
 import { TOKEN_AWARD_LABELS, awardsForTonight, awardsTotal } from '@/domain/economy';
-import { COMPARISONS_TO_SETTLE, DISTINCT_RATERS_TO_SETTLE } from '@/domain/settlement';
 import { useEconomy } from '@/state/economy';
 import { useRenderStatus } from '@/state/submission';
 
@@ -97,18 +96,13 @@ export default function Settled() {
           </Body>
         </View>
 
-        <Card style={{ marginTop: 18 }}>
-          <Kick tone="muted">what happens now</Kick>
-          <Body style={{ marginTop: 5 }}>
-            {/* The mockup says "twenty people", which conflates the two
-                settlement thresholds — twenty is COMPARISONS, and the people
-                floor is twelve. Both numbers, correctly, rather than one
-                number wrongly. */}
-            {DISTINCT_RATERS_TO_SETTLE} people compare your look with someone else&apos;s,{' '}
-            {COMPARISONS_TO_SETTLE} times between them. When they have, it settles — and you hear
-            at 7am, along with tomorrow&apos;s job.
-          </Body>
-        </Card>
+        {/* THE "WHAT HAPPENS NOW" CARD IS GONE (Katya, 4 Sep). It explained the
+            settlement arithmetic — twelve people, twenty comparisons — on the
+            screen that exists to END the evening. It was the mechanics of a
+            thing the reader has just finished and cannot affect, set directly
+            under the reward, and it made the last screen of the day the
+            longest read of it. The one fact worth keeping ("you hear at 7am")
+            is already on the job card, which is where they land next. */}
 
         {/* "Nothing else is asked of you tonight" is gone (Katya, 4 Sep). What
             survives is the render note, and only while the render is actually
@@ -116,7 +110,7 @@ export default function Settled() {
             tester may well have finished voting after the minute was up. */}
         {renderStatus === 'pending' ? (
           <Tiny style={s.closing}>
-            Your look is still rendering — Today will let you know when it lands.
+            Your look is still generating — Today will let you know when it lands.
           </Tiny>
         ) : null}
 

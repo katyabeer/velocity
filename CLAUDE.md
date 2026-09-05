@@ -230,6 +230,71 @@ A fresh session will be tempted by several of these. They were tried and rejecte
   an accusation
 - `youSections` in testState, which let the day fixture decide what You was
   allowed to say. The sections derive themselves now
+- "Not a render — the actual pieces, laid out. No body, no fit." on Create's
+  Look step. Cut 4 Sep, for the same reason the plate's own caption bar went on
+  3 Sep: the picture below it is a picture of clothes, and a sentence saying
+  what it ISN'T is the loudest thing on the screen. The claim still appears in
+  the builder's copy, where a new user meets it first
+- The prototype's `#crendnote` verbatim at Create's commit ("rendering is the
+  expensive bit, so it is one a day — and only rendered looks can go in the
+  magazine"). Twenty-one words in `Tiny` above the button is the size the eye
+  skips at exactly the moment it must not. Now a kicker plus one `Lede` line.
+  The magazine clause went with it: §2.2 deleted the unrendered path, so it
+  argued against an option that no longer exists
+- The step ribbon's second line (`3 to 6`, `together`, `who wears it`,
+  `from 8pm`). Cut 4 Sep: it doubled the ribbon's height on every screen to
+  gloss labels that are a verb each. `Step.hint` is gone from the type, not
+  merely unrendered
+- "Which rails do you want to shop?" as a headline on the profile screen. The
+  kicker asks it and the three named options answer it; the headline made the
+  second question on the screen twice the size of the first
+- "No profile to fill in. No photos. You'll be building in about a minute."
+  Cut 4 Sep — a promise about the absence of work, on the screen with the least
+  work on it, above three rows that prove it faster than the sentence reads
+- The "what happens now" settlement card on the challenge-complete screen
+  (twelve people, twenty comparisons). It put the mechanics of something the
+  reader has just finished and cannot affect under the reward, and made the
+  last screen of the day the longest read of it
+- The 👍 / 👎 pair on magazine cards. Cut 4 Sep: the like is a HEART that
+  fills, the count sits inside it, and thumbs-down is gone from the UI
+  entirely — "we decided not to capture negative sentiments like that". The
+  value stays in the vocabulary so stored ones still read; nothing can cast a
+  new one. An emoji was also the one glyph in the app rendering in the
+  platform's font, which could not take the ink colour
+- "BOLD · LIKED IT" — the count plus the top two reads as words, on every
+  card. It restated what the panel says when you open it, and down a feed it
+  was the same two or three words repeating. The count moved into the heart
+- The LAST TWO walkthrough tooltips, 4 Sep: Today's "Build first, judge
+  after…" (between the stepper and the button, explaining a sequence the
+  stepper directly above it draws) and the magazine's, below. Nothing renders
+  `Tip` / `TIPS` / `dismissedTips` any more — they are kept only because the
+  component is a designed piece worth having if one comes back
+- Create's step-2 rule stated TWICE — once in the body and again as a kicker
+  plus `Lede` above the button. One statement, in the body, is the whole rule:
+  `ONE_A_DAY_AT_COMMIT`
+- "Skip it if you like… cannot be changed once it posts" on Create's tag step,
+  and the "already paid for" panel under the input. The first argued at
+  someone who had not typed anything; the second said there was nothing left to
+  decide, on the screen asking them to decide something. Both facts are still
+  enforced in the domain
+- The `LogoBlock` masthead on the challenges list. It is a screen you go TO,
+  pushed from Today's card, so it wears the in-flow `Header` and a chevron —
+  a masthead made it read as a place you had arrived, with no way back but the
+  tab bar
+- The magazine's walkthrough tooltip ("This is where clothes come from.
+  Judging earns tokens. This is the only place to spend them."). Three rules
+  at once, in the largest accent panel on the screen, above the first
+  photograph anyone sees. Same reasoning as the builder's "No hints, on
+  purpose" tooltip on 3 Sep
+- "Which one works? Tap it — the room has already voted." under the spread's
+  plates. The head asks the question and the Vote A / Vote B pills say how to
+  answer; the rest announced a result before you had given an answer
+- "41 answers to it, yours among them" on the voting strip. The field's size
+  frames the round as a scale to get through rather than a pair to read
+- The Build · Judge · Result stepper on the COMPLETE job card. It is a progress
+  read with no progress left to report — three greyed labels under a heading
+  already saying the same thing. The countdown is the only part still true.
+  It stays on the other three states
 
 ---
 
@@ -248,6 +313,7 @@ Search for `⚠` to find every one. All are Katya's or Jack's call, not yours.
 | `data/challenges.ts`, `create/index.tsx` | Jack 3 — free tags. Suggestion: decoration only |
 | `create/index.tsx` | Jack 4 — layered looks in the renderer |
 | `domain/magazine.ts`, `data/looks.ts` | Jack 5 — per-look settled splits must be stored. **Cannot be backfilled** |
+| `ui/Reactions.tsx` | **the panel's three negatives are still live** (clashing · overdone · too safe) after thumbs-down was hidden. They are a different mechanism — never public, never a figure, owner-only at 5+ reactions and only as a sentence. Say if "no negative sentiments" was meant to cover those too; that would be §6 of reactions-logic removed, not a control hidden |
 | `domain/reactions.ts` | reactions-logic.md §11, all five defaults taken as written: keep thumbs as a fast path · reactions feed NO milestone · negative threshold 5 · excluded from both ladders · spreads reactable. Say if any should flip |
 | `domain/reactions.ts`, `ui/Reactions.tsx` | the negative gate is CLIENT-SIDE here because there is no server. §6 requires it server-side. `publicStats` / `ownerStats` is the contract to build the API against |
 | `state/create.ts`, `today/build.tsx` | **Katya 1** — casting order. Create is now tag→cast; the builder is still cast→tag. The create brief recommends moving the builder so both flows are one sequence configured twice. NOT DONE — it changes a screen signed off two days ago, so it is your call |
@@ -256,12 +322,18 @@ Search for `⚠` to find every one. All are Katya's or Jack's call, not yours.
 | `domain/tags.ts` (`TAG_DELIMITERS`) | space commits a chip, per §5 — so a multi-word tag is impossible and "cold field" lands as `#cold` `#field`. Say if two-word tags need to exist |
 | `state/create.ts` | the create brief contradicts itself on when the allowance is spent (§6's `building` says step 3 is still unspent; §3, §4 and AC 2 put the spend at step 2). Resolved in favour of the acceptance criteria — say if you meant it the other way |
 | `domain/renders.ts` | **Jack 1** — worst case is now THREE renders per user per day (brief · freestyle · freestyle re-render). Lands on the render cost curve, which is the variable cost that grows as the product succeeds. His sign-off, not ours |
+| `domain/today.ts` | a failed brief render refunds the brief allowance (`refundBrief`), but `useBriefRendersLeft` is READ BY NOTHING — the brief allowance gates no behaviour today. Kept for symmetry with the freestyle lane; delete both if the allowance is never wired up |
 | `state/submission.ts` (`SIMULATED_FAILURE`) | **Jack 2** — render latency and failure rate. Decides whether `rendering` is a spinner or a state people live in for hours. Built as the latter, because that shape survives either answer |
 | `domain/you.ts`, `domain/entry.ts` | **THE GAP HAS NO INPUT ANYWHERE.** Both the create brief and the you-brief say it "survives on brief entries, because Build step 3 keeps its single closed declared word" — that step does not exist (locked decision 18 removed it; handover open question C asks whether it returns). Consequence, built strictly: a negative read may appear in the sentence ONLY in gap form, gap form is unreachable, so NO negative reaches the You sentence at all. Katya's you-brief q3 ("set Build's declared words to the four positive reaction words") has nothing to set them on |
 | `domain/you.ts` (`SUPPRESS_ZERO_STATS`) | **you-brief q1** — day-one stats: suppress zeros, or the full grid? Recommendation taken (suppress). One line to flip |
 | `domain/handle.ts` (`TAKEN`) | **you-brief q2** — is the handle on magazine cards, or is the magazine anonymous? If anonymous, the handle only ever appears on your own You screen and barely earns its onboarding step. Recommendation: attributed |
 | `domain/you.ts` (`TIPS`) | **you-brief q4** — the tip thresholds (10 looks · 10 settled · 20 close calls) are ESTIMATES, not measured. They need a pass against real distributions |
 | `data/looks.ts` (`mine`) | there is no ownership model — one fixture is flagged as yours so the owner's read is reachable. Create's posts don't enter the feed |
+| `data/challenges.ts` (`CHALLENGES` order) | the first two entries after the open one ARE THE SCHEDULE — `nextChallenge()` reads the list in order, so the locked preview card names whatever sits at index 2. Reordering the pool silently reorders the month |
+| `data/challenges.ts` (`REVEAL_NEXT_BRIEF`) | the locked next-challenge card NAMES tomorrow's job, which reveals the month's order — withheld everywhere else on purpose ("publish the month's jobs, withhold the order… browsing gets a purpose without becoming shopping for tonight"). Naming it the evening before hands someone thirteen hours to acquire for it. Built as asked, 4 Sep; one line to turn the reveal off and keep the lock |
+| `data/inventory.ts`, `data/capsules.ts` | **Day 2 and Established show GREY PLACEHOLDERS, not clothes.** Their fixtures use the original prototype's short names (`wool coat`, `roll neck`, `red bag`) and the catalogue has none of them — `garmentImage` returns undefined, so every flat lay, slot strip and wardrobe tile falls back to a named box. Day 1 is fine because it draws from `cataloguePool`. Pre-existing, and it undercuts anything that shows a look on those days |
+| `data/challenges.ts` (`YESTERDAYS_BRIEF`) | "The interview" is hardcoded in four other places (`ui/ResultCard.tsx` ×3, `today/result.tsx`, both archive fixtures). They should collapse onto the constant |
+| everywhere | **"render" is "generate" in COPY ONLY.** Katya, 4 Sep. Every user-visible string says generate; the code still says render throughout — `domain/renders.ts`, `RENDER_DELAY_MS`, `rerenderVerdict`, the `rendering` route and state, `RenderStrip`. Renaming the internals is a large, purely mechanical diff and it was not asked for. Say if you want it, because the split will confuse a fresh session |
 | `config/app.ts` | the name. Now **Editorial.** (3 Sep), after *quintets.*, after the *Velocity* rejection. STILL no availability or trademark checks on any candidate, and "Editorial" is a common noun in this exact category — the most contested of the three so far |
 
 ---
@@ -281,6 +353,30 @@ The day's flow `replace`s all the way through (`build` → `rendering` → `judg
 single screen. The symptom was invisible in every individual file: from the
 challenge-complete screen, pressing the Today tab did nothing, because pressing
 a focused tab pops its stack to the top and the top was already the only route.
+
+**Create is NOT a tab** (4 Sep) and must not become one again by accident. It
+is entered from a banner at the top of the Wardrobe. Two ways of keeping it in
+`(tabs)/` while hiding its button were tried and BOTH TRAPPED THE USER on it —
+pressing any other tab changed the URL and left Create on screen with every tab
+dead: `href: null`, and `tabBarItemStyle: { display: 'none' }`. It is a
+root-stack route now, like `casting`. Consequences that had to be built with
+it: the create lane's badge moved to the **Wardrobe** tab (nothing else leads
+to the finished look), and Create's home states need their own way out —
+`LogoBlock` takes an `onBack` for exactly this and nothing else should pass it.
+
+**Metro caches the route tree.** After moving a route between folders, Fast
+Refresh will keep serving the old one — the tab bar showed a fifth `create` tab
+for several minutes after the move. Restart the dev server, don't debug the
+ghost.
+
+**Every tab's `href` is pinned to its root**, and that is the other half of
+the same bug. React Navigation builds each tab's link from the route that tab
+is currently showing, so after the day's replace chain the Today tab rendered
+as `<a href="/today/rendering">` — a link pointing into the middle of its own
+stack, which on web is a no-op because the target is already inside the focused
+tab. The dead Today tab came back on the challenge-complete screen for exactly
+this reason, months after the listener below "fixed" it. Pin the href; don't
+trust the remembered route.
 
 **Pressing a tab takes you to that tab's home**, and that is explicit —
 `homeOnTabPress` in `(tabs)/_layout.tsx`. React Navigation does it for free on
@@ -307,11 +403,11 @@ app/                       expo-router routes — the navigation tree IS this fo
   (tabs)/_layout.tsx       THE FIVE TABS
     today/                 a1 a12 a7 a8 a13 a14 a2 a4  (the day, in order)
     magazine/              a5 a16
-    create/                a11 a17 — a SIX-STATE MACHINE, not a screen. Only two
-                           states are the flow: pick · look (the commit) · tag ·
-                           render, with casting on /casting between 3 and 4
-    wardrobe/              a15
+    wardrobe/              a15 — and the ONLY door into Create (ui/CreateBanner)
     you/                   a10
+  create/                  a11 a17 — NOT a tab (4 Sep). A SIX-STATE MACHINE, not
+                           a screen: pick · look (the commit) · tag · render,
+                           with casting on /casting between 3 and 4
   casting.tsx              a18 — a modal, because two flows open it
 
 src/
@@ -319,6 +415,8 @@ src/
               tags.ts     free-text tags + the reversal of "no free text anywhere"
               renders.ts  the two allowances, the 07:00 day, the re-render window,
                           and the Create tab's six-state machine
+              today.ts    the job card's five states, and why `failed` sits
+                          BELOW the round in the ordering
               you.ts      what a10 is ALLOWED to say, and when. Empty states,
                           the descriptor ladder, the tip thresholds
               handle.ts   the public identifier: shape, uniqueness, the @
@@ -350,6 +448,14 @@ which is precisely the prototype behaviour the port removed.
 
 ---
 
+**The clock is real now** (4 Sep). `phase` reads `phaseAt(new Date())` at boot
+rather than starting at `entry` and only moving when the flow pushed it — which
+is why the job never actually shut at 8pm and the card's "closed, now judging"
+copy was unreachable to anyone who did not enter. **`FORCE_PHASE` in
+`config/testState.ts` overrides it, and a moderated session held in the evening
+needs that**: without it a 21:00 session boots into `judging` and the
+participant cannot build a look at all.
+
 ## Test states
 
 There is no HUD. The seed state is one constant: `ACTIVE_DAY` in
@@ -375,7 +481,7 @@ The overnight roundel is hidden because a zero there would be a lie. The shuffle
 
 ```
 npm run typecheck      # tsc --noEmit, strict + noUncheckedIndexedAccess
-npm test               # 170 assertions over the domain layer
+npm test               # 183 assertions over the domain layer
 ```
 
 **Motion on the spread card is decoration over settled state.** Calling a look

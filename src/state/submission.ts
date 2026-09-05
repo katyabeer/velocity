@@ -54,9 +54,13 @@
  *   do not have. `SIMULATED_FAILURE` in config/testState.ts is how you reach
  *   the failed screen in the meantime.
  *
- * THE BADGE MOVED. It used to be a chip in every Header/LogoBlock, top right.
- * It is now a dot on the owning tab (see ui/TabIcon.tsx), and the brief's
- * progress also reads on the Today challenge card itself — Katya, 3 Sep: a
+ * THE BADGE MOVED, TWICE. It used to be a chip in every Header/LogoBlock, top
+ * right. It is now a dot on the tab that LEADS TO the finished thing — which
+ * for the brief is Today, and for create is WARDROBE, not Create: Create came
+ * out of the tab bar on 4 Sep and is entered from a banner at the top of the
+ * wardrobe. The lane is still called `create`; only the tab showing its badge
+ * changed (see (tabs)/_layout.tsx). The brief's progress also reads on the
+ * Today challenge card itself — Katya, 3 Sep: a
  * status chip floating on every screen in the app reads as chrome, and the one
  * screen the status actually belongs on is the one with the job on it.
  */

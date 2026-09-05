@@ -34,7 +34,6 @@ import { router } from 'expo-router';
 import { LogoBlock, Screen } from '@/ui/layout';
 import { Tiny } from '@/ui/text';
 import { FilterTab } from '@/ui/controls';
-import { Tip } from '@/ui/cards';
 import { BottomSheet } from '@/ui/BottomSheet';
 import { LookCard, SpreadCapped, SpreadCard } from '@/ui/FeedCards';
 import { palette, border, space } from '@/theme/tokens';
@@ -44,7 +43,6 @@ import { garmentImage } from '@/data/catalogue';
 import { cards, spreadIsCapped, FIRST_PAGE, NEXT_PAGE, useMagazine } from '@/state/magazine';
 import { useEconomy } from '@/state/economy';
 import { useWardrobe } from '@/state/wardrobe';
-import { useSession, TIPS, TIP_LEAD } from '@/state/session';
 
 export default function Magazine() {
   /* Selected field by field on purpose. `useMagazine()` with no selector
@@ -69,8 +67,6 @@ export default function Magazine() {
   const wardrobeCap = useWardrobe((s) => s.cap);
   const addToWardrobe = useWardrobe((s) => s.add);
   const removeFromWardrobe = useWardrobe((s) => s.remove);
-  const tipDismissed = useSession((s) => s.dismissedTips.magazine);
-  const dismissTip = useSession((s) => s.dismissTip);
 
   useEffect(() => {
     if (length === 0) extend(FIRST_PAGE);
@@ -165,22 +161,15 @@ export default function Magazine() {
               look={look}
               index={item.index}
               held={reactions[item.index]}
-              /* THE TIP LIVES ON THE FIRST CARD, not above the feed. It is
-                 about where clothes come from, so it points at Save pieces —
-                 caret right, because that tag sits at the image's right edge.
-                 Card 0 only: it is a walkthrough note, not a per-card label. */
-              tip={
-                item.index === 0 && !tipDismissed ? (
-                  <View style={{ paddingHorizontal: space.gutter, paddingTop: 4 }}>
-                    <Tip
-                      notch="right"
-                      lead={TIP_LEAD.magazine}
-                      body={TIPS.magazine.replace(TIP_LEAD.magazine, '').trim()}
-                      onDismiss={() => dismissTip('magazine')}
-                    />
-                  </View>
-                ) : undefined
-              }
+              /* THE WALKTHROUGH TIP IS GONE (Katya, 4 Sep). It sat on the
+                 first card and read "This is where clothes come from. Judging
+                 earns tokens. This is the only place to spend them." — three
+                 rules stated at once, in the largest accent panel on the
+                 screen, above the first photograph anyone sees. Same reasoning
+                 that took the builder's "No hints, on purpose" tooltip off on
+                 3 Sep: it pushed the thing the screen exists to show down the
+                 page in order to explain it. All three rules are still
+                 enforced, and the token badge already says what a token is. */
               onOpenSheet={() => openSheet(item.index)}
               onReact={(v) => react(item.index, v)}
               onTag={(t) => {
