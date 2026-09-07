@@ -418,6 +418,12 @@ A fresh session will be tempted by several of these. They were tried and rejecte
   shared `ONBOARDING_TOP_GAP` (7 Sep): centring left `sign-up` with a deep
   empty band above its heading, and an 8px gap left `handle` asking its first
   question from inside the chrome
+- `TOP_PAD` in the intro carousel. ⟲ It added 76px (later 44) ON TOP of the
+  frame's gap, so the four marketing slides were the one part of onboarding
+  starting lower than the rest — 84px down where sign-up was 40. Deleted, and
+  the carousel takes `ONBOARDING_TOP_GAP` like everything else, so all seven
+  screens now start at y=86. The no-jumping mechanism was never the pad; it is
+  `TEXT_BLOCK_H` being a fixed height rather than a minHeight
 
 ---
 

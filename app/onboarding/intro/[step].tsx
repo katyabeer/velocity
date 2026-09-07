@@ -12,6 +12,10 @@
  * with room in the block for four — if new copy needs more than that, raise
  * the constant rather than letting the block grow.
  *
+ * The gap ABOVE that block is `ONBOARDING_TOP_GAP`, shared with every other
+ * onboarding screen — see TEXT_BLOCK_H's note for why this file no longer
+ * adds its own.
+ *
  * ─── THE ARTWORK: FOUR DIFFERENT COMPOSITIONS (7 Sep, onboarding-visuals) ───
  *
  * All four slides used to be the same thing: one big tile plus two small ones.
@@ -93,7 +97,7 @@ import { useState } from 'react';
 import { Image, StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
-import { OnboardingFrame, ONBOARDING_TOP_GAP } from '@/ui/OnboardingFrame';
+import { OnboardingFrame } from '@/ui/OnboardingFrame';
 import { Hero, Lede, Kick } from '@/ui/text';
 import { type as T } from '@/theme/type';
 import { palette, border, radius, rotation, useReducedMotion } from '@/theme/tokens';
@@ -108,20 +112,24 @@ import {
 const TOTAL = 4;
 
 /**
- * The gap between the header rule and the eyebrow, and the height reserved for
- * eyebrow + heading + body. Both fixed, both the reason nothing jumps.
+ * The height reserved for eyebrow + heading + body. Fixed, and the reason
+ * nothing jumps between slides.
  *
  * 150 = eyebrow 11 + 10 + heading 33 + 12 + four body lines at 21.
  *
- * ⚠ TOP_PAD IS A REMAINDER NOW, not a free number. `OnboardingFrame` grew a
- * shared 34px gap under the header rule on 7 Sep so the setup-chain screens
- * stopped sitting against it; this file's own pad is what is left over to
- * reach the same total the carousel has always had (84). The eyebrow, heading
- * and body therefore sit on exactly the y they did before — which is the
- * point, because that alignment across all four slides is the no-jumping
- * mechanism. Change the frame's gap and this has to move with it.
+ * ⚠ THERE IS NO `TOP_PAD` ANY MORE (Katya, 7 Sep: "force the content to sit
+ * higher up, probably the same distance from the header as 'Let's get you
+ * in'"). This file used to add its own 76px on top of the frame's gap, for a
+ * total of 84 — which made the carousel the one part of onboarding that sat
+ * lower than the rest of it. The gap is now `ONBOARDING_TOP_GAP` and nothing
+ * else, so all seven onboarding screens start at the same y.
+ *
+ * The no-jumping mechanism is untouched: it was never the pad, it is
+ * TEXT_BLOCK_H being a FIXED height rather than a minHeight. What the carousel
+ * gained is 44px of media box, which slide 03 and 04 both take automatically —
+ * 03 measures its own container, 04 is cut to PHOTO_RATIO — and slide 01's
+ * grid and 02's pair are flex, so they simply grow into it.
  */
-const TOP_PAD = 84 - ONBOARDING_TOP_GAP;
 const TEXT_BLOCK_H = 150;
 
 /** Caps the artwork so it centres in a consistent box rather than filling
@@ -650,7 +658,7 @@ export default function Intro() {
 const s = StyleSheet.create({
   /** FIXED height, not minHeight — see the header. This is the whole
    *  no-jumping mechanism. */
-  textBlock: { marginTop: TOP_PAD, height: TEXT_BLOCK_H },
+  textBlock: { height: TEXT_BLOCK_H },
   media: {
     flex: 1,
     maxHeight: MEDIA_MAX_H,
