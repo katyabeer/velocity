@@ -155,11 +155,12 @@ decode/encode, since this machine has no PIL, ffmpeg or ImageMagick).
 
 ## Carried-over known incomplete
 
-- **The magazine filter rail is visually live but does not change the content pool.**
-  Weighting rules unimplemented. Do not demo it as working —
-  `FILTER_RAIL_IS_FUNCTIONAL` is `false` and a test asserts it.
-- **Free-text tags are faked from a bank**, because the prototype had no keyboard. Wire a
-  real `TextInput` — and read Jack's open question 3 first.
+- ~~The magazine filter rail is visually live but does not change the content pool.~~
+  **DONE 4 Sep.** Five chips (All · Editorial · Challenges · Free posts · Trending),
+  a garment search drawer, and a filtered stream that ends honestly instead of cycling.
+  `Trending` is behind a flag and off — see the open question about its kill criterion.
+- ~~Free-text tags are faked from a bank.~~ **DONE 4 Sep** — real `TextInput`,
+  `domain/tags.ts`.
 - **Look plates are tinted panels, not images.** When the renders arrive, add an `image`
   field in `data/looks.ts` and swap the fallback in `ui/LookPlate.tsx`; nothing else
   should need to move.

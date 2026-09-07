@@ -1,21 +1,34 @@
 /**
- * Magazine store — the endless feed, spreads, reactions, and the bottom sheet.
+ * Magazine store — the endless feed, spreads, reactions, the filters and the
+ * two sheets.
  *
- * REACTIONS ARE STORED PER CARD INDEX AND READ BY NOTHING ELSE. `cards()` below
- * builds the list from the cadence and the pool by modulo, and never consults
- * `reactions` — that is *sample, don't sort*, and reactions-logic.md §0.1 makes
- * it the first rule of the whole feature.
+ * REACTIONS ARE STORED PER CARD INDEX AND READ BY NOTHING ELSE. The feed is
+ * laid out by `feedSlots` over a pool built by `filteredPool`, and neither
+ * consults `reactions` — that is *sample, don't sort*, and reactions-logic.md
+ * §0.1 makes it the first rule of the whole feature.
  *
- * The feed is an index-driven infinite list: card N's kind comes from the
- * cadence, and its content from the pool by modulo. That is the prototype's
- * behaviour and it is fine for a test build. When the real sampler lands, keep
- * `kindAt` and replace only the content lookup — and read the banner at the top
- * of domain/magazine.ts first.
+ * ══ THE FILTERS ARE READ NOW (4 Sep) ══
+ *
+ * They were stored and ignored: `filter` went into the store and the feed
+ * built itself from `index % FEED_LOOKS.length` regardless. That was the real
+ * work in the filters brief, and it is done here — `pool` holds the indices
+ * that pass, in a sampled order, and every card maps through it.
+ *
+ * `seed` is bumped on every change to the filters. Same set, different order —
+ * which is what keeps a filter a NARROWING and not an ordering, and is the
+ * thing tests/magazine.test.ts asserts most carefully.
  */
 
 import { create } from 'zustand';
-import { SPREADS_PER_DAY, kindAt, type CardKind } from '@/domain/magazine';
+import {
+  SPREADS_PER_DAY,
+  feedSlots,
+  filteredPool,
+  type MagazineFilter,
+} from '@/domain/magazine';
 import { nextHeld, type ReactionValue } from '@/domain/reactions';
+import type { Category } from '@/domain/garments';
+import { FEED_LOOKS } from '@/data/looks';
 
 export type FeedCard =
   | { index: number; kind: 'H' | 'U'; lookIndex: number }
@@ -45,7 +58,21 @@ type MagazineState = {
    * stored thing is meaningful on its own.
    */
   reactions: Record<number, ReactionValue | undefined>;
-  filter: string;
+  filter: MagazineFilter;
+  /**
+   * Garment categories selected in the search drawer. MULTI-SELECT, OR —
+   * selections widen the pool (AND starves it at launch scale).
+   */
+  garments: readonly Category[];
+  /** Free text, matched against GARMENT NAMES ONLY — not tags, not handles.
+   *  See `matchesQuery` in domain/magazine.ts for why. */
+  query: string;
+  searchOpen: boolean;
+  /** Indices into FEED_LOOKS that pass the current filters, sampled. */
+  pool: readonly number[];
+  /** Bumped on every filter change, so the same set comes back in a new
+   *  order. */
+  seed: number;
   /** Card index whose bottom sheet is open, or null. */
   sheet: number | null;
   /** The piece being viewed close-up (a16). */
@@ -54,7 +81,13 @@ type MagazineState = {
   extend: (by: number) => void;
   call: (index: number, side: 'a' | 'b') => void;
   react: (index: number, value: ReactionValue) => void;
-  setFilter: (f: string) => void;
+  setFilter: (f: MagazineFilter) => void;
+  /** Toggle one garment. */
+  toggleGarment: (c: Category) => void;
+  setQuery: (q: string) => void;
+  clearSearch: () => void;
+  openSearch: () => void;
+  closeSearch: () => void;
   openSheet: (index: number) => void;
   closeSheet: () => void;
   focusPiece: (p: { name: string; from: string; tags: readonly string[] }) => void;
@@ -70,25 +103,59 @@ const blank = {
   spreadIndex: {} as Record<number, number>,
   calls: {} as Record<number, 'a' | 'b' | undefined>,
   reactions: {} as Record<number, ReactionValue | undefined>,
-  filter: 'All',
+  filter: 'All' as MagazineFilter,
+  garments: [] as readonly Category[],
+  query: '',
+  searchOpen: false,
   sheet: null,
   focusedPiece: null,
 };
 
+/** Rebuild the pool and reset the stream. Every filter change goes through
+ *  here, so there is one place where a new seed is drawn and one place where
+ *  the feed is rewound to card zero. */
+const repool = (next: {
+  filter: MagazineFilter;
+  garments: readonly Category[];
+  query: string;
+}) => {
+  const seed = (Date.now() ^ Math.floor(Math.random() * 0xffff)) >>> 0;
+  return {
+    ...blank,
+    ...next,
+    seed,
+    pool: filteredPool(FEED_LOOKS, next.filter, next.garments, next.query, seed),
+  };
+};
+
+const INITIAL_SEED = 1;
+
 export const useMagazine = create<MagazineState>((set) => ({
   ...blank,
+  seed: INITIAL_SEED,
+  pool: filteredPool(FEED_LOOKS, 'All', [], '', INITIAL_SEED),
 
+  /**
+   * Spread numbers are allocated from the LAID-OUT SLOTS, not from `kindAt`.
+   * They used to come straight off the cadence, which was fine while the
+   * cadence was the only layout — it is not any more: under a filter other
+   * than `All` spreads sit at a spacing instead, and under a single-type chip
+   * there are none at all. Reading the slots keeps the numbering in step with
+   * wherever the spreads actually landed.
+   */
   extend: (by) =>
     set((s) => {
+      const length = s.length + by;
+      const slots = feedSlots(FEED_LOOKS, s.pool, s.filter, length);
       const spreadIndex = { ...s.spreadIndex };
       let spreadsServed = s.spreadsServed;
-      for (let i = s.length; i < s.length + by; i++) {
-        if (kindAt(i) === 'S' && spreadIndex[i] === undefined) {
+      slots.forEach((slot, i) => {
+        if (slot.kind === 'S' && spreadIndex[i] === undefined) {
           spreadIndex[i] = spreadsServed;
           spreadsServed += 1;
         }
-      }
-      return { length: s.length + by, spreadIndex, spreadsServed };
+      });
+      return { length, spreadIndex, spreadsServed };
     }),
 
   /** Once called, a spread stays called — there is no re-roll, same as an
@@ -112,10 +179,28 @@ export const useMagazine = create<MagazineState>((set) => ({
       reactions: { ...s.reactions, [index]: nextHeld(s.reactions[index], value) },
     })),
 
-  /** Changing the filter rebuilds the feed from card zero. NOTE: the rail is
-   *  visually live but does not yet change the content pool — see
-   *  FILTER_RAIL_IS_FUNCTIONAL in domain/magazine.ts. Do not demo it as working. */
-  setFilter: (filter) => set({ ...blank, filter }),
+  /** Changing any filter rebuilds the pool and rewinds to card zero. */
+  setFilter: (filter) =>
+    set((s) => repool({ filter, garments: s.garments, query: s.query })),
+
+  toggleGarment: (c) =>
+    set((s) =>
+      repool({
+        filter: s.filter,
+        garments: s.garments.includes(c) ? s.garments.filter((g) => g !== c) : [...s.garments, c],
+        query: s.query,
+      }),
+    ),
+
+  setQuery: (query) => set((s) => repool({ filter: s.filter, garments: s.garments, query })),
+
+  /** Clears the garment axis only. The rail chip is a separate question and
+   *  stays — the thin-result note offers each of them separately for exactly
+   *  this reason. */
+  clearSearch: () => set((s) => repool({ filter: s.filter, garments: [], query: '' })),
+
+  openSearch: () => set({ searchOpen: true }),
+  closeSearch: () => set({ searchOpen: false }),
   openSheet: (sheet) => set({ sheet }),
   closeSheet: () => set({ sheet: null }),
   focusPiece: (focusedPiece) => set({ focusedPiece }),
@@ -125,22 +210,27 @@ export const useMagazine = create<MagazineState>((set) => ({
 export const FIRST_PAGE = INITIAL_CARDS;
 export const NEXT_PAGE = PAGE;
 
-/** Build the descriptor list the FlatList renders. */
+/**
+ * Build the descriptor list the FlatList renders.
+ *
+ * Every look card carries a `lookIndex` INTO FEED_LOOKS, resolved through the
+ * filtered pool — so a card can only ever show something that passed the
+ * filters. Before 4 Sep this was `lookIndex: i`, which is why the rail changed
+ * nothing.
+ */
 export function cards(state: {
   length: number;
   spreadIndex: Record<number, number>;
+  pool: readonly number[];
+  filter: MagazineFilter;
 }): FeedCard[] {
-  const out: FeedCard[] = [];
-  for (let i = 0; i < state.length; i++) {
-    const kind: CardKind = kindAt(i);
-    if (kind === 'S') {
-      out.push({ index: i, kind: 'S', spreadNumber: state.spreadIndex[i] ?? 0 });
-    } else {
-      out.push({ index: i, kind, lookIndex: i });
-    }
-  }
-  return out;
+  const slots = feedSlots(FEED_LOOKS, state.pool, state.filter, state.length);
+  return slots.map((slot, i) =>
+    slot.kind === 'S'
+      ? { index: i, kind: 'S' as const, spreadNumber: state.spreadIndex[i] ?? 0 }
+      : { index: i, kind: slot.kind, lookIndex: slot.poolIndex },
+  );
 }
 
-/** A spread past the daily cap renders the "come back tomorrow" card instead. */
-export const spreadIsCapped = (spreadNumber: number): boolean => spreadNumber >= SPREADS_PER_DAY;
+export const spreadIsCapped = (spreadNumber: number): boolean =>
+  spreadNumber >= SPREADS_PER_DAY;

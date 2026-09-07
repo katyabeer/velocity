@@ -29,20 +29,50 @@
  */
 
 import { useEffect } from 'react';
-import { FlatList, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, View } from 'react-native';
 import { router } from 'expo-router';
 import { LogoBlock, Screen } from '@/ui/layout';
 import { Tiny } from '@/ui/text';
-import { FilterTab } from '@/ui/controls';
+import { Chip, FilterTab } from '@/ui/controls';
+import { SearchSheet } from '@/ui/SearchSheet';
+import { SearchIcon } from '@/ui/TabIcon';
 import { BottomSheet } from '@/ui/BottomSheet';
 import { LookCard, SpreadCapped, SpreadCard } from '@/ui/FeedCards';
 import { palette, border, space } from '@/theme/tokens';
 import { canTake } from '@/domain/economy';
+import { MAGAZINE_FILTERS, feedIsFinite, thinResultNote, trendingVisible } from '@/domain/magazine';
 import { FEED_LOOKS } from '@/data/looks';
 import { garmentImage } from '@/data/catalogue';
 import { cards, spreadIsCapped, FIRST_PAGE, NEXT_PAGE, useMagazine } from '@/state/magazine';
 import { useEconomy } from '@/state/economy';
 import { useWardrobe } from '@/state/wardrobe';
+
+/**
+ * The chips, in order. `Trending` is dropped unless its flag is on and its
+ * eligible set clears the floor — `trendingVisible` owns both conditions, so
+ * the chip cannot appear for one reason and not the other.
+ *
+ * ⚠ THE ELIGIBLE COUNT IS 0 HERE. There is no reaction-velocity data in the
+ * prototype (reactions carry no timestamps), so nothing can compute a rolling
+ * 24h window. The chip is therefore always absent, which is also what the
+ * brief expects at the ~125 DAU launch floor. `trendingSet` in
+ * domain/magazine.ts is the real computation, tested, waiting for data.
+ */
+const TRENDING_ELIGIBLE_COUNT = 0;
+const RAIL = MAGAZINE_FILTERS.filter(
+  (f: string) => f !== 'Trending' || trendingVisible(TRENDING_ELIGIBLE_COUNT),
+);
+
+const s_rail = {
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  paddingVertical: 3,
+  borderBottomWidth: border.hair,
+  borderBottomColor: palette.rule,
+};
+const s_searchBtn = { paddingHorizontal: space.gutter - 6, paddingVertical: 8 };
+const s_activeRow = { flexDirection: 'row' as const, paddingHorizontal: space.gutter, paddingTop: 10 };
+const s_thin = { paddingHorizontal: space.gutter, paddingTop: 10 };
 
 export default function Magazine() {
   /* Selected field by field on purpose. `useMagazine()` with no selector
@@ -58,6 +88,15 @@ export default function Magazine() {
   const call = useMagazine((s) => s.call);
   const react = useMagazine((s) => s.react);
   const setFilter = useMagazine((s) => s.setFilter);
+  const pool = useMagazine((s) => s.pool);
+  const garments = useMagazine((s) => s.garments);
+  const query = useMagazine((s) => s.query);
+  const searchOpen = useMagazine((s) => s.searchOpen);
+  const toggleGarment = useMagazine((s) => s.toggleGarment);
+  const setQuery = useMagazine((s) => s.setQuery);
+  const clearSearch = useMagazine((s) => s.clearSearch);
+  const openSearch = useMagazine((s) => s.openSearch);
+  const closeSearch = useMagazine((s) => s.closeSearch);
   const openSheet = useMagazine((s) => s.openSheet);
   const closeSheet = useMagazine((s) => s.closeSheet);
   const focusPiece = useMagazine((s) => s.focusPiece);
@@ -72,7 +111,16 @@ export default function Magazine() {
     if (length === 0) extend(FIRST_PAGE);
   }, [length, extend]);
 
-  const list = cards({ length, spreadIndex });
+  const list = cards({ length, spreadIndex, pool, filter });
+  /* ONE SOURCE for what is on screen and what the screen says about it — the
+     note and the feed both read `pool`, so they can never disagree. */
+  const thin = thinResultNote(pool.length, filter);
+  const searchActive = garments.length > 0 || query.trim().length > 0;
+  /* A filtered stream ends when the matches run out — see `feedIsFinite`. So
+     the endless-scroll affordances have to go with it: no `onEndReached`, and
+     a footer that says it is the end rather than inviting more. */
+  const finite = feedIsFinite(filter, garments, query);
+  const exhausted = finite && list.filter((c) => c.kind !== 'S').length >= pool.length;
   const sheetLook = sheet !== null ? FEED_LOOKS[sheet % FEED_LOOKS.length]! : null;
 
   /**
@@ -100,46 +148,80 @@ export default function Magazine() {
     <Screen>
       <LogoBlock title="Magazine" />
 
-      {/* The filter rail. See the warning at the top of this file — "Filter"
-          is a static entry point only, not wired to the fuller FILTERS list
-          (data/magazine.ts documents the whole rail as visual-only for MVP). */}
-      <View
-        style={{
-          flexDirection: 'row',
-          paddingHorizontal: space.gutter - 9,
-          paddingVertical: 3,
-          borderBottomWidth: border.hair,
-          borderBottomColor: palette.rule,
-        }}
-      >
-        <FilterTab
-          label="All"
-          on={filter === 'All'}
-          onPress={() => {
-            setFilter('All');
-            extend(FIRST_PAGE);
-          }}
-        />
-        <FilterTab
-          label="From the room"
-          on={filter === 'From the room'}
-          onPress={() => {
-            setFilter('From the room');
-            extend(FIRST_PAGE);
-          }}
-        />
-        <FilterTab label="Filter" />
+      {/* ══ THE RAIL IS LIVE NOW (4 Sep) ══
+          It was two chips and a dead "Filter" label, and `filter` was stored
+          and read by nothing. Every chip narrows the pool; the SAMPLER still
+          samples within it. A filter must never become an ordering — the long
+          version of why is at the top of domain/magazine.ts.
+
+          `Trending` is absent unless its flag is on AND its eligible set
+          clears the floor of 12. It is the one chip that lets reactions decide
+          anything, and it is off by default. */}
+      <View style={s_rail}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: space.gutter - 9 }}
+        >
+          {RAIL.map((f) => (
+            <FilterTab
+              key={f}
+              label={f}
+              on={filter === f}
+              onPress={() => {
+                setFilter(f);
+                extend(FIRST_PAGE);
+              }}
+            />
+          ))}
+        </ScrollView>
+
+        {/* The search icon sits OUTSIDE the scrolling chips so it cannot be
+            scrolled off — it is the other axis, not another chip. */}
+        <Pressable
+          onPress={openSearch}
+          accessibilityRole="button"
+          accessibilityLabel="Find a piece"
+          style={s_searchBtn}
+        >
+          <SearchIcon on={searchActive} />
+        </Pressable>
       </View>
+
+      {/* The active garment selection, as a removable chip under the rail.
+          It is not in the rail itself because the rail is single-select by
+          kind and this is a second, multi-select axis — one control that did
+          both would have to explain which of the two a tap meant. */}
+      {searchActive ? (
+        <View style={s_activeRow}>
+          <Chip
+            label={`${[...garments, ...(query.trim() ? [query.trim()] : [])].join(' · ')} ×`}
+            tone="on"
+            onPress={() => {
+              clearSearch();
+              extend(FIRST_PAGE);
+            }}
+          />
+        </View>
+      ) : null}
+
+      {/* Honest about a thin pool, and it offers the widening move rather
+          than silently relaxing anything. */}
+      {thin ? <Tiny style={s_thin}>{thin}</Tiny> : null}
 
       <FlatList
         data={list}
         keyExtractor={(c) => String(c.index)}
         showsVerticalScrollIndicator={false}
         onEndReachedThreshold={0.6}
-        onEndReached={() => extend(NEXT_PAGE)}
+        onEndReached={exhausted ? undefined : () => extend(NEXT_PAGE)}
         ListFooterComponent={
           <Tiny style={{ paddingHorizontal: space.gutter, paddingVertical: 20, textAlign: 'center' }}>
-            keep scrolling
+            {exhausted
+              ? pool.length === 1
+                ? 'That is the only one.'
+                : `That is all ${pool.length} of them.`
+              : 'keep scrolling'}
           </Tiny>
         }
         renderItem={({ item }) => {
@@ -172,13 +254,31 @@ export default function Magazine() {
                  enforced, and the token badge already says what a token is. */
               onOpenSheet={() => openSheet(item.index)}
               onReact={(v) => react(item.index, v)}
-              onTag={(t) => {
-                setFilter(t);
-                extend(FIRST_PAGE);
-              }}
             />
           );
         }}
+      />
+
+      {/* The other axis. Chrome is ui/Sheet.tsx, shared with the wardrobe's
+          confirm and the Today card's submission drawer. */}
+      <SearchSheet
+        visible={searchOpen}
+        categories={garments}
+        query={query}
+        matchCount={pool.length}
+        onToggleCategory={(c) => {
+          toggleGarment(c);
+          extend(FIRST_PAGE);
+        }}
+        onChangeQuery={(q) => {
+          setQuery(q);
+          extend(FIRST_PAGE);
+        }}
+        onClear={() => {
+          clearSearch();
+          extend(FIRST_PAGE);
+        }}
+        onDismiss={closeSearch}
       />
 
       <BottomSheet

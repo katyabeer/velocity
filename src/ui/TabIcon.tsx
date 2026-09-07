@@ -139,3 +139,23 @@ export function LockIcon({ open, size = 15 }: { open: boolean; size?: number }) 
     </Svg>
   );
 }
+
+/** The magazine's search affordance. Fills its stroke when a garment filter is
+ *  active, so the icon reports state as well as offering the action — the rail
+ *  next to it has no room for a second chip saying "search is on". */
+export function SearchIcon({ on }: { on?: boolean }) {
+  return (
+    <Svg
+      width={19}
+      height={19}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={palette.ink}
+      strokeWidth={on ? 2.4 : 1.8}
+      strokeLinecap="round"
+    >
+      <Circle cx={10.5} cy={10.5} r={6.5} />
+      <Path d="M15.5 15.5L21 21" />
+    </Svg>
+  );
+}

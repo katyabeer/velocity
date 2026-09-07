@@ -38,6 +38,8 @@
 
 /** §2. Nine values. `thumbs_up` / `thumbs_down` are the direct icons; the other
  *  seven live in the panel. */
+import type { LookKind } from './looks';
+
 export const REACTION_VALUES = [
   'thumbs_up',
   'thumbs_down',
@@ -100,7 +102,9 @@ export const PANEL_VALUES = [
 export const PANEL_DIVIDER_AFTER = PANEL_VALUES.filter(isPositive).length;
 
 /** §1. What a look is, which decides whether it can be reacted to at all. */
-export type LookKind = 'editorial' | 'settled_entry' | 'freestyle' | 'live_entry';
+/** Re-exported so existing importers keep working. It LIVES in domain/looks.ts
+ *  — see that file for why it had to leave this one. */
+export type { LookKind };
 
 /**
  * §1. A live brief entry is not reactable, and the spec is precise about the

@@ -272,6 +272,30 @@ A fresh session will be tempted by several of these. They were tried and rejecte
   shouting in 36px caps beside the other stating the job in 23px italic was
   the mismatch. NOTE the empty-state card keeps its display heading: that card
   is a front door, not step 1 of a flow
+- A dead filter rail on the magazine, and `Ours` / `From the room` / four
+  occasion words as its chips. The occasion words could never have worked —
+  occasion stopped aggregating when Create's tags went free text. Five chips
+  now, all of them read: **All · Editorial · Challenges · Free posts ·
+  Trending**, plus a garment search drawer on the other axis
+- **Tappable tags on feed cards.** They set the feed's filter to the tag, which
+  is the thing `domain/tags.ts` explicitly forbids — "not clickable, not
+  filterable, and they must NEVER reach the feed sampler". Free text does not
+  aggregate either, so `#wedding` / `#weddingvibes` / `#bigday` were three
+  filters over one idea. They are a caption now
+- Cycling the pool to fill an endless scroll under a filter. Three matches
+  repeated thirty times is padding, which §5 rules out — a filtered stream
+  shows each match once and ends with "that is all 9 of them"
+- `resizeMode="cover"` on the onboarding collage photos. The look photography
+  is portrait and full-length, so in a cell wider than the source's aspect
+  `cover` filled by cropping the SIDES — a head off the top and an arm off the
+  left of the two bottom cells at 488px. It is `contain`, and both frames carry
+  padding so a contained photo reads as mounted on a mat rather than as one
+  that failed to fill its box
+- A label over the builder's filter chips. It read "everything we have" (the
+  pool, not the task) and "your wardrobe" on Day 2 (which the Wardrobe tab
+  owns); renamed to "Pick your pieces" it duplicated the header, so it came off
+  entirely along with the "60 pieces" count — a fact about the catalogue, not
+  about the decision, sitting where the eye lands after the brief
 - The garment teaser on o7 (four cutouts under the brief) and its
   schedule-only copy. Katya's mockup, 4 Sep: the screen now TEACHES THE LOOP —
   build · vote · see how you did, as three numbered rows (`NumberedList`). It
@@ -389,6 +413,8 @@ Search for `⚠` to find every one. All are Katya's or Jack's call, not yours.
 | `domain/handle.ts` (`TAKEN`) | **you-brief q2** — is the handle on magazine cards, or is the magazine anonymous? If anonymous, the handle only ever appears on your own You screen and barely earns its onboarding step. Recommendation: attributed |
 | `domain/you.ts` (`TIPS`) | **you-brief q4** — the tip thresholds (10 looks · 10 settled · 20 close calls) are ESTIMATES, not measured. They need a pass against real distributions |
 | `data/looks.ts` (`mine`) | there is no ownership model — one fixture is flagged as yours so the owner's read is reachable. Create's posts don't enter the feed |
+| `domain/magazine.ts` (`TRENDING_ENABLED`) | **TRENDING REVERSES SAMPLE-DON'T-SORT** — the one change the handover calls the one that would quietly ruin the product. Built with all seven guardrails and OFF by default; the eligible count is hardcoded 0 because there is no reaction-velocity data (reactions carry no timestamps), so the chip never shows. ⚠ Its kill criterion has NO OWNER: weekly take-concentration, four-week baseline with it off, removed if top-20 share rises >10 points in six weeks. Without an owner that criterion is decorative — say who owns it before the flag is ever turned on |
+| `domain/magazine.ts` (`VOCABULARY_UNSWEPT`) | **brief / job / challenge — three words for one object** across four documents, and the rail now says `Challenges`. Cheap to sweep now, expensive once the demo script is rewritten. The rail argues for *challenge* |
 | `data/challenges.ts` (`CHALLENGES` order) | the first two entries after the open one ARE THE SCHEDULE — `nextChallenge()` reads the list in order, so the locked preview card names whatever sits at index 2. Reordering the pool silently reorders the month |
 | `data/challenges.ts` (`REVEAL_NEXT_BRIEF`) | the locked next-challenge card NAMES tomorrow's job, which reveals the month's order — withheld everywhere else on purpose ("publish the month's jobs, withhold the order… browsing gets a purpose without becoming shopping for tonight"). Naming it the evening before hands someone thirteen hours to acquire for it. Built as asked, 4 Sep; one line to turn the reveal off and keep the lock |
 | `data/inventory.ts`, `data/capsules.ts` | **Day 2 and Established show GREY PLACEHOLDERS, not clothes.** Their fixtures use the original prototype's short names (`wool coat`, `roll neck`, `red bag`) and the catalogue has none of them — `garmentImage` returns undefined, so every flat lay, slot strip and wardrobe tile falls back to a named box. Day 1 is fine because it draws from `cataloguePool`. Pre-existing, and it undercuts anything that shows a look on those days |
@@ -478,6 +504,9 @@ src/
                           and the Create tab's six-state machine
               today.ts    the job card's five states, and why `failed` sits
                           BELOW the round in the ordering
+              magazine.ts sample-don't-sort, the filter rail, and TRENDING —
+                          the one guarded reversal of it. Read before touching
+              looks.ts    `LookKind`, and why it does not live in reactions.ts
               you.ts      what a10 is ALLOWED to say, and when. Empty states,
                           the descriptor ladder, the tip thresholds
               handle.ts   the public identifier: shape, uniqueness, the @
@@ -542,7 +571,7 @@ The overnight roundel is hidden because a zero there would be a lie. The shuffle
 
 ```
 npm run typecheck      # tsc --noEmit, strict + noUncheckedIndexedAccess
-npm test               # 187 assertions over the domain layer
+npm test               # 210 assertions over the domain layer
 ```
 
 **Motion on the spread card is decoration over settled state.** Calling a look

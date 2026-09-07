@@ -20,7 +20,7 @@ import {
   CADENCE,
   COMMENTS_ENABLED,
   FEED_ELIGIBLE,
-  FILTER_RAIL_IS_FUNCTIONAL,
+  MAGAZINE_FILTERS,
   REACTIONS,
   REACTIONS_ON_GARMENTS,
   SPREADS_PER_DAY,
@@ -137,10 +137,17 @@ test('a live entry is never eligible for the feed', () => {
   assert.deepEqual([...FEED_ELIGIBLE], ['settled-entry', 'free-post', 'house-editorial']);
 });
 
-test('the filter rail is flagged as not yet functional', () => {
-  // Deliberate: it is visually live but does not change the pool. Kept as an
-  // assertion so it cannot be quietly demoed as working.
-  assert.equal(FILTER_RAIL_IS_FUNCTIONAL, false);
+test('the filter rail is functional, and its chips are the current five', () => {
+  /* It used to be flagged NOT functional — visually live, read by nothing —
+     and this test asserted the flag so the rail could not be quietly demoed as
+     working. It works now (4 Sep). The behaviour lives in
+     tests/magazine-filters.test.ts; this is the guard that the chip LIST does
+     not drift back to occasion words, which cannot work at all since occasion
+     stopped aggregating (domain/tags.ts). */
+  assert.deepEqual(
+    [...MAGAZINE_FILTERS],
+    ['All', 'Editorial', 'Challenges', 'Free posts', 'Trending'],
+  );
 });
 
 test('sample draws without replacement and respects weights', () => {

@@ -58,7 +58,6 @@ export function LookCard({
   held,
   onOpenSheet,
   onReact,
-  onTag,
   tip,
 }: {
   look: FeedLook;
@@ -68,7 +67,6 @@ export function LookCard({
   held?: ReactionValue;
   onOpenSheet: () => void;
   onReact: (v: ReactionValue) => void;
-  onTag: (tag: string) => void;
   /** Rendered directly under the image, pointing up at Save pieces. Only the
    *  first card in the feed passes one. */
   tip?: React.ReactNode;
@@ -109,8 +107,15 @@ export function LookCard({
       {tip}
 
       <View style={s.tagRow}>
+        {/* ⚠ NOT TAPPABLE, AND THAT IS AN INVARIANT (fixed 4 Sep). These used
+            to set the feed's filter to the tag. domain/tags.ts is explicit:
+            tags are "not clickable, not filterable, and they must NEVER reach
+            the feed sampler — a tag filter is a sort, and invariant 7 is
+            sample-don't-sort". Free text does not aggregate either, so
+            `#wedding`, `#weddingvibes` and `#bigday` were three different
+            filters over one idea. They are a caption on the look. */}
         {look.tags.map((t) => (
-          <Text key={t} style={s.tag} onPress={() => onTag(t)}>
+          <Text key={t} style={s.tag}>
             #{t.replace(' ', '')}
           </Text>
         ))}
