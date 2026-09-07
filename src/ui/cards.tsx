@@ -6,6 +6,7 @@
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { palette, border, space } from '@/theme/tokens';
 import { BANDS, MILESTONES, type BandKey } from '@/domain/bands';
+import type { JobStep } from '@/domain/today';
 import { Kick, Tiny } from './text';
 
 /** `.card` / `.card.ink` */
@@ -19,6 +20,115 @@ export function Card({
   style?: ViewStyle;
 }) {
   return <View style={[s.card, ink && s.cardInk, style]}>{children}</View>;
+}
+
+/**
+ * A STATUS BADGE, top-right of a card. Two tones and no more:
+ *
+ *   open      accent fill + its keyline — the app's emphasis pair. It is the
+ *             one that means "there is something to do".
+ *   done      a hairline outline on the sunk ground. Quiet on purpose: a
+ *             finished thing should not shout as loudly as a live one, and an
+ *             accent badge on every completed card would make the whole feed
+ *             look urgent.
+ *
+ * No red, no green. `palette.error` is validation-only and the do-not-propose
+ * list is explicit that a coloured status chip reads as an alert.
+ *
+ * ⚠ `ui/ResultCard.tsx` still has its own local badge with three tones. It
+ * predates this and could collapse onto it, but its `alert` tone has no
+ * equivalent here — worth doing as its own pass, not as a side effect.
+ */
+export function Badge({ label, tone = 'open' }: { label: string; tone?: 'open' | 'done' }) {
+  return (
+    <View style={[s.badge, tone === 'done' && s.badgeDone]}>
+      <Text style={s.badgeLabel}>{label}</Text>
+    </View>
+  );
+}
+
+/**
+ * THE DAY'S THREE STEPS, STACKED (Katya, 4 Sep). It replaced the `StepRibbon`
+ * on the Today card — three columns of hairline rule with a word under each,
+ * which had to drop its second line to fit and so lost the deadlines that were
+ * the useful part.
+ *
+ * Stacked rows have the width to carry them: "Build by 8pm", not "Build". The
+ * number goes in a disc, which is the same mark Milestones uses for an unearned
+ * one, so "a numbered thing you have not done yet" already means something in
+ * this app.
+ *
+ * FOUR STATES, and `shut` is the one worth understanding. After 8pm Build is
+ * not "todo" — it is gone for the day — so it is struck through and dimmed
+ * rather than left looking like something still ahead of you. See `jobSteps` in
+ * domain/today.ts.
+ */
+export function JobStepList({ steps }: { steps: readonly JobStep[] }) {
+  return (
+    <View style={s.steps}>
+      {steps.map((st) => {
+        const done = st.state === 'done';
+        const shut = st.state === 'shut';
+        const now = st.state === 'now';
+        return (
+          <View key={st.n} style={s.stepRow}>
+            <View style={[s.stepDisc, done && s.stepDiscDone, now && s.stepDiscNow]}>
+              <Text style={[s.stepNum, done && { color: palette.cream }]}>
+                {done ? '✓' : st.n}
+              </Text>
+            </View>
+            <Text
+              style={[
+                s.stepLabel,
+                now && { fontFamily: 'Archivo_700Bold', color: palette.ink },
+                shut && s.stepLabelShut,
+              ]}
+            >
+              {st.label}
+            </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+/**
+ * A NUMBERED EXPLAINER LIST — what the day is, in three rows.
+ *
+ * Not `JobStepList`, which reports PROGRESS through the same three stages and
+ * has four states to do it with. This one is static: it explains the loop to
+ * someone who has never seen it, so every row looks the same and none of them
+ * is "current". Two components for two jobs, sharing the disc so they read as
+ * the same family.
+ *
+ * Not `Roundel` either — its disc is 66px, built to hold a word ("Strength"),
+ * and a number rattles around inside it.
+ *
+ * FILLED DISCS, matching `stepDiscDone`. On this screen nothing has happened
+ * yet, so an outlined disc would be the "not done" mark on a list that is not
+ * a checklist — the fill keeps it reading as a numeral rather than a state.
+ */
+export function NumberedList({
+  items,
+}: {
+  items: readonly { title: string; body: string }[];
+}) {
+  return (
+    <View style={s.numbered}>
+      {items.map((it, i) => (
+        <View key={it.title} style={s.numberedRow}>
+          <View style={s.numberedDisc}>
+            <Text style={s.numberedNum}>{i + 1}</Text>
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={s.numberedTitle}>{it.title}</Text>
+            <Text style={s.numberedBody}>{it.body}</Text>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
 }
 
 /** `.stat` — a label/value row with a hairline under it. */
@@ -250,6 +360,87 @@ export function EmptyState({
 }
 
 const s = StyleSheet.create({
+  numbered: { marginTop: 18, gap: 15 },
+  numberedRow: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
+  numberedDisc: {
+    width: 26,
+    height: 26,
+    borderRadius: 999,
+    backgroundColor: palette.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+    /* Nudged down so the numeral sits on the title's cap line rather than its
+       ascender — the row reads as one thing at a glance. */
+    marginTop: 1,
+  },
+  numberedNum: {
+    fontFamily: 'Archivo_700Bold',
+    fontSize: 12,
+    lineHeight: 15,
+    color: palette.cream,
+  },
+  numberedTitle: {
+    fontFamily: 'Archivo_700Bold',
+    fontSize: 13,
+    lineHeight: 16,
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
+    color: palette.ink,
+  },
+  numberedBody: {
+    fontFamily: 'Archivo_400Regular',
+    fontSize: 14,
+    lineHeight: 19,
+    color: palette.grey,
+    marginTop: 3,
+  },
+  badge: {
+    borderWidth: border.mid,
+    borderColor: palette.accentEdge,
+    backgroundColor: palette.accent,
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 3.5,
+  },
+  badgeDone: {
+    borderWidth: border.hair,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamSunk,
+  },
+  badgeLabel: {
+    fontFamily: 'Archivo_700Bold',
+    fontSize: 9,
+    lineHeight: 11,
+    letterSpacing: 1.05,
+    textTransform: 'uppercase',
+    color: palette.ink,
+  },
+  steps: { marginTop: 14, gap: 9 },
+  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  stepDisc: {
+    width: 22,
+    height: 22,
+    borderRadius: 999,
+    borderWidth: border.hair,
+    borderColor: palette.rule,
+    backgroundColor: palette.creamRaised,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  /** Filled ink for done — the same inversion the band ladder uses for the row
+   *  you are on. */
+  stepDiscDone: { borderColor: palette.ink, backgroundColor: palette.ink },
+  stepDiscNow: { borderWidth: border.mid, borderColor: palette.ink },
+  stepNum: { fontFamily: 'Archivo_700Bold', fontSize: 10.5, lineHeight: 13, color: palette.ink },
+  stepLabel: {
+    fontFamily: 'Archivo_400Regular',
+    fontSize: 13.5,
+    lineHeight: 17,
+    color: palette.grey,
+  },
+  /** Struck through AND dimmed. Colour alone would be the only signal, and the
+   *  app never carries a state on colour by itself. */
+  stepLabelShut: { textDecorationLine: 'line-through', color: palette.greyDecor },
   card: {
     borderWidth: border.hair,
     borderColor: palette.rule,

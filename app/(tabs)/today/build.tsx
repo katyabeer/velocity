@@ -153,24 +153,16 @@ export default function Build() {
 
       <StepRibbonBleed steps={ribbon} />
 
-      {/* paddingBottom, not just paddingTop: the brief and the slot strip were
-          touching, so the job and the thing you build it with read as one
-          block. */}
-      {/* The job, and only the job. Its explainer line ("Cold field, warm
-          marquee…") came off on 4 Sep — the brief is the title, and the
-          sentence under it was being read once and then occupying the top of
-          the screen for the rest of the session. It is still the first thing a
-          new user meets, on the first-challenge screen.
+      {/* ══ YOUR LOOK SITS ABOVE THE BRIEF (Katya, 4 Sep) ══
+          They were the other way round. The two swapped because only one of
+          them needs to be permanently on screen: the slot strip is the thing
+          you are filling and it has to stay put while you scroll a grid of
+          sixty garments, whereas the brief is read once at the start.
 
-          STEP 1 ONLY. Step 2 now states the job itself, under its own kicker
-          and below its headline, so leaving this here printed the same title
-          twice on one screen — once above the fold and once below it. */}
-      {step === 1 ? (
-        <View style={{ paddingHorizontal: 22, paddingTop: 13, paddingBottom: 18 }}>
-          <Lede>{TONIGHTS_BRIEF.title}</Lede>
-        </View>
-      ) : null}
-
+          STICKY BY CONSTRUCTION, not by a prop — `Pinned` sits OUTSIDE the
+          `Scroll`, so it cannot move. The brief moved INTO the Scroll for the
+          same reason, and now yields its space as you browse rather than
+          holding the top of the screen for the rest of the session. */}
       {step === 1 ? (
         <Pinned>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -197,7 +189,18 @@ export default function Build() {
 
       {step === 1 ? (
         <Scroll>
-          <View style={{ marginTop: 11, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          {/* The job, and only the job. Its explainer line ("Cold field, warm
+              marquee…") came off on 4 Sep — the brief is the title, and the
+              sentence under it was read once and then occupied the top of the
+              screen for the rest of the session. It is still the first thing a
+              new user meets, on the first-challenge screen.
+
+              STEP 1 ONLY. Step 2 states the job itself under its own kicker,
+              so leaving this there printed the same title twice on one
+              screen. */}
+          <Lede style={{ marginTop: 13 }}>{TONIGHTS_BRIEF.title}</Lede>
+
+          <View style={{ marginTop: 18, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <Kick tone="muted">{firstRun ? 'everything we have' : 'your wardrobe'}</Kick>
             <Tiny>{pool.length} pieces</Tiny>
           </View>

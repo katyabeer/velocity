@@ -21,23 +21,112 @@
  * surfaces on the strip instead, which is a report rather than a demand.
  */
 
+import { RESULT_LABEL, type Phase } from './clock';
 import type { RenderStatus } from '@/state/submission';
 
-export type JobCardState = 'open' | 'entered' | 'building' | 'complete' | 'failed';
+export type JobCardState =
+  | 'open'
+  | 'entered'
+  | 'building'
+  | 'complete'
+  | 'results'
+  | 'failed';
 
 export function jobCardState(input: {
   entered: boolean;
   /** The judging round is finished — `callsCast >= quota`. */
   judged: boolean;
   render: RenderStatus;
+  /** The room has settled your entry and there is a placing to read.
+   *  ⚠ See RESULTS_NEED_A_DAY_ROLLOVER — nothing in the prototype sets this
+   *  on its own. */
+  resultsReady?: boolean;
 }): JobCardState {
   if (!input.entered) return 'open';
   /* The round outranks the render. See the header. */
   if (!input.judged) return 'entered';
   if (input.render === 'failed') return 'failed';
-  if (input.render === 'ready') return 'complete';
-  return 'building';
+  if (input.render !== 'ready') return 'building';
+  return input.resultsReady ? 'results' : 'complete';
 }
+
+/**
+ * ⚠ `results` NEEDS A DAY ROLLOVER THE PROTOTYPE DOES NOT HAVE.
+ *
+ * Your entry settles overnight and the placing lands at 07:00 — by which point
+ * it is YESTERDAY's job, and this card is showing a new one. So in the real
+ * product the same card never carries both "complete" and "your result is in":
+ * the result appears in Act 1 (`ui/ResultCard.tsx`) on the following morning.
+ *
+ * The state is built because Katya asked for it and because it is the correct
+ * shape if the card ever does persist past 7am — but it is reachable only via
+ * `FORCE_RESULTS_READY` in config/testState.ts. Worth deciding which of the two
+ * places a result belongs before this ships.
+ */
+export const RESULTS_NEED_A_DAY_ROLLOVER = true as const;
+
+/* ════════════════════════ the steps, stacked ════════════════════════ */
+
+/**
+ * `shut` is the one that needed adding: Build is not "todo" after 20:00 — it is
+ * gone for the day, and a step you cannot reach must not look like one you have
+ * not got to yet. The other three are the ribbon's own vocabulary.
+ */
+export type JobStepState = 'done' | 'now' | 'todo' | 'shut';
+
+export type JobStep = { n: number; label: string; state: JobStepState };
+
+/**
+ * THE THREE STEPS, WITH THEIR DEADLINES IN THE LABEL. The stepper used to carry
+ * these as a second line under each label and lost them when the ribbon went to
+ * one line (4 Sep) — stacked rows have the width to say them, which is the
+ * argument for stacking.
+ *
+ * Only rendered while the day is still open. Once the job is complete there is
+ * no progress left to report, and three ticked rows under a badge already
+ * saying "complete" is the same fact three times.
+ */
+export function jobSteps(input: {
+  entered: boolean;
+  judged: boolean;
+  phase: Phase;
+}): JobStep[] {
+  const canBuild = input.phase === 'entry';
+  return [
+    {
+      n: 1,
+      label: 'Build by 8pm',
+      state: input.entered ? 'done' : canBuild ? 'now' : 'shut',
+    },
+    {
+      n: 2,
+      label: 'Vote',
+      state: input.judged ? 'done' : input.entered || !canBuild ? 'now' : 'todo',
+    },
+    { n: 3, label: `Results by ${RESULT_LABEL}`, state: input.judged ? 'now' : 'todo' },
+  ];
+}
+
+/**
+ * THE BADGE REPORTS THE CHALLENGE — not the render.
+ *
+ * That split is what lets `failed` sit under `Complete`: the challenge genuinely
+ * IS complete once you have built and voted, and the only thing that went wrong
+ * is the picture. The render's state is the strip's job. Without the split the
+ * badge would have to say "complete except for the bit that broke", which is
+ * not a badge.
+ */
+export type JobBadge = 'New' | 'Open' | 'Complete';
+
+export const jobBadge = (state: JobCardState): JobBadge => {
+  /* `New` ONLY WHEN NOTHING HAS BEEN DONE (Katya, 4 Sep, renaming `Open`).
+     A card you have already built a look on is not new, so `entered` keeps
+     `Open` — there is still something to do, and calling it new would be the
+     badge forgetting what the user did an hour ago. Three values, not two. */
+  if (state === 'open') return 'New';
+  if (state === 'entered') return 'Open';
+  return 'Complete';
+};
 
 /**
  * A FAILED RENDER DOES NOT UN-ENTER THE LOOK, and the card has to say so. The

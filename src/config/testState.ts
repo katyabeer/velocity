@@ -146,3 +146,18 @@ export const SIMULATED_FAILURE = false;
  * afterwards. Same class of thing as ACTIVE_DAY: a build constant, not a HUD.
  */
 export const FORCE_PHASE: Phase | null = null;
+
+/**
+ * ⚠ HAS TODAY'S RESULT LANDED? Normally impossible to be true — see
+ * RESULTS_NEED_A_DAY_ROLLOVER in domain/today.ts.
+ *
+ * Your entry settles overnight and the placing arrives at 07:00, by which point
+ * it is YESTERDAY's job and the card is showing a new one — so in the real
+ * product the same card never carries both "complete" and "your result is in".
+ * The result appears in Act 1 (`ui/ResultCard.tsx`) the next morning instead.
+ *
+ * The card's `results` state is built because it is the correct shape IF the
+ * card ever persists past 7am, and this is the only way to look at it. Leave it
+ * false for anything a participant will see.
+ */
+export const FORCE_RESULTS_READY = false;

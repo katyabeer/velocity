@@ -18,36 +18,56 @@
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
-import { H2, Body, Tiny, Num, Kick } from '@/ui/text';
+import { H2, PageTitle, Body, Tiny, Num, Kick } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { BandLadder, Card, Stat } from '@/ui/cards';
 import { LookPlate } from '@/ui/LookPlate';
 import { palette } from '@/theme/tokens';
 import { JUDGING_QUOTA } from '@/domain/economy';
 import { useSession } from '@/state/session';
+import { JUDGING_LOOKS } from '@/data/looks';
+
+/**
+ * REAL PHOTOGRAPHS, not the grey plates (Katya, 4 Sep). Both were `LookPlate`
+ * placeholders — a tinted box with the word "Your look" ghosted across it —
+ * on the one screen whose whole job is to show you what happened.
+ *
+ * Drawn from the judging fixtures so they are looks the room actually saw. The
+ * WINNER is picked from the `strong` tier, which is the closest the fixtures
+ * come to "this one placed well"; yours is a different entry so the two are
+ * never the same photograph.
+ *   ⚠ Both are FIXTURES. There is no per-look settled record (Jack's open
+ *   question 5), so nothing here is your actual entry.
+ */
+const YOUR_LOOK = JUDGING_LOOKS[3]!;
+const THE_WINNER = JUDGING_LOOKS.find((l) => l.tier === 'strong')!;
 
 export default function Result() {
   const day = useSession((s) => s.day);
 
   return (
     <Screen>
-      <Header
-        onBack={() => router.back()}
-        title={day >= 3 ? 'Yesterday · the interview' : 'Yesterday · your first job'}
-        right={<Tiny>41 entered</Tiny>}
-      />
+      {/* BARE CHEVRON (Katya, 4 Sep). The header carried the job's name and the
+          field size — "Yesterday · your first job" with "41 entered" out to the
+          right — which made the top of the screen the busiest part of it and
+          left the screen itself untitled. Both moved into the page title
+          below, where they have room to be read. */}
+      <Header onBack={() => router.back()} />
 
       <Scroll>
-        <View style={{ flexDirection: 'row', gap: 13, alignItems: 'flex-start' }}>
-          <View style={{ width: 116 }}>
-            <LookPlate
-              tint="t2"
-              occasion="Interview · clean"
-              pieces="trench · shell · straight leg · loafer · tote"
-              height={146}
-              label="Your look"
-            />
-          </View>
+        <PageTitle>Your results</PageTitle>
+        {/* The field size, demoted from the header. It is context for the band
+            underneath — "upper half" of what — so it belongs with the title
+            rather than in the chrome. */}
+        <Tiny style={{ marginTop: 6 }}>
+          {day >= 3 ? 'The interview' : 'Your first job'} · 41 entered
+        </Tiny>
+
+        {/* THE PHOTOGRAPH SITS RIGHT OF THE TEXT (Katya, 4 Sep), and it is a
+            real look now rather than the grey `Your look` placeholder. The band
+            is the thing being announced, so it reads first at the left margin;
+            the picture is the evidence and follows it. */}
+        <View style={{ flexDirection: 'row', gap: 13, alignItems: 'flex-start', marginTop: 16 }}>
           <View style={{ flex: 1 }}>
             <Kick>you placed</Kick>
             <H2 size={30} style={{ marginTop: 6 }}>
@@ -57,6 +77,15 @@ export default function Result() {
               Above the middle of people who started around when you did. Never a number — 20
               comparisons can&apos;t carry one.
             </Body>
+          </View>
+          <View style={{ width: 116 }}>
+            <LookPlate
+              tint="t2"
+              occasion="Your look"
+              image={YOUR_LOOK.image}
+              height={146}
+              showCaption={false}
+            />
           </View>
         </View>
 
@@ -69,10 +98,11 @@ export default function Result() {
         </Body>
 
         <Kick style={{ marginTop: 17 }}>what beat you</Kick>
+        {/* Same order as the band above: the explanation first, the winning
+            look to the right of it. A photograph leading a paragraph about why
+            it won reads as a caption on the picture rather than a point about
+            your own entry. */}
         <View style={{ flexDirection: 'row', gap: 12, marginTop: 8, alignItems: 'flex-start' }}>
-          <View style={{ width: 100 }}>
-            <LookPlate tint="t5" occasion="Top of the room" pieces="grey suit · red bag" height={126} label="·" />
-          </View>
           <View style={{ flex: 1 }}>
             <Body>
               Four of your five pieces were identical to the winner&apos;s. The bag did it — theirs
@@ -85,6 +115,15 @@ export default function Result() {
             >
               Find it in the magazine →
             </Tiny>
+          </View>
+          <View style={{ width: 100 }}>
+            <LookPlate
+              tint="t5"
+              occasion="Top of the room"
+              image={THE_WINNER.image}
+              height={126}
+              showCaption={false}
+            />
           </View>
         </View>
 

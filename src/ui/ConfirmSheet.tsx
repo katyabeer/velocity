@@ -7,17 +7,11 @@
  * vocabulary (ui/BottomSheet.tsx), so this is the same mechanics with a
  * different payload.
  *
- * THE SCRIM FADE IS COPIED DELIBERATELY, not abstracted. BottomSheet's header
- * explains it: the dim backdrop and the sheet are siblings inside one Modal, so
- * Modal's own "slide" would drag the backdrop up into view instead of fading it
- * in over the page. Driving the dim's opacity and the sheet's translateY
- * separately is what makes the backdrop read as a fade, and `mounted` keeps the
- * Modal alive for the close animation because Modal has no exit hook.
- *
- * Sharing that with BottomSheet would mean a third component whose only job is
- * to own an animation, and the two sheets have nothing else in common. Two
- * copies of fifteen lines, with the reasoning in both, is the cheaper answer —
- * but if a third sheet appears, extract it then.
+ * THE SCRIM AND SLIDE NOW LIVE IN `ui/Sheet.tsx`. This file used to own its own
+ * copy, with a note saying two copies were cheaper than a third component "but
+ * if a third sheet appears, extract it then". One did — the submission drawer
+ * on the Today card — so it was extracted. All this file owns now is the
+ * payload: a question, a picture of the thing, and two answers.
  *
  * THE VISUAL IS THE THING ITSELF. `image` shows the actual garment being
  * removed rather than a warning glyph: it answers "which one?" in the same
@@ -29,26 +23,11 @@
  * reachable three ways and the destructive one exactly once.
  */
 
-import { useEffect, useRef, useState } from 'react';
-import {
-  Animated,
-  Dimensions,
-  Easing,
-  Image,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type ImageSourcePropType,
-} from 'react-native';
-import { palette, border, radius, space } from '@/theme/tokens';
+import { Image, StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
+import { palette, border, radius } from '@/theme/tokens';
+import { Sheet } from './Sheet';
 import { Big, Kick, Tiny } from './text';
 import { Button } from './controls';
-
-const SCREEN_H = Dimensions.get('window').height;
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const CLOSE_MS = 200;
 
 export function ConfirmSheet({
   visible,
@@ -74,59 +53,8 @@ export function ConfirmSheet({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  const [mounted, setMounted] = useState(visible);
-  const progress = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (visible) {
-      setMounted(true);
-      Animated.timing(progress, {
-        toValue: 1,
-        duration: 260,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start();
-      return;
-    }
-
-    Animated.timing(progress, {
-      toValue: 0,
-      duration: CLOSE_MS,
-      easing: Easing.in(Easing.cubic),
-      useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (finished) setMounted(false);
-    });
-
-    /* NEVER GATE STATE ON AN ANIMATION CALLBACK ALONE. The JS driver can be
-       starved — a backgrounded tab, or the Claude preview pane, where
-       requestAnimationFrame never fires at all — and the callback above then
-       never runs. That would leave `mounted` true forever, and this component
-       renders a FULL-SCREEN Modal with a scrim Pressable over it: invisible
-       (opacity 0, translated off) but still swallowing every tap on the page
-       beneath. The judging round lost a vote to exactly this class of bug.
-
-       The same fallback is in ui/BottomSheet.tsx and ui/LookPlate.tsx. */
-    const t = setTimeout(() => setMounted(false), CLOSE_MS + 200);
-    return () => clearTimeout(t);
-    /* `progress` is a useRef value and never changes identity; listing it
-       satisfies the lint rule without changing when this runs. */
-  }, [visible, progress]);
-
-  if (!mounted) return null;
-
-  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [SCREEN_H, 0] });
-
   return (
-    <Modal visible transparent animationType="none" onRequestClose={onCancel}>
-      <AnimatedPressable
-        style={[s.dim, { opacity: progress }]}
-        onPress={onCancel}
-        accessibilityLabel="Keep it"
-      />
-      <Animated.View style={[s.sheet, { transform: [{ translateY }] }]}>
-        <View style={s.grab} />
-
+    <Sheet visible={visible} onDismiss={onCancel} dismissLabel={cancelLabel}>
         <Kick tone="alert">{kick}</Kick>
         <Big size={22} style={{ marginTop: 8 }}>
           {question}
@@ -156,27 +84,11 @@ export function ConfirmSheet({
           style={{ marginTop: 8 }}
           onPress={onCancel}
         />
-      </Animated.View>
-    </Modal>
+    </Sheet>
   );
 }
 
 const s = StyleSheet.create({
-  dim: { flex: 1, backgroundColor: 'rgba(18,17,16,0.55)' },
-  sheet: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    maxHeight: '76%',
-    backgroundColor: palette.cream,
-    borderTopWidth: border.heavy,
-    borderTopColor: palette.ink,
-    paddingHorizontal: space.gutter,
-    paddingTop: 12,
-    paddingBottom: 22,
-  },
-  grab: { width: 42, height: 3, backgroundColor: palette.ink, alignSelf: 'center', marginBottom: 14 },
   subject: { flexDirection: 'row', alignItems: 'center', gap: 13, marginTop: 16 },
   photo: {
     width: 78,

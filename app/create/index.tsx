@@ -35,8 +35,8 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
-import { Foot, Gap, Header, LogoBlock, Pinned, Screen, Scroll } from '@/ui/layout';
-import { Hero, Big, Body, Tiny, Kick } from '@/ui/text';
+import { Foot, Gap, Header, Pinned, Screen, Scroll } from '@/ui/layout';
+import { Hero, Big, Lede, Body, Tiny, Kick } from '@/ui/text';
 import { Bar, Button, ChipRow } from '@/ui/controls';
 import { StepRibbonBleed, statesFor } from '@/ui/StepRibbon';
 import { GarmentGrid, SlotStrip } from '@/ui/pieces';
@@ -132,11 +132,6 @@ export default function Create() {
   );
 
   const canAdvance = c.picks.length >= MIN_PIECES;
-  /* Step 2's title follows its heading, which became a question on 4 Sep —
-     "Have a look" described a screen that now asks whether you are ready to
-     spend the day's generation. It matches the builder's equivalent step,
-     which is the same moment in the other flow. */
-  const titles = ['Pick your pieces', 'Preview your look', 'Tag it'] as const;
 
   /* Step 2 is the only place the chevron can lose work, so it is the only
      place that asks. Step 3 is PAST the commit and has nothing to go back to,
@@ -145,26 +140,26 @@ export default function Create() {
 
   return (
     <Screen>
-      {/* STEP 1 IS THE TAB'S HOME, SO IT GETS THE TAB'S MASTHEAD (Katya,
-          4 Sep). Every other tab home is a `LogoBlock` — Magazine, Today's
-          challenge, Wardrobe, You — and Create was the only one wearing the
-          in-flow `Header` instead, which made it read as a screen you had
-          navigated into rather than a place you had arrived at. It also gave
-          step 1 a back chevron that did nothing, because there is nothing
-          behind the first step of a tab.
+      {/* THE IN-FLOW HEADER, ON EVERY CREATE SCREEN (Katya, 4 Sep).
+          ⟲ This REVERSES the masthead she asked for on the same screen earlier
+          the same day, and the reversal is correct: Create was a tab then. It
+          is a pushed route now, entered from the Wardrobe banner, so a
+          `LogoBlock` claimed a place in the hierarchy it no longer has — the
+          same reasoning that took the masthead off the challenges list.
 
-          Steps 2 and 3 keep the Header: they ARE screens you navigated into,
-          and step 2's chevron is the one control that can lose work.
+          "CREATE" ON ALL FOUR STEPS, not the step name. The ribbon directly
+          below already says which step you are on and emphasises it, and every
+          step has its own Hero heading ("Ready to generate this look?", "Tag
+          it."), so a step name in the bar is the third telling. What the bar is
+          uniquely good for is saying WHICH FLOW you are in — and without it,
+          step 1 would read "Pick your pieces", identical to the builder's own
+          step 1 in a different flow.
 
-          No count in either. The tag count lives beside the FIELD it governs
+          No count in it. The tag count lives beside the FIELD it governs
           (ui/TagInput.tsx) — in the header it was a second copy of the same
           number three lines above the first, which is the same mistake the
           builder's "0 of 6" made before it moved into the slot strip. */}
-      {c.step === 1 ? (
-        <LogoBlock title="Create" onBack={leaveCreate} />
-      ) : (
-        <Header onBack={onBack} title={titles[c.step - 1]} />
-      )}
+      <Header onBack={c.step === 1 ? leaveCreate : onBack} title="Create" />
 
       <StepRibbonBleed steps={ribbon} />
 
@@ -197,7 +192,13 @@ export default function Create() {
           </Pinned>
 
           <Scroll>
-            <Hero size={36}>{'Make\nanything.'}</Hero>
+            {/* MATCHED TO THE BUILDER'S BRIEF TITLE (Katya, 4 Sep) — `Lede`,
+              not the display `Hero` it was. The two screens are the same step
+              of two flows and sat directly across from each other in review:
+              one shouting in 36px caps, the other stating the job in 23px
+              italic. This is Create's brief — it has none, and "Make anything"
+              IS the brief — so it should be set like one. */}
+          <Lede>Make anything.</Lede>
             {/* Placement 1 of the one-a-day rule (§7): ambient, present, not
                 argued. Never in onboarding — this is learned in context. */}
             <Body style={{ marginTop: 8 }}>
@@ -415,7 +416,10 @@ function Rendering() {
 
   return (
     <Screen>
-      <Header title={ready ? 'Posted' : 'Generating'} />
+      {/* "Create", like the rest of the flow — the state is on the ribbon
+          (4 · GENERATE) and in the Hero below it. No chevron: the render is
+          committed, and the footer's "Leave it running" is the way out. */}
+      <Header title="Create" />
 
       <StepRibbonBleed
         steps={statesFor(
@@ -514,9 +518,10 @@ function Spent() {
 
   return (
     <Screen>
-      {/* The tab's masthead, not an in-flow header — this is where Create
-          lives for most of the day, so it is a place, not a step. */}
-      <LogoBlock title="Create" subtitle="today’s generation" onBack={leaveCreate} />
+      {/* Pushed, like every other Create screen — see the note on the flow's
+          header. The subtitle went with the masthead; "today's generation" is
+          what the body says anyway. */}
+      <Header onBack={leaveCreate} title="Create" />
 
       <Scroll>
         {/* §6.1's ORDER, and it is the whole point of the screen: the render
@@ -587,7 +592,7 @@ function Failed() {
 
   return (
     <Screen>
-      <LogoBlock title="Create" onBack={leaveCreate} />
+      <Header onBack={leaveCreate} title="Create" />
       <Scroll>
         <EmptyState
           kick="that didn’t generate"
@@ -638,7 +643,7 @@ function Failed() {
 function Insufficient() {
   return (
     <Screen>
-      <LogoBlock title="Create" onBack={leaveCreate} />
+      <Header onBack={leaveCreate} title="Create" />
       <Scroll>
         <Card style={{ marginTop: 4 }}>
           {/* The state, named before the pitch — so the disabled button below

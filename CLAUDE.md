@@ -241,6 +241,65 @@ A fresh session will be tempted by several of these. They were tried and rejecte
   skips at exactly the moment it must not. Now a kicker plus one `Lede` line.
   The magazine clause went with it: §2.2 deleted the unrendered path, so it
   argued against an option that no longer exists
+- `SectionHead` for "Today's styling challenge", and the masthead reading
+  "Today's challenge" above it. The masthead is **Today** now (the tab's own
+  label) and the heading is an accent kicker — as a SectionHead it was
+  identical to "Try these" in the Wardrobe: a quiet grey label on the loudest
+  thing on the screen
+- A square job card with an inline badge. It is rounded, and the state badge is
+  a STARBURST breaking the top-right corner (`ui/StarBadge.tsx`) — inside the
+  border it is a label, breaking out it is a sticker. `Card` itself stays
+  square: it is also the settlement panel and the wardrobe's boxes, which are
+  documents rather than objects
+- `Open` as the badge on an untouched job. It is **New**; `Open` now means
+  started-but-unfinished, so the badge has three values and never tells someone
+  a card they already built on is new
+- The `LogoBlock` masthead on Create. ⟲ It was asked for and added on 4 Sep,
+  when Create was still a tab; it left the tab bar the same day, so a masthead
+  claimed a place in the hierarchy it no longer has. Every Create screen wears
+  the in-flow `Header` labelled **Create** — not the step name, because the
+  ribbon below already says the step and each screen has its own heading, and
+  without it step 1 would read "Pick your pieces", identical to the builder's
+  step 1 in a different flow
+- The brief above the slot strip in the builder. They swapped 4 Sep: only one
+  of them needs to be permanently on screen, and it is the thing you are
+  filling. `Pinned` is sticky by construction (it sits outside `Scroll`), so
+  the brief moved INTO the scroll and now yields its space as you browse. It
+  also brings the builder into line with Create's step 1, which already read
+  slot-strip-then-heading
+- `Hero` for Create's "Make anything." It is a `Lede`, matching the builder's
+  brief title — the two screens are the same step of two flows, and one
+  shouting in 36px caps beside the other stating the job in 23px italic was
+  the mismatch. NOTE the empty-state card keeps its display heading: that card
+  is a front door, not step 1 of a flow
+- The garment teaser on o7 (four cutouts under the brief) and its
+  schedule-only copy. Katya's mockup, 4 Sep: the screen now TEACHES THE LOOP —
+  build · vote · see how you did, as three numbered rows (`NumberedList`). It
+  used to say only that everyone gets the same job until 8pm, which describes
+  the schedule and not the game; a new user reached the builder never having
+  been told that voting is part of it
+- The `·` disc on the locked next-job card, and a comment claiming this app
+  has no icons. `LockIcon` already existed and a7 had been using it since it
+  was built — the card wears the padlock now, rounded to match the job card
+  above it, under a muted `Tomorrow's challenge` kicker
+- `Tiny` (10px) on `See upcoming challenges →`. 16px, with its note at 14 — it
+  is the only route to the month's list, and at 10 the availability fix was
+  shipping into a size the eye skips
+- The grey `LookPlate` placeholders on the results screen, and its header
+  carrying the job name and field size. Real photographs from the judging
+  fixtures, to the RIGHT of the text; the header is a bare chevron and the
+  screen has a page title with the field size under it
+- The `StepRibbon` on the Today card, and the card's state-as-headline. The
+  ribbon lost its deadlines when it went to one line, and three columns had no
+  width to say "Build by 8pm" — the steps are STACKED rows with numbered discs
+  now (`JobStepList`), and they are absent once the job is done. The card also
+  used to replace the challenge title with the state ("Building your look.",
+  "Challenge complete."), so the one thing every state shares was the thing
+  that vanished as soon as anything happened. Title and description are
+  constant; the BADGE carries the state
+- The finished look inline on the complete card. It was the tallest element on
+  a card with nothing left to do — now a 16px `View your submission →` opening
+  a drawer (`ui/SubmissionSheet.tsx`)
 - The step ribbon's second line (`3 to 6`, `together`, `who wears it`,
   `from 8pm`). Cut 4 Sep: it doubled the ribbon's height on every screen to
   gloss labels that are a verb each. `Step.hint` is gone from the type, not
@@ -308,7 +367,7 @@ Search for `⚠` to find every one. All are Katya's or Jack's call, not yours.
 | `domain/economy.ts` (`awardsForTonight`) | the success screen itemises what a night paid. Katya has more behaviours "to be defined" — each is one entry in `TOKEN_AWARD_LABELS` plus a line in `awardsForTonight`, and the screen needs no change |
 | `you/index.tsx` (`SHOW_STREAK`) | **B** — `Streak · 9 days`. Recommendation: cut the row, keep the *Week straight* milestone |
 | `today/entered.tsx` | **C** — does "the gap" come back? If yes, this screen is its cheapest home |
-| `onboarding/intro/[step].tsx` | **D** — onboarding never teaches the coupling. A new user is currently never told "no judging, no clothes" |
+| `onboarding/intro/[step].tsx`, `onboarding/first-challenge.tsx` | **D** — onboarding never teaches the coupling. CLOSER 4 Sep: o7's three rows now say you vote on theirs and they vote on yours, so the mechanic is stated. The COUPLING to owning clothes — "no judging, no clothes" — is still never said anywhere in onboarding |
 | `casting.tsx`, `ui/pieces.tsx` | Jack 2 — render on a body, or flat lay |
 | `data/challenges.ts`, `create/index.tsx` | Jack 3 — free tags. Suggestion: decoration only |
 | `create/index.tsx` | Jack 4 — layered looks in the renderer |
@@ -322,6 +381,7 @@ Search for `⚠` to find every one. All are Katya's or Jack's call, not yours.
 | `domain/tags.ts` (`TAG_DELIMITERS`) | space commits a chip, per §5 — so a multi-word tag is impossible and "cold field" lands as `#cold` `#field`. Say if two-word tags need to exist |
 | `state/create.ts` | the create brief contradicts itself on when the allowance is spent (§6's `building` says step 3 is still unspent; §3, §4 and AC 2 put the spend at step 2). Resolved in favour of the acceptance criteria — say if you meant it the other way |
 | `domain/renders.ts` | **Jack 1** — worst case is now THREE renders per user per day (brief · freestyle · freestyle re-render). Lands on the render cost curve, which is the variable cost that grows as the product succeeds. His sign-off, not ours |
+| `domain/today.ts` (`RESULTS_NEED_A_DAY_ROLLOVER`) | the card's `results` state ("View results") is UNREACHABLE on its own — your entry settles at 07:00, by which point it is yesterday's job and the card shows a new one, so the result lands in Act 1 instead. Built because it is the right shape if the card ever persists past 7am; `FORCE_RESULTS_READY` is the only way to see it. Decide which of the two places a result belongs |
 | `domain/today.ts` | a failed brief render refunds the brief allowance (`refundBrief`), but `useBriefRendersLeft` is READ BY NOTHING — the brief allowance gates no behaviour today. Kept for symmetry with the freestyle lane; delete both if the allowance is never wired up |
 | `state/submission.ts` (`SIMULATED_FAILURE`) | **Jack 2** — render latency and failure rate. Decides whether `rendering` is a spinner or a state people live in for hours. Built as the latter, because that shape survives either answer |
 | `domain/you.ts`, `domain/entry.ts` | **THE GAP HAS NO INPUT ANYWHERE.** Both the create brief and the you-brief say it "survives on brief entries, because Build step 3 keeps its single closed declared word" — that step does not exist (locked decision 18 removed it; handover open question C asks whether it returns). Consequence, built strictly: a negative read may appear in the sentence ONLY in gap form, gap form is unreachable, so NO negative reaches the You sentence at all. Katya's you-brief q3 ("set Build's declared words to the four positive reaction words") has nothing to set them on |
@@ -334,6 +394,7 @@ Search for `⚠` to find every one. All are Katya's or Jack's call, not yours.
 | `data/inventory.ts`, `data/capsules.ts` | **Day 2 and Established show GREY PLACEHOLDERS, not clothes.** Their fixtures use the original prototype's short names (`wool coat`, `roll neck`, `red bag`) and the catalogue has none of them — `garmentImage` returns undefined, so every flat lay, slot strip and wardrobe tile falls back to a named box. Day 1 is fine because it draws from `cataloguePool`. Pre-existing, and it undercuts anything that shows a look on those days |
 | `data/challenges.ts` (`YESTERDAYS_BRIEF`) | "The interview" is hardcoded in four other places (`ui/ResultCard.tsx` ×3, `today/result.tsx`, both archive fixtures). They should collapse onto the constant |
 | everywhere | **"render" is "generate" in COPY ONLY.** Katya, 4 Sep. Every user-visible string says generate; the code still says render throughout — `domain/renders.ts`, `RENDER_DELAY_MS`, `rerenderVerdict`, the `rendering` route and state, `RenderStrip`. Renaming the internals is a large, purely mechanical diff and it was not asked for. Say if you want it, because the split will confuse a fresh session |
+| `onboarding/first-challenge.tsx`, `app/(tabs)/today/index.tsx` | o7's card says **today's brief** (Katya's mockup) and the Today heading says **Today's styling challenge** — two words for one thing on consecutive screens. Built to the mockup; pick one |
 | `config/app.ts` | the name. Now **Editorial.** (3 Sep), after *quintets.*, after the *Velocity* rejection. STILL no availability or trademark checks on any candidate, and "Editorial" is a common noun in this exact category — the most contested of the three so far |
 
 ---
@@ -481,7 +542,7 @@ The overnight roundel is hidden because a zero there would be a lie. The shuffle
 
 ```
 npm run typecheck      # tsc --noEmit, strict + noUncheckedIndexedAccess
-npm test               # 183 assertions over the domain layer
+npm test               # 187 assertions over the domain layer
 ```
 
 **Motion on the spread card is decoration over settled state.** Calling a look

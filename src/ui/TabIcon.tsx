@@ -125,9 +125,9 @@ export function SaveIcon({ filled }: { filled: boolean }) {
 }
 
 /** Open / locked marks on the month-ahead list. */
-export function LockIcon({ open }: { open: boolean }) {
+export function LockIcon({ open, size = 15 }: { open: boolean; size?: number }) {
   return (
-    <Svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke={open ? palette.ink : palette.greyDecor} strokeWidth={1.7}>
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={open ? palette.ink : palette.greyDecor} strokeWidth={1.7}>
       {open ? (
         <Path d="M5 12l5 5L19 8" />
       ) : (

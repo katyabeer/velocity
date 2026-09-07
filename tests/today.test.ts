@@ -14,7 +14,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { jobCardState, ENTRY_SURVIVES_A_FAILED_RENDER, RETRY_INPUT_FROZEN } from '../src/domain/today.ts';
+import {
+  ENTRY_SURVIVES_A_FAILED_RENDER,
+  RETRY_INPUT_FROZEN,
+  jobBadge,
+  jobCardState,
+  jobSteps,
+} from '../src/domain/today.ts';
 import { CLOSE_HOUR, RESULT_HOUR, canEnterAt, canJudgeAt, phaseAt } from '../src/domain/clock.ts';
 
 const card = (over: Partial<Parameters<typeof jobCardState>[0]> = {}) =>
@@ -37,8 +43,13 @@ test('entered, judged, still going is `building`', () => {
   assert.equal(card({ render: 'none' }), 'building');
 });
 
-test('entered, judged, landed is `complete`', () => {
+test('entered, judged, landed is `complete` — and `results` once it has settled', () => {
   assert.equal(card({ render: 'ready' }), 'complete');
+  assert.equal(card({ render: 'ready', resultsReady: true }), 'results');
+  /* Only ever with the render in. A result cannot arrive for a look that has
+     no picture yet. */
+  assert.equal(card({ render: 'pending', resultsReady: true }), 'building');
+  assert.equal(card({ render: 'failed', resultsReady: true }), 'failed');
 });
 
 test('entered, judged, died is `failed` — NOT `building`', () => {
@@ -102,4 +113,52 @@ test('every hour of the day has exactly one phase', () => {
     const p = at(h);
     assert.ok(['entry', 'judging', 'settling'].includes(p), `${h}:00 gave ${p}`);
   }
+});
+
+/* ═══════════════════ the badge, and the steps ═══════════════════ */
+
+test('the badge reports THE CHALLENGE, not the render', () => {
+  /* Which is what lets `failed` badge as Complete: the challenge genuinely is
+     complete once you have built and voted, and the only thing that broke is
+     the picture. Without the split the badge would have to say "complete except
+     for the bit that failed", which is not a badge. */
+  /* `New` only while nothing has been done — a card you already built a look
+     on is not new (Katya, 4 Sep). Three values, not two. */
+  assert.equal(jobBadge('open'), 'New');
+  assert.equal(jobBadge('entered'), 'Open');
+  assert.equal(jobBadge('building'), 'Complete');
+  assert.equal(jobBadge('complete'), 'Complete');
+  assert.equal(jobBadge('results'), 'Complete');
+  assert.equal(jobBadge('failed'), 'Complete');
+});
+
+test('Build is SHUT after 8pm, not merely "todo"', () => {
+  /* A step you cannot reach must not look like one you have not got to yet —
+     it is gone for the day. */
+  const open = jobSteps({ entered: false, judged: false, phase: 'entry' });
+  assert.equal(open[0]!.state, 'now', 'before 8pm it is the live step');
+
+  for (const phase of ['judging', 'settling'] as const) {
+    const shut = jobSteps({ entered: false, judged: false, phase });
+    assert.equal(shut[0]!.state, 'shut', `broken in ${phase}`);
+  }
+});
+
+test('the steps carry their deadlines, which is why they are stacked', () => {
+  /* The ribbon dropped its second line on 4 Sep and lost these with it. */
+  const steps = jobSteps({ entered: false, judged: false, phase: 'entry' });
+  assert.match(steps[0]!.label, /8pm/);
+  assert.match(steps[2]!.label, /7am/);
+  assert.deepEqual(steps.map((st) => st.n), [1, 2, 3]);
+});
+
+test('the steps track progress through the day', () => {
+  const built = jobSteps({ entered: true, judged: false, phase: 'entry' });
+  assert.equal(built[0]!.state, 'done');
+  assert.equal(built[1]!.state, 'now', 'voting is what is left');
+
+  const done = jobSteps({ entered: true, judged: true, phase: 'judging' });
+  assert.equal(done[0]!.state, 'done');
+  assert.equal(done[1]!.state, 'done');
+  assert.equal(done[2]!.state, 'now', 'the result is the only thing outstanding');
 });
