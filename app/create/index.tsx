@@ -41,6 +41,7 @@ import { Bar, Button, ChipRow } from '@/ui/controls';
 import { StepRibbonBleed, statesFor } from '@/ui/StepRibbon';
 import { GarmentGrid, SlotStrip } from '@/ui/pieces';
 import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
+import { RenderedLook } from '@/ui/RenderedLook';
 import { RenderStrip } from '@/ui/RenderStrip';
 import { SubmissionSheet } from '@/ui/SubmissionSheet';
 import { ConfirmSheet } from '@/ui/ConfirmSheet';
@@ -539,7 +540,6 @@ function Rendering() {
           rather than scroll with it. */}
       <SubmissionSheet
         visible={showLook}
-        pieces={pieces}
         caption={tags.length ? tags.map(chipLabel).join('  ') : undefined}
         onDismiss={() => setShowLook(false)}
       />
@@ -578,7 +578,9 @@ function Spent() {
     now: Date.now(),
   });
 
-  const pieces = job?.picks ?? c.picks.map((p) => p.name);
+  /* No `pieces` here any more — the plate this state shows is a photograph of
+     the finished look, not a composition of the cutouts. The record still
+     carries them (`job.picks`); nothing on this screen draws them. */
   const tags = job?.tags ?? c.tags;
 
   return (
@@ -594,8 +596,13 @@ function Spent() {
             then the time to 07:00. The 7am line was the Hero at the top for
             one draft and it out-shouted the thing it was sitting above — a
             state that has to read as a reward cannot lead with the rule. */}
+        {/* TODAY'S GENERATION, as a look (Katya, 7 Sep). This is the state
+            that "has to read as a reward rather than a lockout", and it is
+            showing the best thing the user made today — a grid of cutouts was
+            never going to carry that. The flat lay stays on the PENDING state
+            above, where §6 wants it. */}
         <View style={{ marginTop: 4 }}>
-          <ComposedFlatLay pieces={pieces} />
+          <RenderedLook />
         </View>
 
         {tags.length ? (

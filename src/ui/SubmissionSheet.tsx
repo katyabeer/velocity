@@ -28,22 +28,27 @@
  */
 
 import { View } from 'react-native';
-import { ComposedFlatLay, TIGHTEN_PREVIEW } from './ComposedFlatLay';
+import { RenderedLook } from './RenderedLook';
 import { Big, Kick, Tiny } from './text';
 import { Button } from './controls';
 import { Sheet } from './Sheet';
 
+/**
+ * ⚠ `pieces` IS GONE FROM THE PROPS (7 Sep). It fed the flat lay, and the
+ * picture is a photograph now — so the prop had nothing left to draw. Removed
+ * rather than left in place: a prop nothing reads is a trap, because the next
+ * person assumes the image comes from it. When the real render pipeline lands
+ * this takes a URI instead.
+ */
 export function SubmissionSheet({
   visible,
   job,
-  pieces,
   caption,
   onDismiss,
 }: {
   visible: boolean;
   /** The challenge it was an answer to. OMITTED for a freestyle look. */
   job?: string;
-  pieces: readonly string[];
   /** Freestyle only: a pre-formatted line under the look — its tags. */
   caption?: string;
   onDismiss: () => void;
@@ -60,10 +65,13 @@ export function SubmissionSheet({
         </Big>
       ) : null}
 
-      {/* Tightened, like the builder's own preview — the pieces read as one
-          arrangement rather than a grid of separate photographs. */}
+      {/* THE GENERATED LOOK, not the flat lay (Katya, 7 Sep). Both drawers
+          this serves — Today's completed card and Create's ready state — open
+          on a finished generation, so they show the look worn. The flat lay
+          belongs to the two moments before that: the pre-commit preview and
+          the pending state. */}
       <View style={{ marginTop: 14 }}>
-        <ComposedFlatLay pieces={pieces} tighten={TIGHTEN_PREVIEW} />
+        <RenderedLook />
       </View>
 
       {caption ? <Tiny style={{ marginTop: 12 }}>{caption}</Tiny> : null}

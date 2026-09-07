@@ -46,7 +46,7 @@ import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, LogoBlock, Screen, Scroll } from '@/ui/layout';
-import { Big, Body, Kick, Tiny, Link } from '@/ui/text';
+import { Big, Body, Kick, Link } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { Badge, Card, EarnedRow, JobStepList } from '@/ui/cards';
 import { LockIcon } from '@/ui/TabIcon';
@@ -286,15 +286,18 @@ export default function Today() {
               about the size of the pile; it is about there being one. The
               number is on the screen it leads to, where it can be read
               against the list it describes. */}
-          {/* 16px and 14px (Katya, 4 Sep). Both were `Tiny` at 10 — the size
-              the eye skips — on the only route to the month's list. A link
-              nobody finds is the availability fix not shipping. */}
+          {/* 16px (Katya, 4 Sep). It was `Tiny` at 10 — the size the eye skips
+              — on the only route to the month's list. A link nobody finds is
+              the availability fix not shipping.
+
+              THE NOTE UNDER IT IS GONE (Katya, 7 Sep): "You won't know when
+              each lands, but it's worth knowing what's in the pile." It
+              argued for the tap instead of just offering it, and the screen
+              it leads to makes the same point with the list in front of
+              you. */}
           <Link >
             See upcoming challenges →
           </Link>
-          <Tiny color={palette.grey} style={s_monthNote}>
-            You won&apos;t know when each lands, but it&apos;s worth knowing what&apos;s in the pile.
-          </Tiny>
         </Pressable>
 
         <Gap />
@@ -309,7 +312,6 @@ export default function Today() {
       <SubmissionSheet
         visible={showSubmission}
         job={TONIGHTS_BRIEF.title}
-        pieces={picks.map((p) => p.name)}
         onDismiss={() => setShowSubmission(false)}
       />
     </Screen>
@@ -326,8 +328,6 @@ const s_card = {
 
 /** The note under the month link. 14px, per Katya — it sits under a 16px link
  *  and had been 10. */
-const s_monthNote = { fontSize: 14, lineHeight: 19, marginTop: 2 };
-
 /** 16px, per Katya — it is a real destination, not a footnote on the card, and
  *  `Tiny`'s own 10 would have made it the smallest thing on a card whose other
  *  text is 16. */

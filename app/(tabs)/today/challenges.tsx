@@ -20,7 +20,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
-import { Body, Tiny, Kick, B } from '@/ui/text';
+import { PageTitle, Body, Tiny, B } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { LockIcon } from '@/ui/TabIcon';
 import { palette, border } from '@/theme/tokens';
@@ -32,19 +32,38 @@ export default function Challenges() {
 
   return (
     <Screen>
+      {/* NO TITLE IN THE BAR (Katya, 7 Sep) — the screen has a page title of
+          its own now, three lines below. Same move as the day's flow on 4 Sep
+          and Create's on the 7th: the bar keeps the chevron and the token
+          badge, which are the only things on it that are not repetition. */}
       <Header
         onBack={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/today'))}
-        title="Challenges"
       />
 
       <Scroll>
-        {/* The count is derived — it said "Twelve this month" while the list
-            held fourteen, which is the kind of number that goes wrong quietly
-            every time a job is added. */}
-        <Kick tone="muted">{CHALLENGES.length} this month, in no particular order</Kick>
+        {/* A PAGE TITLE IN THE BODY, matching `today/result.tsx` — the other
+            screen you push into from the day and the other one that had its
+            name in the chrome. */}
+        <PageTitle>Upcoming challenges</PageTitle>
+
+        {/* ⚠ "PINCH" IS KATYA'S WORD, 7 Sep, AND IT IS WORTH JACK SEEING.
+            Invariant 18 is that the currency is TOKENS, "never keeps or
+            pinches — including in variable names", because the naming is a
+            regulatory position (R-G5): the prototype's own `S.pinch` was
+            renamed for exactly this reason, and "pinches earned" is on the
+            do-not-re-propose list. This sentence does not call a token a
+            pinch, so it does not breach the letter of it — but it puts the
+            word back on screen as the VERB for acquiring a garment, and the
+            app's own verb everywhere else is TAKE ("Take it", "costs 1
+            token"). One word, `take` for `pinch`, keeps the sentence and the
+            position. Katya's call — built as asked.
+
+            The two lines that came off with it: the derived count kicker
+            ("14 this month, in no particular order", now said by the
+            subheading) and "You won't know which lands when…", which spent
+            three lines arguing for a screen the reader is already on. */}
         <Body style={{ marginTop: 8 }}>
-          You won&apos;t know which lands when. Worth a read anyway — it&apos;s how you work out what
-          to go and keep from the magazine before you need it.
+          {'One a day. In no particular order.\nKnowing what’s coming may help you pinch the right items from the magazine.'}
         </Body>
 
         <View style={{ marginTop: 16 }}>

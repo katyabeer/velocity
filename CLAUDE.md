@@ -424,6 +424,32 @@ A fresh session will be tempted by several of these. They were tried and rejecte
   the carousel takes `ONBOARDING_TOP_GAP` like everything else, so all seven
   screens now start at y=86. The no-jumping mechanism was never the pad; it is
   `TEXT_BLOCK_H` being a fixed height rather than a minHeight
+- **The composed flat lay on every FINISHED look** (7 Sep). `ui/RenderedLook`
+  shows worn photography instead, on a14's *On a model*, Create's ready drawer
+  and `spent` state, a17, and the wardrobe's Looks archive. The flat lay is
+  still correct in four places and they are not oversights: the day's step 2
+  and Create's step 2 (**nothing renders before commit**), Create's PENDING
+  state (§6), a14's explicit *Flat lay* toggle, and archive rows whose band is
+  `flat` — a saved combination that never generated, where a worn photo would
+  claim a render that does not exist
+- `RenderedFigure` — the wireframe body with grey garment shapes, on a14. It
+  was always a stand-in for Jack's pipeline and looked like one. `RenderStage`
+  still holds the *in-progress* version of the same wireframe
+- `renderMode` defaulting to `'flat'`. It is `'model'`, so the one screen that
+  shows your finished generation opens on the look
+- "One brief a day. Everyone plays." on o7. The three numbered rows below said
+  the same two things and then said what you actually do
+- The `tonight's job` block on the day's step 2 — a kicker, the challenge title
+  and a divider above them. The brief is on the screen you just came from,
+  permanently, above the grid you picked the pieces out of
+- "You won't know when each lands…" under *See upcoming challenges*. It argued
+  for the tap instead of offering it, and the screen it leads to makes the
+  point with the list in front of you
+- `title="Challenges"` in the challenges screen's bar, and the two lines of
+  copy under it — the derived count kicker ("14 this month, in no particular
+  order") and "You won't know which lands when…", which spent three lines
+  arguing for a screen the reader had already arrived on. It has a `PageTitle`
+  in the body now, matching `today/result.tsx`, and a two-line subheading
 
 ---
 
@@ -463,6 +489,10 @@ Search for `⚠` to find every one. All are Katya's or Jack's call, not yours.
 | `domain/magazine.ts` (`VOCABULARY_UNSWEPT`) | **brief / job / challenge — three words for one object** across four documents, and the rail now says `Challenges`. Cheap to sweep now, expensive once the demo script is rewritten. The rail argues for *challenge* |
 | `data/challenges.ts` (`CHALLENGES` order) | the first two entries after the open one ARE THE SCHEDULE — `nextChallenge()` reads the list in order, so the locked preview card names whatever sits at index 2. Reordering the pool silently reorders the month |
 | `data/challenges.ts` (`REVEAL_NEXT_BRIEF`) | the locked next-challenge card NAMES tomorrow's job, which reveals the month's order — withheld everywhere else on purpose ("publish the month's jobs, withhold the order… browsing gets a purpose without becoming shopping for tonight"). Naming it the evening before hands someone thirteen hours to acquire for it. Built as asked, 4 Sep; one line to turn the reveal off and keep the lock |
+| `today/challenges.tsx` | **"pinch the right items" is on screen** (Katya's copy, 7 Sep). Invariant 18 holds that the currency is TOKENS, "never keeps or pinches", because the naming is a regulatory position — the prototype's `S.pinch` was renamed for it and "pinches earned" is on the do-not-re-propose list. The sentence does not call a token a pinch, so it is not the letter of the invariant; it does put the word back as the VERB for acquiring a garment, where the app says TAKE everywhere else. One word fixes it. Jack should see it |
+| `today/challenges.tsx` (the bottom hint) | the gap signal — "you are thin on tailoring and you own one pair of decent shoes" — is a HARDCODED FIXTURE, wired to no inventory, and it now sits below the fold under the new subheading, which says the same thing honestly. Katya asked to "remove the rest of the copy" from a screenshot that did not reach it, so it was kept. Say if it goes: the header comment calls it "the whole mechanism", but a fake personalised read is worse than none |
+| `ui/RenderedLook.tsx` | **THERE IS NO DAY-2 ASSET SET.** Katya asked for "one of the day 2 looks from the asset library"; `assets/looks/` holds one folder, `d1` — 14 judging and 14 magazine photographs, nothing else ever delivered. The stand-ins come from the magazine set, led by `look_d1_mag_06` because `data/looks.ts` already flags that fixture as `mine`. Say if a day-2 set exists and this should point at it |
+| `ui/RenderedLook.tsx`, `casting.tsx` | showing every finished look as worn photography **leans on Jack's open question 2** (render on a body vs flat lay) in the direction `casting.tsx` already assumes. Not settled: the flat lay still exists, a14 still toggles to it, and one line puts it back |
 | `data/inventory.ts`, `data/capsules.ts` | **Day 2 and Established show GREY PLACEHOLDERS, not clothes.** Their fixtures use the original prototype's short names (`wool coat`, `roll neck`, `red bag`) and the catalogue has none of them — `garmentImage` returns undefined, so every flat lay, slot strip and wardrobe tile falls back to a named box. Day 1 is fine because it draws from `cataloguePool`. Pre-existing, and it undercuts anything that shows a look on those days |
 | `data/challenges.ts` (`YESTERDAYS_BRIEF`) | "The interview" is hardcoded in four other places (`ui/ResultCard.tsx` ×3, `today/result.tsx`, both archive fixtures). They should collapse onto the constant |
 | everywhere | **"render" is "generate" in COPY ONLY.** Katya, 4 Sep. Every user-visible string says generate; the code still says render throughout — `domain/renders.ts`, `RENDER_DELAY_MS`, `rerenderVerdict`, the `rendering` route and state, `RenderStrip`. Renaming the internals is a large, purely mechanical diff and it was not asked for. Say if you want it, because the split will confuse a fresh session |

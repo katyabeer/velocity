@@ -36,7 +36,7 @@ import { router } from 'expo-router';
 import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
 import { Big, Body, Kick, Link } from '@/ui/text';
 import { Button } from '@/ui/controls';
-import { RenderedFigure } from '@/ui/RenderStage';
+import { RenderedLook } from '@/ui/RenderedLook';
 import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
 import { useEntry } from '@/state/entry';
 import { useSession } from '@/state/session';
@@ -81,8 +81,18 @@ export default function Entered() {
       />
 
       <Scroll>
+        {/* ON A MODEL IS A PHOTOGRAPH NOW (Katya, 7 Sep), not the wireframe
+            figure with grey garment shapes on it. `RenderedFigure` was always
+            a stand-in for Jack's pipeline and it looked like one; a finished
+            generation has to look like a look.
+
+            The TOGGLE stays, and it is still the point of this screen: these
+            two presentations are the two positions on Jack's open question 2,
+            side by side, so a session can watch which one people believe. The
+            flat lay is also the state a FAILED generation enters the pool as
+            (R-L6), so it has to exist regardless. */}
         {mode === 'model' ? (
-          <RenderedFigure />
+          <RenderedLook />
         ) : (
           <ComposedFlatLay pieces={picks.map((p) => p.name)} />
         )}

@@ -78,8 +78,11 @@ export default function FirstChallenge() {
       topAlign
     >
       <Hero size={30}>{'Your first styling challenge.\nLet’s do it!'}</Hero>
-      <Body style={{ marginTop: 10 }}>One brief a day. Everyone plays.</Body>
 
+      {/* "One brief a day. Everyone plays." came off (Katya, 7 Sep). The three
+          numbered rows below say the same two things and then say what you
+          actually do — a summary directly above the thing it summarises is the
+          line that gets skipped. */}
       <NumberedList items={LOOP} />
 
       {/* The job itself, last — you read what the day is, then what today's is.

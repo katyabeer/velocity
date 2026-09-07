@@ -48,7 +48,7 @@ import { router } from 'expo-router';
 import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
 import { Body, Hero, Link, Tiny } from '@/ui/text';
 import { Button } from '@/ui/controls';
-import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
+import { RenderedLook } from '@/ui/RenderedLook';
 import { chipLabel } from '@/domain/tags';
 import { useCreate } from '@/state/create';
 import { useSubmission } from '@/state/submission';
@@ -98,8 +98,10 @@ export default function Posted() {
         {/* SMALLER (Katya, 4 Sep). It was full width, which made a screen with
             one message on it mostly picture — and you have just spent two
             screens looking at these pieces. */}
+        {/* The published look, worn (Katya, 7 Sep) — not the flat lay. It has
+            generated and posted by the time this screen exists. */}
         <View style={s_preview}>
-          <ComposedFlatLay pieces={view.picks} />
+          <RenderedLook />
         </View>
 
         {view.tags.length ? (

@@ -129,7 +129,11 @@ const initial = (day: TestDay) => {
       skin: 'Mid',
       body: 'Average',
     } as Casting,
-    renderMode: 'flat' as RenderMode,
+    /* THE LOOK FIRST (Katya, 7 Sep). It defaulted to 'flat', so the one
+       screen that shows your finished generation opened on the flat lay —
+       which is the pre-commit and failure picture, not the finished one. The
+       toggle still gets you there. See today/entered.tsx. */
+    renderMode: 'model' as RenderMode,
     dismissedTips: {},
     castingOrigin: 'brief' as const,
   };

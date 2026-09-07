@@ -287,19 +287,18 @@ export default function Build() {
               that. Now: what the screen is, what it costs, and which job it is
               answering, in that order.
 
-              The brief title sits BELOW the body rather than above it because
-              the screen's own name has to come first — you arrive here from a
-              grid of clothes, and "which job was this again" is the second
-              question, not the first. */}
+              ══ AND THE BRIEF TITLE IS GONE FROM HERE (Katya, 7 Sep) ══
+              It was a ruled-off block below the body — "tonight's job" over
+              the challenge title. Cut with its divider: the brief is on the
+              screen you just came from, permanently, above the grid you
+              picked these pieces out of. Restating it at the commit made the
+              screen ask "which job was this again" on the reader's behalf,
+              and answered it with the loudest type on the page. */}
           <Hero>{'Preview\nyour look.'}</Hero>
           <Body style={{ marginTop: 10 }}>
             Once you enter, <B>nothing can be changed</B>. The generation comes after, and at 8pm
             you judge the field alongside everyone else.
           </Body>
-          <View style={{ marginTop: 14, paddingTop: 12, borderTopWidth: border.hair, borderTopColor: palette.rule }}>
-            <Kick tone="muted">tonight&apos;s job</Kick>
-            <Lede style={{ marginTop: 5 }}>{TONIGHTS_BRIEF.title}</Lede>
-          </View>
           <View style={{ marginTop: 16 }}>
             {/* Tightened, so the pieces read as one arrangement rather than a
                 grid of separate photographs. See TIGHTEN_PREVIEW. */}

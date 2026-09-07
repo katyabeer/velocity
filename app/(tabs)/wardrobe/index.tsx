@@ -24,6 +24,7 @@ import { Button, ChipRow, Segmented } from '@/ui/controls';
 import { EmptyState, NewBox } from '@/ui/cards';
 import { InventoryTile } from '@/ui/pieces';
 import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
+import { RenderedLook } from '@/ui/RenderedLook';
 import { ConfirmSheet } from '@/ui/ConfirmSheet';
 import { CreateBanner } from '@/ui/CreateBanner';
 import { garmentImage } from '@/data/catalogue';
@@ -194,13 +195,28 @@ export default function Wardrobe() {
                     key={`${a.job}-${i}`}
                     style={[s.archRow, i === w.archive.length - 1 && { borderBottomWidth: 0 }]}
                   >
-                    {/* A real plate when the entry carries its pieces — the
-                        empty grey box is only for the pre-dated fixtures that
-                        have no piece list to draw. */}
+                    {/* THE LOOK, not the flat lay (Katya, 7 Sep). Every row
+                        here is a look that generated, so every row gets a
+                        photograph — including the pre-dated fixtures, which
+                        used to show an empty grey box because they carry no
+                        piece list to draw a plate from. `index={i}` walks the
+                        stand-ins so nine past looks are not nine copies of
+                        one picture.
+
+                        ⚠ ONE EXCEPTION, and it is the flat lay's own meaning:
+                        band 'flat' is a saved combination that was NEVER
+                        generated (see ArchiveEntry). Showing it as a worn look
+                        would claim a render that does not exist, so it keeps
+                        the plate — and it is the row that still needs
+                        `pieces`. */}
                     <View style={s.archPlate}>
-                      {a.pieces?.length ? (
-                        <ComposedFlatLay pieces={a.pieces} />
-                      ) : null}
+                      {a.band === 'flat' ? (
+                        a.pieces?.length ? (
+                          <ComposedFlatLay pieces={a.pieces} />
+                        ) : null
+                      ) : (
+                        <RenderedLook index={i} />
+                      )}
                     </View>
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <Text style={s.archJob}>{a.job}</Text>
