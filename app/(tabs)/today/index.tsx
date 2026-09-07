@@ -49,6 +49,7 @@ import { Foot, Gap, LogoBlock, Screen, Scroll } from '@/ui/layout';
 import { Big, Body, Kick, Link } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { Badge, Card, EarnedRow, JobStepList } from '@/ui/cards';
+import { StarBadge } from '@/ui/StarBadge';
 import { LockIcon } from '@/ui/TabIcon';
 import { ResultCard } from '@/ui/ResultCard';
 import { RenderStrip } from '@/ui/RenderStrip';
@@ -192,32 +193,49 @@ export default function Today() {
           Today&apos;s styling challenge
         </Kick>
 
-        {/* ⟲ THE STARBURST CAME OFF (Katya, 4 Sep), one round after it went on.
-            It is a PILL INSIDE the card now, top right, in the new pale green.
-            The star broke the border to read as a sticker; the pill reads as a
-            status, which is what it is — and on the completed states it was a
-            grey star hanging off a card with nothing left to do, which is a lot
-            of shape for "done".
+        {/* ══ TWO KINDS OF BADGE, AND THE SPLIT IS THE POINT (Katya, 7 Sep) ══
+            ⟲ Reopens 4 Sep, which replaced the starburst with a pill for ALL
+            states. That was right for the finished ones and wrong for `New`,
+            and one rule could not serve both:
 
-            The card keeps its radius. `Badge` in ui/cards.tsx is the component;
-            `ui/StarBadge.tsx` is now unused and kept only in case the sticker
-            is wanted somewhere it suits. */}
+              New        the STARBURST, breaking the card's top-right corner.
+                         A badge inside the border is a label; a badge breaking
+                         it is a sticker. This is the one state that is an
+                         invitation rather than a status — the card is the hero
+                         of the screen and the sticker is what stops it reading
+                         as an admin panel.
+              everything the PILL, inside the card, top right. Quiet, and
+              else       correctly so: 4 Sep's objection stands for `Completed`
+                         — a star hanging off a card with nothing left to do is
+                         a lot of shape for "done".
+
+            So `ui/StarBadge.tsx` is rendered again, and its own "nothing
+            renders this any more" header is no longer true.
+
+            THE HEADER ROW IS THE SAME HEIGHT EITHER WAY (`BADGE_ROW_H`). When
+            the pill is there it fills the row; when the star is there the row
+            is EMPTY and the star hangs into it from outside. That is what
+            keeps the title on the same line as the card changes state through
+            the day, and it is why the star needs no right-padding on the title
+            — the two never share vertical space. Beside the title `flex`
+            shrank the brief to three lines and over it a 92pt right pad did
+            the same; neither happens here. */}
         <View style={{ marginTop: 12 }}>
-          <Card ink style={s_card}>
-            {/* The pill gets its OWN right-aligned row rather than sharing one
-                with the title or overlapping it. Both of those cost the title
-                width — beside it, `flex` shrank the brief to three lines; over
-                it, a 92pt right pad did the same. On its own line the title
-                keeps the full card width and the pill still reads as the
-                card's top-right corner. */}
-            <View style={{ alignItems: 'flex-end' }}>
-              <Badge label={badge} tone={open ? 'open' : 'done'} />
-            </View>
-            <Big style={{ marginTop: 8 }}>{TONIGHTS_BRIEF.title}</Big>
+          {/* The star is a SIBLING of the Card, not a child, so it can sit
+              outside the border — and this wrapper must never take
+              `overflow: 'hidden'` or the overhang is clipped away. */}
+          <View>
+            <Card ink style={s_card}>
+              <View style={s_badgeRow}>
+                {badge === 'New' ? null : (
+                  <Badge label={badge} tone={open ? 'open' : 'done'} />
+                )}
+              </View>
+              <Big style={{ marginTop: 8 }}>{TONIGHTS_BRIEF.title}</Big>
 
-          {/* ONE description, constant across states. The brief's own line —
-              the state is the badge's job, not this sentence's. */}
-          <Body style={{ marginTop: 8 }}>{TONIGHTS_BRIEF.note}</Body>
+            {/* ONE description, constant across states. The brief's own line —
+                the state is the badge's job, not this sentence's. */}
+            <Body style={{ marginTop: 8 }}>{TONIGHTS_BRIEF.note}</Body>
 
           {/* ── the steps, while the day is still open ──
               Gone once complete: three ticked rows under a badge already
@@ -254,8 +272,23 @@ export default function Today() {
               onPress={primary.onPress}
               style={{ marginTop: 16 }}
             />
-          </Card>
+            </Card>
 
+            {/* ── THE STICKER ──
+                Absolute, so it hangs over the card's top-right corner instead
+                of taking part in the layout. It lands in the empty badge row,
+                which is why the title needs no clearance from it.
+
+                `pointerEvents: none` — it is decoration with a word on it, and
+                the card's own control is the button at the bottom. A 62pt
+                shape floating over the corner must not be able to eat a tap
+                aimed at anything under it. */}
+            {badge === 'New' ? (
+              <View style={s_star} pointerEvents="none">
+                <StarBadge label={badge} />
+              </View>
+            ) : null}
+          </View>
         </View>
 
         {/* ── TOMORROW, LOCKED ──
@@ -317,6 +350,39 @@ export default function Today() {
     </Screen>
   );
 }
+
+/**
+ * The header row, and it is a `minHeight` rather than a `height` on purpose.
+ *
+ * 21 is `Badge`'s own box: `border.mid` twice (3) plus 3.5 of padding twice
+ * (7) plus an 11pt line. The floor is what the STAR needs — an empty row of
+ * this height is the space it hangs into, and it is what keeps the title on
+ * the same line whichever badge the state gets.
+ *
+ * `minHeight` because a fixed 21 would CLIP the pill in the one case a fixed
+ * number cannot survive: RN honours the OS text-size setting, so at large
+ * accessibility scales the label grows and the pill grows with it. A row that
+ * can only grow costs a few points of title position between states; a row
+ * that cannot costs half the word. If the pill's padding changes, move this
+ * with it so the star's clearance stays true.
+ */
+const BADGE_ROW_H = 21;
+
+const s_badgeRow = { minHeight: BADGE_ROW_H, alignItems: 'flex-end' as const };
+
+/**
+ * THE STAR'S OFFSETS, and they are arithmetic rather than taste.
+ *
+ * A 62pt star at `top: -24` is centred 7pt above the card's top edge, so its
+ * lowest point reaches y=38 — and the title's first line starts at 45 (16 of
+ * card padding + 21 of badge row + 8 of margin). That 7pt is the whole reason
+ * the title does not need a right pad. Make the star bigger, or move it down,
+ * and it starts cutting into the brief.
+ *
+ * `right: -14` leaves the rightmost 48pt of the card under the star, all of it
+ * inside the empty badge row.
+ */
+const s_star = { position: 'absolute' as const, top: -24, right: -14 };
 
 const s_card = {
   padding: 16,

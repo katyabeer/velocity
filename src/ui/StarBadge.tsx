@@ -1,16 +1,22 @@
 /**
- * ⚠ NOTHING RENDERS THIS ANY MORE (4 Sep). It was the job card's state badge
- * for one round; Katya replaced it with a pale-green pill inside the card the
- * next — the star broke the border to read as a sticker, and on the completed
- * states that was a lot of shape for "done". `Badge` in ui/cards.tsx is what
- * the card uses.
+ * THE `NEW` BADGE ON THE DAY'S CARD, AS A STARBURST — the one deliberately
+ * playful mark in the app.
  *
- * Kept because the geometry is worth having if a sticker is ever wanted
- * somewhere it suits, the same reason `Tip` survives. If you are reading this
- * and nothing has picked it up, delete it.
+ * ⟲ IT WAS UNRENDERED FOR THREE DAYS. It badged every state of the job card
+ * for one round on 4 Sep, was replaced by a pale-green pill for all of them
+ * the next, and came back on 7 Sep for ONE state only. That split is the
+ * resolution, and both halves of it are right:
  *
- * THE STATE BADGE, AS A STARBURST — the one deliberately playful mark in the
- * app.
+ *   New          this. An invitation, not a status — and a badge breaking the
+ *                border is a sticker where a badge inside it is a label.
+ *   every other  `Badge` in ui/cards.tsx, a pill inside the card. 4 Sep's
+ *   state        objection holds for `Completed`: a star hanging off a card
+ *                with nothing left to do is a lot of shape for "done".
+ *
+ * See `s_star` in `(tabs)/today/index.tsx` for the offsets, which are
+ * arithmetic against the title's first line and not a matter of taste. Nothing
+ * else should pick this component up — a second sticker makes both look like a
+ * mistake, which is the same reason the 12° tilt below is unique in the app.
  *
  * It overlaps the card's top-right corner rather than sitting inside it, which
  * is the whole point: a badge inside the border is a label, a badge breaking

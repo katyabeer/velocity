@@ -272,11 +272,17 @@ A fresh session will be tempted by several of these. They were tried and rejecte
   shouting in 36px caps beside the other stating the job in 23px italic was
   the mismatch. NOTE the empty-state card keeps its display heading: that card
   is a front door, not step 1 of a flow
-- The starburst state badge, ⟲ one round after it went on. It is a **pale
-  green pill inside the card**, top right, reading `Completed` — the star broke
-  the border to read as a sticker, and on a finished card that was a lot of
-  shape for "done". `accentPale` is a NEW HUE and the only green; `StarBadge`
-  survives unrendered
+- The starburst state badge **on the finished states**, ⟲ one round after it
+  went on. Those are a **pale green pill inside the card**, top right, reading
+  `Completed` — on a card with nothing left to do a star breaking the border
+  was a lot of shape for "done". `accentPale` is a NEW HUE and the only green.
+  ⟲⟲ AMENDED AGAIN 7 Sep: `New` gets the starburst back, breaking the
+  top-right corner, because that state is an INVITATION and not a status — a
+  badge inside the border is a label, one breaking it is a sticker. So the
+  card has two badge treatments and one rule could not serve both. The header
+  row is a `minHeight` floor either way, which is what keeps the title on the
+  same line as the day progresses; `s_star`'s offsets in `today/index.tsx` are
+  arithmetic against the title's first line, not taste
 - The sunk-cream ground on the locked next-job card. Sunk cream is this app's
   DISABLED ground, so a locked-but-coming card read as broken; it is
   `creamRaised` now and sits above the page rather than pressed into it
