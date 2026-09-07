@@ -47,7 +47,16 @@ const METHODS = [
 export default function SignUp() {
   const next = () => router.push('/onboarding/handle');
   return (
-    <OnboardingFrame index={0} label="Sign up" onBack={() => router.back()}>
+    <OnboardingFrame
+      index={0}
+      label="Sign up"
+      onBack={() => router.back()}
+      /* TOP-ALIGNED like the rest of the chain (Katya, 7 Sep). Centred, this
+         screen had a deep empty band above "Let's get you in." and left the
+         18+ note hanging in mid-page, which made the three methods look like
+         they were floating rather than sitting under a heading. */
+      topAlign
+    >
       <H2 size={40}>{'Let’s\nget you in.'}</H2>
 
       <View style={{ marginTop: 20 }}>

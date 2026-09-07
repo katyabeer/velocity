@@ -30,6 +30,30 @@ import { palette, border } from '@/theme/tokens';
 /** The setup chain: sign-up, your profile, first challenge. */
 export const ONBOARDING_SLIDES = 3;
 
+/**
+ * THE GAP UNDER THE HEADER RULE, and it lives here so every onboarding screen
+ * gets the same one (Katya, 7 Sep — "a decent amount of space between the
+ * header and the content, so it doesn't seem too tight").
+ *
+ * It was 8. On `handle` that put "what shall we call you" almost against the
+ * rule, so the first thing the screen asked for read as part of the chrome
+ * rather than as the start of the page.
+ *
+ * ONE NUMBER TO DIAL, deliberately. It reads differently per screen and that
+ * is unavoidable: `first-challenge` leads with a 30px Hero, whose own leading
+ * adds to the gap, while `handle` leads with a 9px eyebrow that has almost
+ * none — so the same 40 looks generous on one and merely adequate on the
+ * other. 40 is the value that fixes the tight case without pushing
+ * `first-challenge` (the tallest screen in the chain, ~90px of slack) into
+ * clipping. Raise it and check that screen.
+ *
+ * ⚠ THE INTRO CAROUSEL SUBTRACTS THIS FROM ITS OWN `TOP_PAD`, so its eyebrow
+ * stays on the same y it has always been on — that alignment is the carousel's
+ * whole no-jumping mechanism. If you change this number, the carousel's total
+ * changes with it unless you change TOP_PAD too. See intro/[step].tsx.
+ */
+export const ONBOARDING_TOP_GAP = 40;
+
 export function OnboardingFrame({
   /** 0-based, for the dots. */
   index,
@@ -44,7 +68,13 @@ export function OnboardingFrame({
   onCta,
   ctaVariant = 'solid',
   children,
-  /** Slides 5 and 6 top-align their content rather than centring it. */
+  /**
+   * Top-align rather than centre. EVERY onboarding screen passes this now
+   * (Katya, 7 Sep): centring left `sign-up` with a deep empty band above the
+   * heading and the 18+ note floating in the middle of the page. Kept as a
+   * prop rather than made the default because `mid` is also what the splash
+   * beat would want if it ever came through here.
+   */
   topAlign,
   /** Dot count for this screen's progress indicator. Defaults to the full
    *  six-step onboarding chain; the 5-slide intro carousel overrides this
@@ -90,7 +120,12 @@ export function OnboardingFrame({
           )}
         </View>
 
-        <View style={[s.mid, topAlign && { justifyContent: 'flex-start', paddingTop: 8 }]}>
+        <View
+          style={[
+            s.mid,
+            topAlign && { justifyContent: 'flex-start', paddingTop: ONBOARDING_TOP_GAP },
+          ]}
+        >
           {children}
         </View>
 

@@ -11,6 +11,15 @@
  * just clothes — the whole point of the entry is that it was an answer to
  * something.
  *
+ * ══ IT ALSO CARRIES A FREESTYLE LOOK NOW (Katya, 7 Sep) ══
+ * Create's generate step used to route through to a17 to show the finished
+ * look; it opens this instead, "mirroring the view-rendered-look behaviour on
+ * today's challenge". A freestyle look genuinely has no job — that is what
+ * freestyle MEANS — so `job` is optional, and when it is absent the only
+ * description the look has is its own tags. Those come in as `caption`
+ * already formatted: this file stays ignorant of `domain/tags`, which is a
+ * shared sheet's business to stay out of.
+ *
  * Chrome is `ui/Sheet.tsx`. This file is only the payload.
  *
  * ⚠ ONE WAY OUT, AND IT IS NOT DESTRUCTIVE. Unlike ConfirmSheet there is no
@@ -20,7 +29,7 @@
 
 import { View } from 'react-native';
 import { ComposedFlatLay, TIGHTEN_PREVIEW } from './ComposedFlatLay';
-import { Big, Kick } from './text';
+import { Big, Kick, Tiny } from './text';
 import { Button } from './controls';
 import { Sheet } from './Sheet';
 
@@ -28,26 +37,36 @@ export function SubmissionSheet({
   visible,
   job,
   pieces,
+  caption,
   onDismiss,
 }: {
   visible: boolean;
-  /** The challenge it was an answer to. */
-  job: string;
+  /** The challenge it was an answer to. OMITTED for a freestyle look. */
+  job?: string;
   pieces: readonly string[];
+  /** Freestyle only: a pre-formatted line under the look — its tags. */
+  caption?: string;
   onDismiss: () => void;
 }) {
   return (
     <Sheet visible={visible} onDismiss={onDismiss} dismissLabel="Close">
-      <Kick tone="muted">your submission</Kick>
-      <Big size={22} style={{ marginTop: 8 }}>
-        {job}
-      </Big>
+      {/* Two different objects, so two different words. An entry is a
+          SUBMISSION — it went somewhere and is being judged. A freestyle look
+          is just yours. */}
+      <Kick tone="muted">{job ? 'your submission' : 'your look'}</Kick>
+      {job ? (
+        <Big size={22} style={{ marginTop: 8 }}>
+          {job}
+        </Big>
+      ) : null}
 
       {/* Tightened, like the builder's own preview — the pieces read as one
           arrangement rather than a grid of separate photographs. */}
       <View style={{ marginTop: 14 }}>
         <ComposedFlatLay pieces={pieces} tighten={TIGHTEN_PREVIEW} />
       </View>
+
+      {caption ? <Tiny style={{ marginTop: 12 }}>{caption}</Tiny> : null}
 
       <Button label="Close" variant="ghost" style={{ marginTop: 16 }} onPress={onDismiss} />
     </Sheet>

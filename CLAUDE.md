@@ -397,6 +397,27 @@ A fresh session will be tempted by several of these. They were tried and rejecte
   read with no progress left to report — three greyed labels under a heading
   already saying the same thing. The countdown is the only part still true.
   It stays on the other three states
+- **`title="Create"` in the Create flow's header**, on all five states. Cut
+  7 Sep for the same reason the day's flow lost its titles on 4 Sep: the ribbon
+  below says the step and every screen leads with its own heading. ⚠ The label
+  WAS doing one thing nothing else does — saying which flow you are in. Create
+  step 1 and the builder's step 1 now both read "Pick your pieces" under a bare
+  chevron
+- **"It's up." as the headline on Create's generate step.** It is
+  **Your look is ready.** (7 Sep) — "It's up" is also what a17 says, and it
+  named the publication rather than the thing that just changed, which is that
+  there is something to look at
+- The `RenderStrip` and the inline `ComposedFlatLay` on that screen's READY
+  state. The strip's ready label was the Hero's own six words one line below
+  it; the flat lay is in the drawer now, which is the trade the Today card made
+  on 4 Sep. Both are still there while it is PENDING, where the strip is a
+  progress read and §6 wants the flat lay
+- A solid **See it** CTA there, routing to a17. The footer is a ghost **Back to
+  Wardrobe** — the look is offered above, so the footer is only the way out
+- Vertically centred onboarding content. Every screen is `topAlign` with a
+  shared `ONBOARDING_TOP_GAP` (7 Sep): centring left `sign-up` with a deep
+  empty band above its heading, and an 8px gap left `handle` asking its first
+  question from inside the chrome
 
 ---
 
@@ -440,6 +461,8 @@ Search for `⚠` to find every one. All are Katya's or Jack's call, not yours.
 | `data/challenges.ts` (`YESTERDAYS_BRIEF`) | "The interview" is hardcoded in four other places (`ui/ResultCard.tsx` ×3, `today/result.tsx`, both archive fixtures). They should collapse onto the constant |
 | everywhere | **"render" is "generate" in COPY ONLY.** Katya, 4 Sep. Every user-visible string says generate; the code still says render throughout — `domain/renders.ts`, `RENDER_DELAY_MS`, `rerenderVerdict`, the `rendering` route and state, `RenderStrip`. Renaming the internals is a large, purely mechanical diff and it was not asked for. Say if you want it, because the split will confuse a fresh session |
 | `onboarding/first-challenge.tsx`, `app/(tabs)/today/index.tsx` | o7's card says **today's brief** (Katya's mockup) and the Today heading says **Today's styling challenge** — two words for one thing on consecutive screens. Built to the mockup; pick one |
+| `app/create/index.tsx`, `app/create/posted.tsx` | **a17 HAS ONE ENTRY POINT LEFT.** The generate step's link and its footer both routed to `create/posted`; on 7 Sep they became a `SubmissionSheet` drawer and a Back-to-Wardrobe button, so a17 is now reachable ONLY by leaving and returning through the Wardrobe banner. Not deleted, because that banner still opens it. Say whether the drawer is meant to replace it |
+| `src/ui/text.tsx` (`Link`) | **a `Link` renders as a bare `<div>`** — no `role`, no `tabindex` (measured 7 Sep). So the app's text links are unreachable by keyboard and unannounced to a screen reader, in the eight places where they are often the only route to a screen. Same class as the `accessibilityState` gap; pre-existing, not introduced by any one change |
 | `config/app.ts` | the name. Now **Editorial.** (3 Sep), after *quintets.*, after the *Velocity* rejection. STILL no availability or trademark checks on any candidate, and "Editorial" is a common noun in this exact category — the most contested of the three so far |
 
 ---

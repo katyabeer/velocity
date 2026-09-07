@@ -93,7 +93,7 @@ import { useState } from 'react';
 import { Image, StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
-import { OnboardingFrame } from '@/ui/OnboardingFrame';
+import { OnboardingFrame, ONBOARDING_TOP_GAP } from '@/ui/OnboardingFrame';
 import { Hero, Lede, Kick } from '@/ui/text';
 import { type as T } from '@/theme/type';
 import { palette, border, radius, rotation, useReducedMotion } from '@/theme/tokens';
@@ -112,8 +112,16 @@ const TOTAL = 4;
  * eyebrow + heading + body. Both fixed, both the reason nothing jumps.
  *
  * 150 = eyebrow 11 + 10 + heading 33 + 12 + four body lines at 21.
+ *
+ * ⚠ TOP_PAD IS A REMAINDER NOW, not a free number. `OnboardingFrame` grew a
+ * shared 34px gap under the header rule on 7 Sep so the setup-chain screens
+ * stopped sitting against it; this file's own pad is what is left over to
+ * reach the same total the carousel has always had (84). The eyebrow, heading
+ * and body therefore sit on exactly the y they did before — which is the
+ * point, because that alignment across all four slides is the no-jumping
+ * mechanism. Change the frame's gap and this has to move with it.
  */
-const TOP_PAD = 76;
+const TOP_PAD = 84 - ONBOARDING_TOP_GAP;
 const TEXT_BLOCK_H = 150;
 
 /** Caps the artwork so it centres in a consistent box rather than filling

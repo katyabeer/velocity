@@ -36,12 +36,13 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, Header, Pinned, Screen, Scroll } from '@/ui/layout';
-import { Hero, Big, Lede, Body, Tiny, Kick } from '@/ui/text';
+import { Hero, Big, Lede, Body, Tiny, Kick, Link } from '@/ui/text';
 import { Bar, Button, ChipRow } from '@/ui/controls';
 import { StepRibbonBleed, statesFor } from '@/ui/StepRibbon';
 import { GarmentGrid, SlotStrip } from '@/ui/pieces';
 import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
 import { RenderStrip } from '@/ui/RenderStrip';
+import { SubmissionSheet } from '@/ui/SubmissionSheet';
 import { ConfirmSheet } from '@/ui/ConfirmSheet';
 import { TagInput } from '@/ui/TagInput';
 import { Card, EmptyState } from '@/ui/cards';
@@ -147,19 +148,27 @@ export default function Create() {
           `LogoBlock` claimed a place in the hierarchy it no longer has — the
           same reasoning that took the masthead off the challenges list.
 
-          "CREATE" ON ALL FOUR STEPS, not the step name. The ribbon directly
-          below already says which step you are on and emphasises it, and every
-          step has its own Hero heading ("Ready to generate this look?", "Tag
-          it."), so a step name in the bar is the third telling. What the bar is
-          uniquely good for is saying WHICH FLOW you are in — and without it,
-          step 1 would read "Pick your pieces", identical to the builder's own
-          step 1 in a different flow.
+          ══ AND NO TITLE IN IT AT ALL (Katya, 7 Sep) ══
+          It read "Create" on all five states. That came off for the same
+          reason the day's flow lost "Pick your pieces", "Preview your look"
+          and the rest on 4 Sep: the ribbon directly below says which step you
+          are on, and every step has its own heading. The bar keeps the chevron
+          and the token badge, which are the only things on it that are not
+          repetition.
 
-          No count in it. The tag count lives beside the FIELD it governs
-          (ui/TagInput.tsx) — in the header it was a second copy of the same
-          number three lines above the first, which is the same mistake the
-          builder's "0 of 6" made before it moved into the slot strip. */}
-      <Header onBack={c.step === 1 ? leaveCreate : onBack} title="Create" />
+          ⚠ WHAT THE LABEL WAS ACTUALLY FOR, so nobody re-adds it by accident
+          and nobody is surprised: it was the only thing on screen saying WHICH
+          FLOW you were in. Create's step 1 and the builder's step 1 now both
+          read "Pick your pieces" under a bare chevron, and nothing
+          distinguishes them. That is the accepted cost — the two flows are
+          reached from different places and only one of them has a brief above
+          the grid — but it is a real one. Katya's call.
+
+          No count in it either. The tag count lives beside the FIELD it
+          governs (ui/TagInput.tsx) — in the header it was a second copy of the
+          same number three lines above the first, which is the same mistake
+          the builder's "0 of 6" made before it moved into the slot strip. */}
+      <Header onBack={c.step === 1 ? leaveCreate : onBack} />
 
       <StepRibbonBleed steps={ribbon} />
 
@@ -410,15 +419,28 @@ function Rendering() {
   const markSeen = useSubmission((s) => s.markSeen);
   const ready = job?.status === 'ready';
 
+  const [showLook, setShowLook] = useState(false);
+
   const pieces = job?.picks ?? c.picks.map((p) => p.name);
   const tags = job?.tags ?? c.tags;
 
+  /* OPENING THE DRAWER IS WHAT COUNTS AS HAVING SEEN IT, and `markSeen` is the
+     only thing that clears the dot on the Wardrobe tab. Leaving for the
+     wardrobe without opening it deliberately does NOT clear it — the dot is
+     the record that something landed while you were away, so it may not be
+     spent by walking past. */
+  const openLook = () => {
+    markSeen('create');
+    setShowLook(true);
+  };
+
   return (
     <Screen>
-      {/* "Create", like the rest of the flow — the state is on the ribbon
-          (4 · GENERATE) and in the Hero below it. No chevron: the render is
-          committed, and the footer's "Leave it running" is the way out. */}
-      <Header title="Create" />
+      {/* Bare, like the rest of the flow (see the note on step 1's header).
+          The state is on the ribbon (4 · GENERATE) and in the Hero below it.
+          No chevron either: the render is committed, and the footer button is
+          the way out. */}
+      <Header />
 
       <StepRibbonBleed
         steps={statesFor(
@@ -429,7 +451,16 @@ function Rendering() {
       />
 
       <Scroll>
-        <Hero>{ready ? 'It’s up.' : 'On its way.'}</Hero>
+        {/* ══ THE READY HEADLINE IS "YOUR LOOK IS READY." (Katya, 7 Sep) ══
+            It was "It's up." — which is true, and is also what a17 says, and
+            said nothing about the thing that had just changed. What changed is
+            that there is now something to LOOK AT.
+
+            ⚠ THE STRIP USED TO SAY THESE EXACT SIX WORDS, one line below. That
+            is why it is gone from the ready state (see below) — the same
+            sentence in a Hero and in an accent strip stacked on top of each
+            other is the duplication every round on this project has removed. */}
+        <Hero>{ready ? 'Your look\nis ready.' : 'On its way.'}</Hero>
         <Body style={{ marginTop: 7 }}>
           {ready
             ? 'Posted itself, exactly as committed.'
@@ -439,44 +470,79 @@ function Rendering() {
               'It posts itself when it lands. Go and do something else — the dot on Wardrobe will tell you.'}
         </Body>
 
-        {/* The same strip the Today challenge card uses, so the two async
-            renders read alike. */}
-        <View style={{ marginTop: 14 }}>
-          <RenderStrip
-            status={ready ? 'ready' : 'pending'}
-            pendingNote="A few seconds"
-            onPress={() => {
-              markSeen('create');
-              router.push('/create/posted');
-            }}
-          />
-        </View>
+        {ready ? (
+          /* ══ A LINK INTO A DRAWER, NOT A ROUTE (Katya, 7 Sep: "mirror the
+                behaviour of the view-rendered-look on today's challenge, i.e.
+                show in a drawer") ══
+             Which is exactly what the Today card does — a 16px `Link` and a
+             `SubmissionSheet` — so the two places you go to look at your own
+             finished work now behave the same way.
 
-        {/* §6: the look as a flat lay while it renders. Not the render — that
-            does not exist yet, and inventing one here would be the only place
-            in the app that showed a look it had not made. */}
-        <View style={{ marginTop: 16 }}>
-          <ComposedFlatLay pieces={pieces} />
-        </View>
+             ⚠ CONSEQUENCE, AND IT IS KATYA'S CALL: this was one of the two
+             routes into a17 (`create/posted`), and the footer below was the
+             other. Both are gone, so a17 is now reachable ONLY by leaving and
+             coming back through the Wardrobe banner once the render has
+             landed. It has not been deleted — it is still the screen that
+             banner opens — but if this drawer is meant to replace it, say so
+             and it can go. */
+          <Link style={{ marginTop: 16 }} onPress={openLook}>
+            Take a look →
+          </Link>
+        ) : (
+          <>
+            {/* The same strip the Today challenge card uses, so the two async
+                renders read alike. PENDING ONLY now — on `ready` its label was
+                the Hero's own sentence. */}
+            <View style={{ marginTop: 14 }}>
+              <RenderStrip status="pending" pendingNote="A few seconds" onPress={() => {}} />
+            </View>
 
-        {tags.length ? <Tiny style={{ marginTop: 12 }}>{tags.map(chipLabel).join('  ')}</Tiny> : null}
+            {/* §6: the look as a flat lay while it renders. Not the render —
+                that does not exist yet, and inventing one here would be the
+                only place in the app that showed a look it had not made.
+
+                GONE FROM THE READY STATE, because the drawer holds it now.
+                Same trade the Today card made on 4 Sep: inline, it was the
+                tallest thing on a screen with nothing left to do. */}
+            <View style={{ marginTop: 16 }}>
+              <ComposedFlatLay pieces={pieces} />
+            </View>
+
+            {tags.length ? (
+              <Tiny style={{ marginTop: 12 }}>{tags.map(chipLabel).join('  ')}</Tiny>
+            ) : null}
+          </>
+        )}
+
         <Gap />
       </Scroll>
 
       <Foot>
+        {/* SECONDARY, AND IT GOES TO THE WARDROBE (Katya, 7 Sep). It was a
+            solid "See it" into a17. Ghost is right for what this now is: the
+            look is already offered above, so the footer is only the way OUT —
+            and the wardrobe is where Create is entered from and where the
+            create lane's dot lives, so it is the honest destination.
+
+            `replace`, not `push`: the render is committed and there is nothing
+            on this screen to come back to. */}
         <Button
-          label={ready ? 'See it' : 'Leave it running'}
-          variant={ready ? 'solid' : 'ghost'}
-          onPress={() => {
-            if (ready) {
-              markSeen('create');
-              router.push('/create/posted');
-            } else {
-              router.push('/(tabs)/magazine');
-            }
-          }}
+          label={ready ? 'Back to Wardrobe' : 'Leave it running'}
+          variant="ghost"
+          onPress={() =>
+            ready ? router.replace('/(tabs)/wardrobe') : router.push('/(tabs)/magazine')
+          }
         />
       </Foot>
+
+      {/* Outside the Scroll — it is a Modal and has to float over the screen
+          rather than scroll with it. */}
+      <SubmissionSheet
+        visible={showLook}
+        pieces={pieces}
+        caption={tags.length ? tags.map(chipLabel).join('  ') : undefined}
+        onDismiss={() => setShowLook(false)}
+      />
     </Screen>
   );
 }
@@ -517,10 +583,10 @@ function Spent() {
 
   return (
     <Screen>
-      {/* Pushed, like every other Create screen — see the note on the flow's
+      {/* Pushed, like every other Create screen — see the note on step 1's
           header. The subtitle went with the masthead; "today's generation" is
           what the body says anyway. */}
-      <Header onBack={leaveCreate} title="Create" />
+      <Header onBack={leaveCreate} />
 
       <Scroll>
         {/* §6.1's ORDER, and it is the whole point of the screen: the render
@@ -591,7 +657,7 @@ function Failed() {
 
   return (
     <Screen>
-      <Header onBack={leaveCreate} title="Create" />
+      <Header onBack={leaveCreate} />
       <Scroll>
         <EmptyState
           kick="that didn’t generate"
@@ -642,7 +708,7 @@ function Failed() {
 function Insufficient() {
   return (
     <Screen>
-      <Header onBack={leaveCreate} title="Create" />
+      <Header onBack={leaveCreate} />
       <Scroll>
         <Card style={{ marginTop: 4 }}>
           {/* The state, named before the pitch — so the disabled button below
