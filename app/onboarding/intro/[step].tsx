@@ -119,7 +119,17 @@ function LookPhoto({
   if (!image) return null;
   return (
     <View style={[mat ? s.mat : s.plain, { flex, transform: [{ rotate: `${tilt}deg` }] }]}>
-      <Image source={image} style={s.photo} resizeMode="cover" />
+      {/* `contain`, NOT `cover` (Katya, 4 Sep — "image is cut off on the left
+          hand side"). The look photography is portrait and full-length; in a
+          cell wider than the source's aspect, `cover` fills by cropping the
+          SIDES, and centred cropping cut into the subject — a head off the top
+          and an arm off the left on the two bottom cells. A marketing slide
+          showing half a person is worse than one with a margin.
+
+          Both variants have a ground and padding for exactly this reason, so a
+          contained photo reads as mounted on a mat rather than as a picture
+          that failed to fill its box. */}
+      <Image source={image} style={s.photo} resizeMode="contain" />
     </View>
   );
 }
@@ -250,7 +260,17 @@ const s = StyleSheet.create({
     borderColor: palette.rule,
     overflow: 'hidden',
   },
-  plain: { borderRadius: radius.sm, overflow: 'hidden', backgroundColor: palette.creamSunk },
+  /** The sunk mat. Same padding as the accent one below so the two bottom
+   *  cells sit on the same optical inset — without it the contained photo went
+   *  edge to edge in one cell and was framed in the other. */
+  plain: {
+    borderRadius: radius.sm,
+    backgroundColor: palette.creamSunk,
+    borderWidth: border.hair,
+    borderColor: palette.rule,
+    padding: 6,
+    overflow: 'hidden',
+  },
   /** The accent mat. Padding, so the lime reads as a frame the photo sits on
    *  rather than as a coloured border on the photo. */
   mat: {

@@ -188,7 +188,10 @@ export default function Build() {
       ) : null}
 
       {step === 1 ? (
-        <Scroll>
+        /* `contentStyle` trims the Scroll's own 20pt top pad. `Pinned` already
+           contributes 12 of its own, so the default put ~36pt between the slot
+           strip and the brief — see the note on the Lede below. */
+        <Scroll contentStyle={{ paddingTop: 8 }}>
           {/* The job, and only the job. Its explainer line ("Cold field, warm
               marquee…") came off on 4 Sep — the brief is the title, and the
               sentence under it was read once and then occupied the top of the
@@ -198,14 +201,26 @@ export default function Build() {
               STEP 1 ONLY. Step 2 states the job itself under its own kicker,
               so leaving this there printed the same title twice on one
               screen. */}
-          <Lede style={{ marginTop: 13 }}>{TONIGHTS_BRIEF.title}</Lede>
+          {/* Tight to the slot strip above it (Katya, 4 Sep). Between
+              `Pinned`'s own 12pt bottom pad, the Scroll's 20pt top pad and a
+              13pt margin here, there were ~36pt between the thing you are
+              filling and the job it answers — they belong together. Now 20,
+              and NOT zero: the earlier note on this file records that when the
+              two blocks touched they read as one. */}
+          <Lede>{TONIGHTS_BRIEF.title}</Lede>
 
-          <View style={{ marginTop: 18, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <Kick tone="muted">{firstRun ? 'everything we have' : 'your wardrobe'}</Kick>
-            <Tiny>{pool.length} pieces</Tiny>
-          </View>
+          {/* NO LABEL OVER THE FILTERS, and that is settled rather than
+              missing (Katya, 4 Sep). It read "everything we have" — which
+              describes the POOL rather than the task, and said "your wardrobe"
+              on Day 2, which the Wardrobe tab already owns. Renaming it to
+              "Pick your pieces" put that phrase on the screen twice, since the
+              header says it too, so it came off entirely. The header names the
+              screen; the chips are self-evident.
 
-          <View style={{ marginTop: 9 }}>
+              The count went with it: sixty is a fact about the catalogue, not
+              about the decision, and it sat where the eye lands after reading
+              the brief. */}
+          <View style={{ marginTop: 18 }}>
             <ChipRow
               items={['All', ...railsFor(pool)]}
               value={filter}
