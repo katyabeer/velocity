@@ -35,11 +35,10 @@
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Gap, LogoBlock, Screen, Scroll, Sig } from '@/ui/layout';
-import { SigHead, Lede, Body, Tiny, Kick, B } from '@/ui/text';
+import { SigHead, Lede, Body, Tiny, Kick, B, Link } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { Milestones, Reach, Stat, Roundel, Trend } from '@/ui/cards';
 import { LookPlate } from '@/ui/LookPlate';
-import { palette } from '@/theme/tokens';
 import { chipLabel } from '@/domain/tags';
 import {
   REACTIONS_CAPTION,
@@ -256,13 +255,12 @@ export default function You() {
                 </>
               ) : null}
               {showAllPostsLink(r) ? (
-                <Tiny
-                  color={palette.link}
-                  style={{ marginTop: 9, fontFamily: 'Archivo_700Bold' }}
+                <Link
+                  style={{ marginTop: 9 }}
                   onPress={() => router.push('/(tabs)/wardrobe')}
                 >
                   All {r.looks} posts →
-                </Tiny>
+                </Link>
               ) : null}
             </>
           ) : (
@@ -331,13 +329,12 @@ export default function You() {
             {showWardrobeRoute(r) ? (
               <>
                 {' '}
-                <Tiny
-                  color={palette.link}
-                  style={{ fontFamily: 'Archivo_700Bold' }}
+                <Link
+                  
                   onPress={() => router.push('/(tabs)/magazine')}
                 >
                   Find something to go with the rest →
-                </Tiny>
+                </Link>
               </>
             ) : null}
           </Body>

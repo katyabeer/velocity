@@ -186,9 +186,8 @@ export default function Create() {
             <View style={{ marginTop: 9 }}>
               <Bar progress={c.picks.length / MAX_PIECES} />
             </View>
-            <Tiny style={{ marginTop: 7 }}>
-              Tap a filled slot to put it back. The last two are both for extras.
-            </Tiny>
+            {/* No instruction under the strip — see the note in
+                today/build.tsx. It explained what the strip already shows. */}
           </Pinned>
 
           <Scroll>

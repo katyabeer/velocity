@@ -62,15 +62,20 @@ export default function CastingScreen() {
 
   return (
     <Screen>
-      <Header
-        onBack={() => router.back()}
-        title="Who wears it"
-        right={
-          <Tiny color={palette.link} onPress={go} style={{ fontFamily: 'Archivo_700Bold' }}>
-            Same as last time →
-          </Tiny>
-        }
-      />
+      {/* NO "SAME AS LAST TIME" (Katya, 4 Sep). It was a header shortcut that
+          skipped straight to `go()` — but the casting PERSISTS between
+          sessions, so arriving here and pressing the footer button without
+          touching anything already reuses it. The link was a second control
+          for the thing the primary control already did, and at 16px it pushed
+          "Who wears it" onto two lines in a bar meant for one. */}
+      {/* ══ NO TITLE IN THE BAR (Katya, 4 Sep) ══
+          Every screen of the day's flow had one — "Pick your pieces",
+          "Preview your look", "Who wears it", "In · can't be changed", "Vote 1
+          of 5" — and every one restated something the screen already said
+          louder. The step ribbon names the step, and each screen leads with
+          its own heading. The bar keeps the chevron and the token badge, which
+          are the only things on it that are not repetition. */}
+      <Header onBack={() => router.back()} />
 
       {/* Whichever flow opened this, its own ribbon, so the screen reads as a
           step OF that journey rather than a flow it dropped out of.

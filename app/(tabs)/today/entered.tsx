@@ -34,11 +34,10 @@ import { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
-import { Big, Body, Tiny, Kick } from '@/ui/text';
+import { Big, Body, Kick, Link } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { RenderedFigure } from '@/ui/RenderStage';
 import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
-import { palette } from '@/theme/tokens';
 import { useEntry } from '@/state/entry';
 import { useSession } from '@/state/session';
 import { useEconomy } from '@/state/economy';
@@ -63,14 +62,20 @@ export default function Entered() {
 
   return (
     <Screen>
+      {/* ══ NO TITLE IN THE BAR (Katya, 4 Sep) ══
+          Every screen of the day's flow had one — "Pick your pieces",
+          "Preview your look", "Who wears it", "In · can't be changed", "Vote 1
+          of 5" — and every one restated something the screen already said
+          louder. The step ribbon names the step, and each screen leads with
+          its own heading. The bar keeps the chevron and the token badge, which
+          are the only things on it that are not repetition. */}
       <Header
         onBack={() => router.back()}
-        title="In · can’t be changed"
         right={
           <Pressable onPress={() => setMode(mode === 'model' ? 'flat' : 'model')}>
-            <Tiny color={palette.link} style={{ fontFamily: 'Archivo_700Bold' }}>
+            <Link >
               {mode === 'model' ? 'On a model' : 'Flat lay'}
-            </Tiny>
+            </Link>
           </Pressable>
         }
       />

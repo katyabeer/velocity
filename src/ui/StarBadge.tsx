@@ -1,6 +1,16 @@
 /**
- * THE STATE BADGE, AS A STARBURST (Katya, 4 Sep) — the one deliberately playful
- * mark in the app.
+ * ⚠ NOTHING RENDERS THIS ANY MORE (4 Sep). It was the job card's state badge
+ * for one round; Katya replaced it with a pale-green pill inside the card the
+ * next — the star broke the border to read as a sticker, and on the completed
+ * states that was a lot of shape for "done". `Badge` in ui/cards.tsx is what
+ * the card uses.
+ *
+ * Kept because the geometry is worth having if a sticker is ever wanted
+ * somewhere it suits, the same reason `Tip` survives. If you are reading this
+ * and nothing has picked it up, delete it.
+ *
+ * THE STATE BADGE, AS A STARBURST — the one deliberately playful mark in the
+ * app.
  *
  * It overlaps the card's top-right corner rather than sitting inside it, which
  * is the whole point: a badge inside the border is a label, a badge breaking

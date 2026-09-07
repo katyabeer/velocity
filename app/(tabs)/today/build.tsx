@@ -136,6 +136,13 @@ export default function Build() {
 
   return (
     <Screen>
+      {/* ══ NO TITLE IN THE BAR (Katya, 4 Sep) ══
+          Every screen of the day's flow had one — "Pick your pieces",
+          "Preview your look", "Who wears it", "In · can't be changed", "Vote 1
+          of 5" — and every one restated something the screen already said
+          louder. The step ribbon names the step, and each screen leads with
+          its own heading. The bar keeps the chevron and the token badge, which
+          are the only things on it that are not repetition. */}
       <Header
         onBack={() => {
           if (step > 1) return setStep(1);
@@ -145,7 +152,6 @@ export default function Build() {
              is most likely to want out of. */
           return router.canGoBack() ? router.back() : router.replace('/(tabs)/today');
         }}
-        title={step === 1 ? 'Pick your pieces' : 'Preview your look'}
         /* The count used to sit here. It moved into the slot strip (Katya,
            4 Sep), which is the thing it counts — in the header it was a number
            floating next to the token badge with nothing to attach itself to. */
@@ -177,13 +183,13 @@ export default function Build() {
           <View style={{ marginTop: 9 }}>
             <Bar progress={picks.length / MAX_PIECES} />
           </View>
-          {/* Stays small. It is a control's instruction, not prose — and at
-              16px it took two lines and pushed the grid down on the one screen
-              where seeing the clothes is the whole job, which is the same
-              reason the walkthrough tooltip came off it. */}
-          <Tiny style={{ marginTop: 7 }}>
-            Tap a filled slot to put it back. The last two are both for extras.
-          </Tiny>
+          {/* NO INSTRUCTION UNDER THE STRIP (Katya, 4 Sep). "Tap a filled slot
+              to put it back. The last two are both for extras." explained two
+              things the strip itself shows: a filled slot is obviously filled,
+              and the two EXTRA labels are already side by side. It was the
+              last thing between the strip and the grid on the one screen where
+              seeing the clothes is the whole job. Both behaviours are
+              unchanged. */}
         </Pinned>
       ) : null}
 
@@ -207,7 +213,13 @@ export default function Build() {
               filling and the job it answers — they belong together. Now 20,
               and NOT zero: the earlier note on this file records that when the
               two blocks touched they read as one. */}
-          <Lede>{TONIGHTS_BRIEF.title}</Lede>
+          {/* A kicker names it, so the title does not have to carry the job of
+              saying what it is (Katya, 4 Sep) — which is why it can come down
+              from `Lede`'s 23px. */}
+          <Kick tone="muted">styling brief</Kick>
+          <Lede size={18} style={{ marginTop: 5 }}>
+            {TONIGHTS_BRIEF.title}
+          </Lede>
 
           {/* NO LABEL OVER THE FILTERS, and that is settled rather than
               missing (Katya, 4 Sep). It read "everything we have" — which

@@ -56,6 +56,9 @@ export const Lede = make(T.lede!, 'Lede');
 export const Big = make(T.lede!, 'Big');
 export const Body = make(T.body!, 'Body');
 export const Tiny = make(T.tiny!, 'Tiny');
+/** A text link — the "→ see more" rows. 16px, and it carries its own colour
+ *  and weight so no call site has to set them (see T.link for the history). */
+export const Link = make(T.link!, 'Link');
 export const Meta = make(T.meta!, 'Meta');
 export const Num = make(T.num!, 'Num');
 

@@ -46,10 +46,9 @@ import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, LogoBlock, Screen, Scroll } from '@/ui/layout';
-import { Big, Body, Kick, Tiny } from '@/ui/text';
+import { Big, Body, Kick, Tiny, Link } from '@/ui/text';
 import { Button } from '@/ui/controls';
-import { Card, EarnedRow, JobStepList } from '@/ui/cards';
-import { StarBadge } from '@/ui/StarBadge';
+import { Badge, Card, EarnedRow, JobStepList } from '@/ui/cards';
 import { LockIcon } from '@/ui/TabIcon';
 import { ResultCard } from '@/ui/ResultCard';
 import { RenderStrip } from '@/ui/RenderStrip';
@@ -193,16 +192,28 @@ export default function Today() {
           Today&apos;s styling challenge
         </Kick>
 
-        {/* ROUNDED, AND OVERFLOWING (Katya, 4 Sep). The radius and the star
-            are the same instruction — make it look less like an admin panel.
-            `overflow` stays visible so the badge can break the border: inside
-            it, it is a label; breaking out, it is a sticker.
+        {/* ⟲ THE STARBURST CAME OFF (Katya, 4 Sep), one round after it went on.
+            It is a PILL INSIDE the card now, top right, in the new pale green.
+            The star broke the border to read as a sticker; the pill reads as a
+            status, which is what it is — and on the completed states it was a
+            grey star hanging off a card with nothing left to do, which is a lot
+            of shape for "done".
 
-            The right padding leaves room for the star, so a long brief title
-            cannot run under it. */}
+            The card keeps its radius. `Badge` in ui/cards.tsx is the component;
+            `ui/StarBadge.tsx` is now unused and kept only in case the sticker
+            is wanted somewhere it suits. */}
         <View style={{ marginTop: 12 }}>
           <Card ink style={s_card}>
-            <Big style={{ paddingRight: 46 }}>{TONIGHTS_BRIEF.title}</Big>
+            {/* The pill gets its OWN right-aligned row rather than sharing one
+                with the title or overlapping it. Both of those cost the title
+                width — beside it, `flex` shrank the brief to three lines; over
+                it, a 92pt right pad did the same. On its own line the title
+                keeps the full card width and the pill still reads as the
+                card's top-right corner. */}
+            <View style={{ alignItems: 'flex-end' }}>
+              <Badge label={badge} tone={open ? 'open' : 'done'} />
+            </View>
+            <Big style={{ marginTop: 8 }}>{TONIGHTS_BRIEF.title}</Big>
 
           {/* ONE description, constant across states. The brief's own line —
               the state is the badge's job, not this sentence's. */}
@@ -229,13 +240,12 @@ export default function Today() {
               />
             </View>
           ) : (
-            <Tiny
-              color={palette.link}
+            <Link
               style={s_submissionLink}
               onPress={() => setShowSubmission(true)}
             >
               View your submission →
-            </Tiny>
+            </Link>
           )}
 
             <Button
@@ -246,13 +256,6 @@ export default function Today() {
             />
           </Card>
 
-          {/* Absolutely positioned over the corner, and OUTSIDE the Card so
-              the card's own border cannot clip it. Negative offsets by half
-              the star's overhang, which is what makes it read as applied to
-              the card rather than drawn on it. */}
-          <View style={s_star} pointerEvents="none">
-            <StarBadge label={badge} tone={open ? 'accent' : 'quiet'} />
-          </View>
         </View>
 
         {/* ── TOMORROW, LOCKED ──
@@ -286,9 +289,9 @@ export default function Today() {
           {/* 16px and 14px (Katya, 4 Sep). Both were `Tiny` at 10 — the size
               the eye skips — on the only route to the month's list. A link
               nobody finds is the availability fix not shipping. */}
-          <Tiny color={palette.link} style={s_monthLink}>
+          <Link >
             See upcoming challenges →
-          </Tiny>
+          </Link>
           <Tiny color={palette.grey} style={s_monthNote}>
             You won&apos;t know when each lands, but it&apos;s worth knowing what&apos;s in the pile.
           </Tiny>
@@ -321,16 +324,8 @@ const s_card = {
   borderRadius: radius.lg,
 };
 
-/** Half the star hangs off each edge. `top`/`right` are negative by roughly a
- *  third of its size — enough to read as applied, not so far that a point
- *  clips the screen edge at the gutter. */
-const s_star = {
-  position: 'absolute' as const,
-  top: -24,
-  right: -14,
-};
-
-const s_monthLink = { fontFamily: 'Archivo_700Bold' as const, fontSize: 16, lineHeight: 21 };
+/** The note under the month link. 14px, per Katya — it sits under a 16px link
+ *  and had been 10. */
 const s_monthNote = { fontSize: 14, lineHeight: 19, marginTop: 2 };
 
 /** 16px, per Katya — it is a real destination, not a footnote on the card, and
@@ -403,7 +398,11 @@ const s_next = {
    *  the two read as the same kind of object — one open, one not — rather than
    *  as a card and a notice. */
   borderRadius: radius.lg,
-  backgroundColor: palette.creamSunk,
+  /** White (Katya, 4 Sep). It was the sunk cream, which is the app's
+   *  "disabled" ground — on a card that is locked-but-coming that read as
+   *  broken rather than as not-yet. `creamRaised` is the raised surface, so a
+   *  locked card now sits ABOVE the page rather than pressed into it. */
+  backgroundColor: palette.creamRaised,
   padding: 14,
 };
 

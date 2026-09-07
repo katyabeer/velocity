@@ -126,10 +126,10 @@ test('the badge reports THE CHALLENGE, not the render', () => {
      on is not new (Katya, 4 Sep). Three values, not two. */
   assert.equal(jobBadge('open'), 'New');
   assert.equal(jobBadge('entered'), 'Open');
-  assert.equal(jobBadge('building'), 'Complete');
-  assert.equal(jobBadge('complete'), 'Complete');
-  assert.equal(jobBadge('results'), 'Complete');
-  assert.equal(jobBadge('failed'), 'Complete');
+  assert.equal(jobBadge('building'), 'Completed');
+  assert.equal(jobBadge('complete'), 'Completed');
+  assert.equal(jobBadge('results'), 'Completed');
+  assert.equal(jobBadge('failed'), 'Completed');
 });
 
 test('Build is SHUT after 8pm, not merely "todo"', () => {

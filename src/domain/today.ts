@@ -116,7 +116,7 @@ export function jobSteps(input: {
  * badge would have to say "complete except for the bit that broke", which is
  * not a badge.
  */
-export type JobBadge = 'New' | 'Open' | 'Complete';
+export type JobBadge = 'New' | 'Open' | 'Completed';
 
 export const jobBadge = (state: JobCardState): JobBadge => {
   /* `New` ONLY WHEN NOTHING HAS BEEN DONE (Katya, 4 Sep, renaming `Open`).
@@ -125,7 +125,7 @@ export const jobBadge = (state: JobCardState): JobBadge => {
      badge forgetting what the user did an hour ago. Three values, not two. */
   if (state === 'open') return 'New';
   if (state === 'entered') return 'Open';
-  return 'Complete';
+  return 'Completed';
 };
 
 /**

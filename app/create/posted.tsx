@@ -45,13 +45,11 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
-import { Foot, Gap, LogoBlock, Screen, Scroll } from '@/ui/layout';
-import { Body, Kick, Tiny } from '@/ui/text';
+import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
+import { Body, Hero, Link, Tiny } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
-import { palette, border } from '@/theme/tokens';
 import { chipLabel } from '@/domain/tags';
-import { RERENDER_BLOCK_LINES, RERENDER_NOTE, rerenderVerdict } from '@/domain/renders';
 import { useCreate } from '@/state/create';
 import { useSubmission } from '@/state/submission';
 import { useEntry } from '@/state/entry';
@@ -62,7 +60,6 @@ export default function Posted() {
 
   const cPicks = useCreate((s) => s.picks);
   const cTags = useCreate((s) => s.tags);
-  const rerender = useCreate((s) => s.rerender);
   const startAgain = useCreate((s) => s.startAgain);
   const entered = useEntry((s) => s.entered);
   const phase = useSession((s) => s.phase);
@@ -76,19 +73,32 @@ export default function Posted() {
 
   /* The verdict is NOT frozen: the window is a live thing, and a reaction
      landing while this screen is open has to close the offer. */
-  const verdict = rerenderVerdict({
-    publishedAt: job?.publishedAt ?? null,
-    rerenderUsed: job?.rerenderUsed ?? false,
-    reactions: job?.reactions ?? 0,
-    now: Date.now(),
-  });
 
   return (
     <Screen>
-      <LogoBlock title="It’s up" subtitle="Somewhere in the magazine" />
+      {/* THE HEADLINE IS ON THE SCREEN, NOT IN THE BAR (Katya, 4 Sep). "It's
+          up" was the masthead's title with "Somewhere in the magazine" as its
+          subtitle — a piece of news set as chrome, on the one screen whose
+          whole job is to deliver it. The bar is a bare chevron now and the
+          news is a heading. */}
+      <Header onBack={() => router.back()} />
 
       <Scroll>
-        <View style={{ marginTop: 6 }}>
+        <Hero>{'It’s\nup.'}</Hero>
+        {/* One paragraph, replacing three fragments: the subtitle, the
+            "no score, no placing" line, and the re-render panel's note. It
+            says what happened, what might happen, and when to come back —
+            which is everything this screen has to do. */}
+        <Body style={{ marginTop: 10 }}>
+          That&apos;s your freestyle look for today. We&apos;ve posted it to the Magazine.
+          Somebody might spend a token on it — you&apos;ll know if they do. Come back tomorrow
+          to create another one.
+        </Body>
+
+        {/* SMALLER (Katya, 4 Sep). It was full width, which made a screen with
+            one message on it mostly picture — and you have just spent two
+            screens looking at these pieces. */}
+        <View style={s_preview}>
           <ComposedFlatLay pieces={view.picks} />
         </View>
 
@@ -96,19 +106,15 @@ export default function Posted() {
           <Tiny style={{ marginTop: 12 }}>{view.tags.map(chipLabel).join('  ')}</Tiny>
         ) : null}
 
-        <Body style={{ marginTop: 10 }}>
-          No score, no placing. Somebody might spend a token on it — you&apos;ll know if they do.
-        </Body>
-
-        <View style={s_block}>
-          <Kick tone="muted">one more go at it</Kick>
-          <Body style={{ marginTop: 6 }}>{RERENDER_NOTE}</Body>
-          {verdict.allowed ? (
-            <Button label="Generate it again" variant="ghost" style={{ marginTop: 12 }} onPress={rerender} />
-          ) : (
-            <Tiny style={{ marginTop: 10 }}>{RERENDER_BLOCK_LINES[verdict.because]}</Tiny>
-          )}
-        </View>
+        {/* ⚠ THE RE-RENDER IS NOT OFFERED HERE ANY MORE (Katya, 4 Sep). It was
+            a panel with the three constraints and a "Generate it again"
+            button. Create brief AC 9 wants it "on a17 and on the owner's own
+            magazine card"; it now lives ONLY in the Create tab's `spent`
+            state, which is where you land next and which reads the same
+            verdict. The window is unchanged — frozen input, in place, and it
+            shuts on the first reaction or 15 minutes — so removing the control
+            here shortens the window in practice, because you have to navigate
+            to find it. Say if it should come back. */}
 
         <Gap />
       </Scroll>
@@ -133,24 +139,21 @@ export default function Posted() {
             offering a second is the tab promising something it will refuse two
             taps later. The Create tab's own `spent` state is where the user
             lands instead, and it says when the next one arrives. */}
-        <Tiny
-          color={palette.link}
-          style={{ marginTop: 14, textAlign: 'center', fontFamily: 'Archivo_700Bold' }}
+        <Link
+          style={{ marginTop: 14, textAlign: 'center' }}
           onPress={() => {
             startAgain();
             router.replace('/create');
           }}
         >
           Back to Create →
-        </Tiny>
+        </Link>
       </Foot>
     </Screen>
   );
 }
 
-const s_block = {
-  marginTop: 24,
-  paddingTop: 16,
-  borderTopWidth: border.hair,
-  borderTopColor: palette.rule,
-};
+/** A third of the width. Enough to confirm which look it was, not enough to
+ *  become the screen. */
+const s_preview = { width: '46%' as const, marginTop: 18 };
+

@@ -112,7 +112,14 @@ export default function Rendering() {
 
   return (
     <Screen>
-      <Header title="In · can’t be changed" />
+      {/* ══ NO TITLE IN THE BAR (Katya, 4 Sep) ══
+          Every screen of the day's flow had one — "Pick your pieces",
+          "Preview your look", "Who wears it", "In · can't be changed", "Vote 1
+          of 5" — and every one of them restated something the screen already
+          said louder. The step ribbon names the step, and each screen leads
+          with its own heading. The bar keeps the chevron and the token badge,
+          which are the only things on it that are not repetition. */}
+      <Header />
 
       {/* THE RIBBON IS BACK (Katya, 4 Sep). It was dropped when this stopped
           being a wait screen, which lost the one thing that tells you the day

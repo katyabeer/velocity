@@ -272,6 +272,25 @@ A fresh session will be tempted by several of these. They were tried and rejecte
   shouting in 36px caps beside the other stating the job in 23px italic was
   the mismatch. NOTE the empty-state card keeps its display heading: that card
   is a front door, not step 1 of a flow
+- The starburst state badge, ⟲ one round after it went on. It is a **pale
+  green pill inside the card**, top right, reading `Completed` — the star broke
+  the border to read as a sticker, and on a finished card that was a lot of
+  shape for "done". `accentPale` is a NEW HUE and the only green; `StarBadge`
+  survives unrendered
+- The sunk-cream ground on the locked next-job card. Sunk cream is this app's
+  DISABLED ground, so a locked-but-coming card read as broken; it is
+  `creamRaised` now and sits above the page rather than pressed into it
+- "Tap a filled slot to put it back. The last two are both for extras." on the
+  builder and Create. It explained what the strip already shows — a filled slot
+  looks filled, and the two EXTRA labels sit side by side
+- `Tiny` (10px) inline-styled text links, in eight places. There is a `Link`
+  component now at **16px** using the `linkLg` colour the palette had and never
+  used — they are often the only route to a screen, and small print is a poor
+  place for that
+- The re-render panel on a17 ("one more go at it"). ⚠ Create brief AC 9 wants
+  it on a17 AND the owner's magazine card; it now lives ONLY in the Create
+  tab's `spent` state. The window is unchanged, so removing the control here
+  shortens it in practice — you have to navigate to find it
 - A dead filter rail on the magazine, and `Ours` / `From the room` / four
   occasion words as its chips. The occasion words could never have worked —
   occasion stopped aggregating when Create's tags went free text. Five chips

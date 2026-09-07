@@ -133,6 +133,25 @@ export const type = StyleSheet.create({
     textTransform: 'uppercase',
     color: palette.greyMute,
   },
+  /**
+   * TEXT LINKS — the "→ see more" rows. One style, at 16px (Katya, 4 Sep:
+   * "increase the size of all text links").
+   *
+   * They were `Tiny` at 10px with an inline `Archivo_700Bold` and
+   * `color={palette.link}` at eight different call sites — small print, styled
+   * by hand each time, on controls that are often the only route to a screen.
+   * `See upcoming challenges` was the worst case: the only way into the
+   * month's list.
+   *
+   * `linkLg` rather than `link`: the palette carries a slightly darker green
+   * for larger link text, which was sitting unused.
+   */
+  link: {
+    fontFamily: family.sans700,
+    fontSize: 16,
+    lineHeight: 21,
+    color: palette.linkLg,
+  },
   /** .qt-handle / .qt-tag — interactive text (hashtags, handles, tags). */
   handle: {
     fontFamily: family.sans700,

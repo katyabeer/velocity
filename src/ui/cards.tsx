@@ -402,10 +402,14 @@ const s = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 3.5,
   },
+  /** PALE GREEN (Katya, 4 Sep), not the sunk cream it was. Sunk cream is this
+   *  app's disabled ground, so a finished challenge read as an unavailable one
+   *  — the opposite of the intended "nothing left to do, and that is good".
+   *  See `accentPale` in tokens.ts: it is a new hue and a deliberate one. */
   badgeDone: {
     borderWidth: border.hair,
-    borderColor: palette.rule,
-    backgroundColor: palette.creamSunk,
+    borderColor: palette.accentEdge,
+    backgroundColor: palette.accentPale,
   },
   badgeLabel: {
     fontFamily: 'Archivo_700Bold',

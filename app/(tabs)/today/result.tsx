@@ -18,11 +18,10 @@
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
-import { H2, PageTitle, Body, Tiny, Num, Kick } from '@/ui/text';
+import { H2, PageTitle, Body, Tiny, Num, Kick, Link } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { BandLadder, Card, Stat } from '@/ui/cards';
 import { LookPlate } from '@/ui/LookPlate';
-import { palette } from '@/theme/tokens';
 import { JUDGING_QUOTA } from '@/domain/economy';
 import { useSession } from '@/state/session';
 import { JUDGING_LOOKS } from '@/data/looks';
@@ -108,13 +107,12 @@ export default function Result() {
               Four of your five pieces were identical to the winner&apos;s. The bag did it — theirs
               was red, yours was the tote.
             </Body>
-            <Tiny
-              color={palette.link}
-              style={{ marginTop: 8, fontFamily: 'Archivo_700Bold' }}
+            <Link
+              style={{ marginTop: 8 }}
               onPress={() => router.push('/(tabs)/magazine')}
             >
               Find it in the magazine →
-            </Tiny>
+            </Link>
           </View>
           <View style={{ width: 100 }}>
             <LookPlate

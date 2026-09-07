@@ -55,10 +55,16 @@ export default function Judging() {
 
   return (
     <Screen>
-      <Header
-        onBack={() => router.back()}
-        title={`Vote ${Math.min(callsCast + 1, quota)} of ${quota}`}
-      />
+      {/* ══ NO TITLE IN THE BAR (Katya, 4 Sep) ══
+          Every screen of the day's flow had one — "Pick your pieces",
+          "Preview your look", "Who wears it", "In · can't be changed", "Vote 1
+          of 5" — and every one of them restated something the screen already
+          said louder. The step ribbon names the step, and each screen leads
+          with its own heading. The bar keeps the chevron and the token badge,
+          which are the only things on it that are not repetition. */}
+      {/* The vote count is NOT lost with the title — the strip below carries
+          it, on the right. */}
+      <Header onBack={() => router.back()} />
 
       {/* "41 answers to it, yours among them." came off (Katya, 4 Sep). The
           field's size is not something a voter needs while voting — it frames

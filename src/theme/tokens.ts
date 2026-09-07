@@ -58,6 +58,19 @@ export const palette = {
 
   // accent — one value. Fills only; pair with accentEdge. Bare on photos.
   accent: '#DCE568',
+  /**
+   * A PALE GREEN, and it is a NEW HUE — the first since the v3 collapse other
+   * than `error`. Katya asked for one, 4 Sep, for the completed-status pill on
+   * the job card: the accent fill is too loud for a status that means "nothing
+   * left to do", and the sunk cream reads as disabled rather than done.
+   *
+   * A tint of `accent` rather than an unrelated green, so it stays in the
+   * family. Ink on it is ~14:1, so the label needs no special treatment.
+   *
+   * ⚠ FOR A SETTLED, POSITIVE STATUS ONLY. It is not a general "success"
+   * colour and emphatically not for alerts — `error` is the only red and this
+   * is the only green. */
+  accentPale: '#EDF2C4',
   accentEdge: '#121110',
 
   // interactive text
