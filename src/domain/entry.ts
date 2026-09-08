@@ -2,7 +2,8 @@
  * The look you are entering: slot rules and the pick/unpick logic.
  *
  * LOCKED DECISION 11 AMENDED, 3 Sep 2026 (Katya) — 6 pieces maximum, 3
- * minimum, for briefs AND freestyle. One piece per slot, EXCEPT Extra, which
+ * minimum (4 as of 7 Sep — see MIN_PIECES), for briefs AND freestyle. One
+ * piece per slot, EXCEPT Extra, which
  * takes two.
  *
  * What that amendment is and is not. It is not "the cap went up by one": the
@@ -23,7 +24,25 @@
 
 import { SLOTS, slotOf, type Slot } from './garments';
 
-export const MIN_PIECES = 3;
+/**
+ * ⚠ FOUR NOW, UP FROM THREE (Katya, 7 Sep: "very succinctly outline the rules
+ * — up to 6 items, minimum 4").
+ *
+ * THIS IS AN AMENDMENT TO INVARIANT 3, not a copy change, so it is worth
+ * saying what moved with it: `canEnter` gates the day's flow on it, the
+ * builder's primary button reads it, Create's `insufficient` state uses it to
+ * decide whether the tab is even available ("you need N to start"), and
+ * `tests/entry.test.ts` asserts the pair.
+ *
+ * The max is still 6 and still DERIVED from `SLOT_CAPACITY` — see MAX_PIECES.
+ * Only the floor moved.
+ *
+ * What it costs, and Katya should know it: a wardrobe thin in one category is
+ * now one piece closer to being locked out of entering. The two loaners
+ * (`LOANS_PER_BRIEF`) are what stop that, and they are why the floor can move
+ * at all — handover §5.
+ */
+export const MIN_PIECES = 4;
 
 /**
  * How many pieces each slot holds. Extra is the exception — see the amendment
@@ -55,6 +74,17 @@ export const STRIP_SLOTS: readonly Slot[] = SLOTS.flatMap((s) =>
  * entering. They go back at close. (Handover §5.)
  */
 export const LOANS_PER_BRIEF = 2;
+
+/**
+ * The rule, in one line, for the builder to print.
+ *
+ * Katya, 7 Sep: the category pills and the sixty-tile grid came off, and "very
+ * succinctly outline the rules" is what replaces them. Derived from the two
+ * constants so the screen cannot drift from the gate that enforces it — the
+ * old copy hard-wrote "At least 3 pieces" in the button label and would have
+ * gone stale the moment the floor moved, which it just did.
+ */
+export const PIECE_RULE = `Up to ${MAX_PIECES} pieces, minimum ${MIN_PIECES}.`;
 
 /** A pick is either from your own inventory or from tonight's loaner shelf. */
 export type PickSource = 'owned' | 'loan';

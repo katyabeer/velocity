@@ -101,6 +101,20 @@ export const nextChallenge = (): Challenge =>
 export const TONIGHTS_BRIEF = {
   title: 'An autumn wedding in the countryside.',
   note: 'Cold field, warm marquee. Dress for both, and don’t upstage anyone.',
+  /**
+   * The first sentence only. Onboarding's first-challenge card uses this
+   * (Katya, 7 Sep): that screen is read while someone decides whether to
+   * start, and the second sentence is detail they meet in the builder, where
+   * the full note sits above the grid for the whole session.
+   *
+   * ⚠ THIS BRIEF NOW HAS THREE NOTES. `note` here, this, and
+   * `CHALLENGES[0].note` ("Cold field, warm marquee. Dress for both.") on the
+   * upcoming-challenges list. Three strings for one job, and the list's is not
+   * derived from either of the others — so a wording change has to be made in
+   * three places or the screens disagree. Worth collapsing; same class as the
+   * brief/job/challenge vocabulary sweep.
+   */
+  shortNote: 'Cold field, warm marquee.',
   shortName: 'The autumn wedding',
 } as const;
 

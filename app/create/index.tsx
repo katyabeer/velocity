@@ -35,11 +35,11 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
-import { Foot, Gap, Header, Pinned, Screen, Scroll } from '@/ui/layout';
+import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
 import { Hero, Big, Lede, Body, Tiny, Kick, Link } from '@/ui/text';
-import { Bar, Button, ChipRow } from '@/ui/controls';
+import { Bar, Button } from '@/ui/controls';
 import { StepRibbonBleed, statesFor } from '@/ui/StepRibbon';
-import { GarmentGrid, SlotStrip } from '@/ui/pieces';
+import { PiecePicker, SlotGrid } from '@/ui/SlotBuilder';
 import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
 import { RenderedLook } from '@/ui/RenderedLook';
 import { RenderStrip } from '@/ui/RenderStrip';
@@ -48,8 +48,8 @@ import { ConfirmSheet } from '@/ui/ConfirmSheet';
 import { TagInput } from '@/ui/TagInput';
 import { Card, EmptyState } from '@/ui/cards';
 import { palette, border } from '@/theme/tokens';
-import { CATEGORIES, categoryOf, slotOf, type Category } from '@/domain/garments';
-import { MAX_PIECES, MIN_PIECES, isPicked, isSlotOccupied, slotStrip } from '@/domain/entry';
+import { slotOf } from '@/domain/garments';
+import { MAX_PIECES, MIN_PIECES, PIECE_RULE, slotStrip } from '@/domain/entry';
 import {
   CREATE_RIBBON,
   LEAVE_WITHOUT_RENDERING,
@@ -93,6 +93,20 @@ export default function Create() {
   const [leaving, setLeaving] = useState(false);
   const [tagFocused, setTagFocused] = useState(false);
 
+  /* ══ THE PICKER'S STATE — see today/build.tsx for the full note ══
+     Both flows are the same step configured twice, so they get the same
+     mechanism: the six slots are the screen and a slot opens its own pieces.
+     `open` is a CELL INDEX because two cells are both `Extra`.
+
+     ⚠ DECLARED UP HERE, ABOVE THE EARLY RETURNS, AND IT HAS TO BE. This
+     component returns a different sub-screen for `failed`, `insufficient`,
+     `rendering` and `spent` before it reaches the picker — so hooks placed
+     next to the code that uses them would be called conditionally, which is
+     the rules-of-hooks violation eslint caught. Anything stateful in this
+     component belongs above the switch. */
+  const [open, setOpen] = useState<number | null>(null);
+  const [pending, setPending] = useState<string | null>(null);
+
   /* Create offers what you OWN, always — it is the pressure valve, not a
      shop. On Day 1 that is the look you entered this morning, which is the
      point: freestyle is for recombining your own wardrobe. */
@@ -119,12 +133,44 @@ export default function Create() {
 
   /* ── available · building · rendering: the flow itself ───────────────── */
 
-  const visible = pool.filter((n) => c.filter === 'All' || categoryOf(n) === c.filter);
+  const cells = slotStrip(c.picks).map((sl) => ({
+    slot: sl.slot,
+    name: sl.pick?.name,
+    image: sl.pick ? garmentImage(sl.pick.name) : undefined,
+  }));
+
+  const openCell = cells[open ?? -1];
+  const usedElsewhere = new Set(c.picks.map((p) => p.name).filter((n) => n !== openCell?.name));
+  const pickerItems = openCell
+    ? pool
+        .filter((n) => slotOf(n) === openCell.slot && !usedElsewhere.has(n))
+        .map((n) => ({ name: n, image: garmentImage(n) }))
+    : [];
+
+  const openSlot = (i: number) => {
+    setOpen(i);
+    setPending(cells[i]?.name ?? null);
+  };
+  const closePicker = () => {
+    setOpen(null);
+    setPending(null);
+  };
+  /* Out first, then in — the order matters on `Extra`. See build.tsx. */
+  const confirmPick = () => {
+    const was = openCell?.name;
+    if (was && was !== pending) c.putBack(was);
+    if (pending && pending !== was) c.toggle(pending);
+    closePicker();
+  };
+  const removePick = () => {
+    if (openCell?.name) c.putBack(openCell.name);
+    closePicker();
+  };
   /* Only rails the pool can actually fill — an empty rail is a dead end.
      Canonical order, and the full category list so a legacy Accessories name
      stays reachable by filter (see railsFor in today/build.tsx). */
-  const railsPresent = new Set(pool.map(categoryOf));
-  const rails = CATEGORIES.filter((cat) => railsPresent.has(cat));
+/* The rails list went with the category chips (Katya, 7 Sep) — a slot's
+   drawer only ever holds that slot's pieces, so an empty rail cannot happen. */
 
   /* Casting has no segment, so the ribbon reads the step directly — which is
      the point of taking Model out of it. */
@@ -175,68 +221,43 @@ export default function Create() {
 
       {/* ── 1 · PICK ────────────────────────────────────────────────────── */}
       {c.step === 1 ? (
-        <>
-          <Pinned>
-            <View style={s_row}>
-              <Kick>your look</Kick>
-              <Tiny color={palette.ink} style={{ fontFamily: 'Archivo_700Bold' }}>
-                {c.picks.length} of {MAX_PIECES}
-              </Tiny>
-            </View>
-            <View style={{ marginTop: 8 }}>
-              <SlotStrip
-                slots={slotStrip(c.picks).map((sl) => ({
-                  slot: sl.slot,
-                  name: sl.pick?.name,
-                  image: sl.pick ? garmentImage(sl.pick.name) : undefined,
-                }))}
-                onClear={(name) => c.putBack(name)}
-              />
-            </View>
-            <View style={{ marginTop: 9 }}>
-              <Bar progress={c.picks.length / MAX_PIECES} />
-            </View>
-            {/* No instruction under the strip — see the note in
-                today/build.tsx. It explained what the strip already shows. */}
-          </Pinned>
-
-          <Scroll>
-            {/* MATCHED TO THE BUILDER'S BRIEF TITLE (Katya, 4 Sep) — `Lede`,
+        /* NOTHING PINNED — there is no catalogue to scroll under it any more.
+           See the note in today/build.tsx. */
+        <Scroll>
+          {/* MATCHED TO THE BUILDER'S BRIEF TITLE (Katya, 4 Sep) — `Lede`,
               not the display `Hero` it was. The two screens are the same step
               of two flows and sat directly across from each other in review:
               one shouting in 36px caps, the other stating the job in 23px
               italic. This is Create's brief — it has none, and "Make anything"
               IS the brief — so it should be set like one. */}
           <Lede>Make anything.</Lede>
-            {/* Placement 1 of the one-a-day rule (§7): ambient, present, not
-                argued. Never in onboarding — this is learned in context. */}
-            <Body style={{ marginTop: 8 }}>
-              No brief and no score. {ONE_A_DAY_AMBIENT}
-            </Body>
+          {/* Placement 1 of the one-a-day rule (§7): ambient, present, not
+              argued. Never in onboarding — this is learned in context. */}
+          <Body style={{ marginTop: 8 }}>
+            No brief and no score. {ONE_A_DAY_AMBIENT}
+          </Body>
 
-            <View style={{ marginTop: 14 }}>
-              <ChipRow
-                items={['All', ...rails]}
-                value={c.filter}
-                onChange={(v) => c.setFilter(v as Category | 'All')}
-              />
+          <View style={{ marginTop: 20 }}>
+            <View style={s_row}>
+              <Kick>your look</Kick>
+              <Tiny color={palette.ink} style={{ fontFamily: 'Archivo_700Bold' }}>
+                {c.picks.length} of {MAX_PIECES}
+              </Tiny>
             </View>
 
-            <GarmentGrid
-              style={{ marginTop: 11 }}
-              items={visible.map((n) => ({
-                name: n,
-                image: garmentImage(n),
-                selected: isPicked(c.picks, n),
-                /* A filled slot dims but stays tappable — picking into it
-                   swaps rather than refusing. */
-                dimmed: isSlotOccupied(c.picks, slotOf(n)) && !isPicked(c.picks, n),
-              }))}
-              onPress={c.toggle}
-            />
-            <Gap />
-          </Scroll>
-        </>
+            <View style={{ marginTop: 9 }}>
+              <SlotGrid cells={cells} onOpen={openSlot} />
+            </View>
+
+            <View style={{ marginTop: 12 }}>
+              <Bar progress={c.picks.length / MAX_PIECES} />
+            </View>
+
+            <Tiny style={{ marginTop: 9 }}>{PIECE_RULE}</Tiny>
+          </View>
+
+          <Gap />
+        </Scroll>
       ) : null}
 
       {/* ── 2 · LOOK — ⚑ the commit ─────────────────────────────────────── */}
@@ -305,6 +326,18 @@ export default function Create() {
           <Gap />
         </Scroll>
       ) : null}
+
+      {/* Outside the Scroll — a Modal has to float over the screen. */}
+      <PiecePicker
+        visible={open !== null}
+        slot={openCell?.slot ?? null}
+        items={pickerItems}
+        pending={pending}
+        onSelect={(n) => setPending((cur) => (cur === n ? null : n))}
+        onConfirm={confirmPick}
+        onRemove={openCell?.name ? removePick : undefined}
+        onCancel={closePicker}
+      />
 
       <Foot>
         {c.step === 1 ? (

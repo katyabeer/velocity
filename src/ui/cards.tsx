@@ -109,21 +109,28 @@ export function JobStepList({ steps }: { steps: readonly JobStep[] }) {
  * yet, so an outlined disc would be the "not done" mark on a list that is not
  * a checklist — the fill keeps it reading as a numeral rather than a state.
  */
+/**
+ * `title` IS OPTIONAL (7 Sep). A row can be a single sentence, which is what
+ * o7's three steps are now — and the sentence goes in the BODY treatment, not
+ * the title one: `numberedTitle` is 13px uppercase bold, which reads as a
+ * label, and "Build a look that answers a brief" is not a label. With no title
+ * the body loses its top margin so the line sits on the disc's centre.
+ */
 export function NumberedList({
   items,
 }: {
-  items: readonly { title: string; body: string }[];
+  items: readonly { title?: string; body: string }[];
 }) {
   return (
     <View style={s.numbered}>
       {items.map((it, i) => (
-        <View key={it.title} style={s.numberedRow}>
+        <View key={i} style={s.numberedRow}>
           <View style={s.numberedDisc}>
             <Text style={s.numberedNum}>{i + 1}</Text>
           </View>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={s.numberedTitle}>{it.title}</Text>
-            <Text style={s.numberedBody}>{it.body}</Text>
+            {it.title ? <Text style={s.numberedTitle}>{it.title}</Text> : null}
+            <Text style={[s.numberedBody, !it.title && { marginTop: 0 }]}>{it.body}</Text>
           </View>
         </View>
       ))}
@@ -132,6 +139,32 @@ export function NumberedList({
 }
 
 /** `.stat` — a label/value row with a hairline under it. */
+/**
+ * THE STAT GRID — two columns of big numbers, for You.
+ *
+ * Katya, 7 Sep: "less wordy, more visual". The label/value ROW list below is
+ * still right where a value is a sentence ("You backed it" on the result
+ * screen); it is wrong for six counts, where the row's job is to make the
+ * NUMBER the thing you see and a right-aligned 17pt figure beside a 11.5pt
+ * sentence does the opposite.
+ *
+ * `zero` cells go to the rule colour rather than being dropped. That is the
+ * whole day-one argument — see `statCells` in domain/you.ts for why, and for
+ * the one-line way back.
+ */
+export function StatGrid({ cells }: { cells: readonly { label: string; value: string; zero?: boolean }[] }) {
+  return (
+    <View style={s.grid}>
+      {cells.map((c) => (
+        <View key={c.label} style={s.gridCell}>
+          <Text style={[s.gridValue, c.zero && { color: palette.rule }]}>{c.value}</Text>
+          <Text style={[s.gridLabel, c.zero && { color: palette.rule }]}>{c.label}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export function Stat({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
     <View style={[s.stat, last && { borderBottomWidth: 0 }]}>
@@ -452,6 +485,23 @@ const s = StyleSheet.create({
     padding: 14,
   },
   cardInk: { borderWidth: border.mid, borderColor: palette.ink, backgroundColor: palette.cream },
+  /** Two up, hairline-separated by the gap showing the ground through it —
+   *  the same trick the wardrobe grid uses, so no cell needs a border. */
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 },
+  gridCell: { width: '50%', paddingVertical: 10, paddingRight: 10 },
+  gridValue: {
+    fontFamily: 'BigShouldersDisplay_900Black',
+    fontSize: 34,
+    lineHeight: 30,
+    color: palette.ink,
+  },
+  gridLabel: {
+    fontFamily: 'Archivo_400Regular',
+    fontSize: 11,
+    lineHeight: 14.5,
+    color: palette.grey,
+    marginTop: 4,
+  },
   stat: {
     flexDirection: 'row',
     justifyContent: 'space-between',

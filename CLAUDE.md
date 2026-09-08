@@ -90,8 +90,10 @@ change:
    version B, which was rejected.
 2. **Mark-then-mint.** Tokens land on the tenth call, never during. Minting on the spot
    lets someone cast one vote, take three pieces and leave.
-3. **6 pieces max, 3 min, one piece per slot except Extra, which takes two** —
-   briefs *and* freestyle. Amended 3 Sep 2026 (Katya); it was 5 max. Extra is the
+3. **6 pieces max, 4 min, one piece per slot except Extra, which takes two** —
+   briefs *and* freestyle. Amended 3 Sep 2026 (Katya); it was 5 max. **The floor
+   moved 3 → 4 on 7 Sep (Katya)** — `MIN_PIECES` in `domain/entry.ts` carries
+   what that gates and what it costs. Extra is the
    only slot that doubles because the delivery sheet's flat-lay template is the
    only thing that can hold a second piece there. `MAX_PIECES` is derived from
    `SLOT_CAPACITY`, so don't hand-write the number.
@@ -118,7 +120,10 @@ change:
     DraftKings precedents, not a simplification.
 14. **Performance history never appears in the builder.** Wardrobe and result screen only.
 15. **Builder filters are by garment type and nothing else.** Nothing is sorted by what
-    "goes with" the brief — deciding that is the skill being tested.
+    "goes with" the brief — deciding that is the skill being tested. ⟲ 7 Sep:
+    the category chips are gone and a SLOT opens its own pieces instead
+    (`ui/SlotBuilder.tsx`). Same axis — a slot *is* a garment type — reached by
+    tapping the thing you are filling rather than by choosing a chip.
 16. **Nothing is bought, sold, traded, gifted or lost.**
 17. **Judging opens only after entry closes** (20:00). The anti-copying rule is a
     consequence of the schedule, not a rule.
@@ -448,6 +453,56 @@ A fresh session will be tempted by several of these. They were tried and rejecte
 - The `tonight's job` block on the day's step 2 — a kicker, the challenge title
   and a divider above them. The brief is on the screen you just came from,
   permanently, above the grid you picked the pieces out of
+- **The builder as a catalogue.** It was a scrolling grid of every garment in
+  the pool with category chips over it and a sticky six-cell strip above
+  reading back what you had picked — so the slots were a read-out and the
+  catalogue was the screen, on a task whose whole question is the empty slot.
+  ⟲ 7 Sep: the six slots ARE the screen, 3×2, and a slot opens a drawer of its
+  own category (`ui/SlotBuilder.tsx`). What went with the grid: the chips,
+  `railsFor`, the pinned strip, `SlotStrip`, and the separate loaner section —
+  the two loaners now appear inside their own slot's drawer, flagged NEW, which
+  is where someone filling that slot actually meets them
+- "Tap a filled slot to put it back" as the removal gesture. Tapping a filled
+  slot opens the drawer now, so removal is a control inside it (**Take it
+  out**). The old gesture was faster but undiscoverable, and one tap did two
+  different things depending on state
+- The label/value ROW list under You's Stats. It is a **two-up grid of big
+  numbers** (`StatGrid`, 7 Sep — "less wordy, more visual"): the row's job is
+  to make the number the thing you see, and a right-aligned 17pt figure beside
+  an 11.5pt sentence did the opposite. `Stat` itself stays — the result screen
+  uses it for values that are sentences ("You backed it")
+- The grey `LookPlate` strips on You. Finished generations, so they are
+  `RenderedLook` photographs, with the band under each — same ruling as the
+  drawers and the wardrobe archive
+- The label-plus-sentence pairs in o7's three steps ("Be the stylist / Build a
+  look that answers the brief.", and two more). One line per step now, in the
+  BODY treatment — `numberedTitle` is 13px uppercase and a sentence set in it
+  reads as a label, so `NumberedList`'s `title` went optional
+- "Who's wearing it?" as the casting screen's heading, and "Changes the
+  generation, not the clothes. Set it once and reuse it." under it. It is
+  **Model customisation** now (Katya, 7 Sep) — see the open question, because
+  those words were load-bearing rather than decorative
+- "Once you enter, nothing can be changed." as the whole of step 2's body — it
+  lasted one round. Katya's replacement says the same thing and adds what the
+  button does, which on a commit screen is the point
+- **The captions on the judging plates** — the occasion as a kicker plus the
+  full piece list, in an accent block over the bottom of each photograph, on
+  every pair of the round. The occasion is identical on both plates and named
+  above them; the piece list is a spec sheet under a question asking which look
+  WORKS; and reading two of them was most of the work on a screen that wants a
+  glance and a tap. `LookPlate` still captions elsewhere — You, `ResultCard`,
+  the magazine — so it is `showCaption={false}` on the pair, not a deletion
+- The first-pair line on the voting screen ("The same job you just answered.
+  Nobody can enter now, so seeing these can't change anyone's look — including
+  yours."). It argued the anti-copying rule at someone who had not asked, and
+  that rule is a consequence of the 8pm schedule (invariant 17) which the black
+  strip at the top of the same screen already states. Every pair gets the count
+  now. The challenge title under the question went 13px → 19px italic at the
+  same time: it is the only place the job is named on the screen now
+- "The generation comes after, and at 8pm you judge the field alongside
+  everyone else" on the day's step 2. Both halves are on the step ribbon
+  directly above it — GENERATE and VOTE are steps 3 and 4 — and the commit
+  screen's one job is to say what the commit costs
 - "You won't know when each lands…" under *See upcoming challenges*. It argued
   for the tap instead of offering it, and the screen it leads to makes the
   point with the list in front of you
@@ -495,6 +550,13 @@ Search for `⚠` to find every one. All are Katya's or Jack's call, not yours.
 | `domain/magazine.ts` (`VOCABULARY_UNSWEPT`) | **brief / job / challenge — three words for one object** across four documents, and the rail now says `Challenges`. Cheap to sweep now, expensive once the demo script is rewritten. The rail argues for *challenge* |
 | `data/challenges.ts` (`CHALLENGES` order) | the first two entries after the open one ARE THE SCHEDULE — `nextChallenge()` reads the list in order, so the locked preview card names whatever sits at index 2. Reordering the pool silently reorders the month |
 | `data/challenges.ts` (`REVEAL_NEXT_BRIEF`) | the locked next-challenge card NAMES tomorrow's job, which reveals the month's order — withheld everywhere else on purpose ("publish the month's jobs, withhold the order… browsing gets a purpose without becoming shopping for tonight"). Naming it the evening before hands someone thirteen hours to acquire for it. Built as asked, 4 Sep; one line to turn the reveal off and keep the lock |
+| `data/you.ts`, `you/index.tsx` (`seeded`) | **DAY 2 ON `You` IS A FIXTURE NOW** (Katya, 7 Sep — "mock data and display what is suggested for Day 3"). It used to be read entirely from the stores, which is why the screen was nearly empty: on day 2 the prototype genuinely holds one archive row and zero reactions. The cost, accepted so the PROGRESSION is demonstrable: a participant who enters a look on day 2 does not see it, and the numbers do not move. **Day 1 is still entirely real** |
+| `domain/you.ts` (`statCells`) | ⟲ **you-brief q1 IS REOPENED.** Day 1 shows the full grid of zeros in the RULE COLOUR, per her day-1 mock — which answers the do-not-re-propose objection ("zeros are an accusation") rather than ignoring it: greyed, they carry the shape of the page on the one day nothing else can. `keepZeros: false` at the call site is the whole way back |
+| `ui/ReactionsChart.tsx` | the chart is **fixture-fed and animated on focus**. Its series and `reactionsReceived` in the rollup are two separate numbers that must stay in step — the series sums to 6 and so does the stat. Derive one from the other when real reaction data exists |
+| `casting.tsx` | **THE SCREEN IS CONFIGURATION NOW, NOT CASTING** (Katya, 7 Sep). "Who's wearing it?" plus "changes the generation, not the clothes" is what made it a production decision about the photograph rather than a description of the user — and §10.7 / §13.4 hold *no bodies, no fit* with ART DIRECTION as the defensible claim. "Model customisation" / "customise the model" are configuration words: they read closer to the body-picker the casting framing exists to avoid, and they drop the "not the clothes" clause that kept the two apart. Nearest thing that keeps her structure and the position: "Customise the model wearing your outfit — it changes the generation, not the clothes." Jack should see it |
+| `onboarding/first-challenge.tsx` (`LOOP`) | row 2 lost "**Everyone else votes on yours**" — the only place onboarding said the voting goes BOTH ways, which is what made that step more than a chore. Open question D is wider again, not narrower |
+| `data/challenges.ts` (`TONIGHTS_BRIEF`) | **ONE BRIEF, THREE NOTES.** `note`, the new `shortNote` (o7's card), and `CHALLENGES[0].note` on the upcoming list — none derived from the others, so a wording change has to be made three times or the screens disagree |
+| `today/rendering.tsx` | **THREE VERBS FOR ONE THING ON ONE SCREEN** — the ribbon step says GENERATE, the heading says "we're BUILDING your look", and Katya's new body (7 Sep) says "we're CREATING your look". The 4 Sep ruling is that every user-visible string says *generate*. The body also restates the heading, so dropping its first clause fixes both at once. One line; her copy, so her call |
 | `today/challenges.tsx` | **"pinch the right items" is on screen** (Katya's copy, 7 Sep). Invariant 18 holds that the currency is TOKENS, "never keeps or pinches", because the naming is a regulatory position — the prototype's `S.pinch` was renamed for it and "pinches earned" is on the do-not-re-propose list. The sentence does not call a token a pinch, so it is not the letter of the invariant; it does put the word back as the VERB for acquiring a garment, where the app says TAKE everywhere else. One word fixes it. Jack should see it |
 | `today/challenges.tsx` (the bottom hint) | the gap signal — "you are thin on tailoring and you own one pair of decent shoes" — is a HARDCODED FIXTURE, wired to no inventory, and it now sits below the fold under the new subheading, which says the same thing honestly. Katya asked to "remove the rest of the copy" from a screenshot that did not reach it, so it was kept. Say if it goes: the header comment calls it "the whole mechanism", but a fake personalised read is worse than none |
 | `ui/RenderedLook.tsx` | **THERE IS NO DAY-2 ASSET SET.** Katya asked for "one of the day 2 looks from the asset library"; `assets/looks/` holds one folder, `d1` — 14 judging and 14 magazine photographs, nothing else ever delivered. The stand-ins come from the magazine set, led by `look_d1_mag_06` because `data/looks.ts` already flags that fixture as `mine`. Say if a day-2 set exists and this should point at it |

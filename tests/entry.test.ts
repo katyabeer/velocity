@@ -28,8 +28,10 @@ const owned = (name: string) => ({ name, source: 'owned' as const });
 const build = (...names: string[]): Pick[] =>
   names.reduce<Pick[]>((acc, n) => togglePick(acc, owned(n)), []);
 
-test('the slot rules are 3 minimum and 6 maximum, over five slots', () => {
-  assert.equal(MIN_PIECES, 3);
+test('the slot rules are 4 minimum and 6 maximum, over five slots', () => {
+  /* The floor moved 3 -> 4 on 7 Sep (Katya). See MIN_PIECES for what it
+     gates and what it costs. */
+  assert.equal(MIN_PIECES, 4);
   assert.equal(MAX_PIECES, 6);
   assert.equal(SLOTS.length, 5, 'still five slots — the sixth piece is a second Extra');
 });

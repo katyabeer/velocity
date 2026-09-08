@@ -36,23 +36,23 @@
  * invariant 5 intact with no re-roll machinery.
  */
 
+import { useState } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
-import { Foot, Gap, Header, Pinned, Screen, Scroll } from '@/ui/layout';
+import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
 import { Hero, Lede, Body, Tiny, Kick, B } from '@/ui/text';
-import { Bar, Button, ChipRow } from '@/ui/controls';
+import { Bar, Button } from '@/ui/controls';
 import { StepRibbonBleed, statesFor } from '@/ui/StepRibbon';
-import { GarmentGrid, SlotStrip } from '@/ui/pieces';
+import { PiecePicker, SlotGrid } from '@/ui/SlotBuilder';
 import { ComposedFlatLay, TIGHTEN_PREVIEW } from '@/ui/ComposedFlatLay';
-import { palette, border } from '@/theme/tokens';
-import { CATEGORIES, categoryOf, slotOf, type Category } from '@/domain/garments';
+import { palette } from '@/theme/tokens';
+import { slotOf } from '@/domain/garments';
 import {
   ENTRY_STEPS,
   LOANS_PER_BRIEF,
   MAX_PIECES,
   MIN_PIECES,
-  isPicked,
-  isSlotOccupied,
+  PIECE_RULE,
   loansUsed,
   slotStrip,
 } from '@/domain/entry';
@@ -64,19 +64,10 @@ import { useSession } from '@/state/session';
 import { useWardrobe } from '@/state/wardrobe';
 import { useEconomy } from '@/state/economy';
 
-/**
- * The rails: every category the pool actually holds, in canonical order.
- *
- * Narrowed to what is PRESENT because an empty rail is a dead end — on Day 2 a
- * thin wardrobe would otherwise show six rails and fill one. Drawn from the
- * domain's full CATEGORIES rather than the catalogue's six, so a legacy fixture
- * name that classifies as Accessories (Established's 'silk scarf') is still
- * reachable by filter and not only under All.
- */
-function railsFor(pool: readonly string[]): Category[] {
-  const present = new Set(pool.map(categoryOf));
-  return CATEGORIES.filter((c) => present.has(c));
-}
+/* `railsFor` went with the category chips (Katya, 7 Sep). It narrowed the rail
+   list to the categories the pool actually held, so an empty rail could never
+   be a dead end — the same job the picker now does by construction, because a
+   slot's drawer only ever contains that slot's pieces. */
 
 export default function Build() {
   const day = useSession((s) => s.day);
@@ -86,12 +77,10 @@ export default function Build() {
   const owned = useWardrobe((s) => s.pieces);
   const picks = useEntry((s) => s.picks);
   const step = useEntry((s) => s.step);
-  const filter = useEntry((s) => s.filter);
   const entered = useEntry((s) => s.entered);
   const toggle = useEntry((s) => s.toggle);
   const putBack = useEntry((s) => s.putBack);
   const setStep = useEntry((s) => s.setStep);
-  const setFilter = useEntry((s) => s.setFilter);
   const callsCast = useEconomy((s) => s.callsCast);
   const quota = useEconomy((s) => s.quota);
 
@@ -108,15 +97,67 @@ export default function Build() {
       ? BUILDER_POOL_ESTABLISHED
       : owned.map((p) => p.name);
 
-  const visible = pool.filter((n) => filter === 'All' || categoryOf(n) === filter);
   const loansLeft = LOANS_PER_BRIEF - loansUsed(picks);
 
-  const strip = slotStrip(picks).map((sl) => ({
+  const cells = slotStrip(picks).map((sl) => ({
     slot: sl.slot,
     name: sl.pick?.name,
     isLoan: sl.pick?.source === 'loan',
     image: sl.pick ? garmentImage(sl.pick.name) : undefined,
   }));
+
+  /* ══ THE PICKER'S STATE, AND IT IS POSITIONAL ══
+     `open` is a CELL INDEX, not a slot, because two cells are both `Extra`.
+     `pending` is the selection the drawer is holding; nothing reaches the look
+     until Confirm, which is what makes Cancel mean something. */
+  const [open, setOpen] = useState<number | null>(null);
+  const [pending, setPending] = useState<string | null>(null);
+
+  const openCell = cells[open ?? -1];
+
+  /**
+   * What the drawer offers for the open cell: everything in the pool that
+   * classifies into that slot, plus the two loaners if any are left, MINUS
+   * anything already used in another cell.
+   *
+   * The exclusion matters for `Extra`: without it the second Extra's drawer
+   * would offer the piece sitting in the first, and `toggle` would read that
+   * as a de-selection and quietly remove it from the look.
+   */
+  const usedElsewhere = new Set(picks.map((p) => p.name).filter((n) => n !== openCell?.name));
+  const loanable: readonly string[] = firstRun || loansLeft <= 0 ? [] : LOAN_PIECES;
+  const pickerItems = openCell
+    ? [...pool, ...loanable]
+        .filter((n) => slotOf(n) === openCell.slot && !usedElsewhere.has(n))
+        .map((n) => ({ name: n, image: garmentImage(n), isLoan: LOAN_PIECES.includes(n as never) }))
+    : [];
+
+  const openSlot = (i: number) => {
+    setOpen(i);
+    setPending(cells[i]?.name ?? null);
+  };
+
+  const closePicker = () => {
+    setOpen(null);
+    setPending(null);
+  };
+
+  /* Take the cell's current piece out FIRST, then put the new one in. Order is
+     load-bearing on `Extra`: adding before removing would hit the two-piece
+     cap and `toggle` would evict the wrong accessory. */
+  const confirmPick = () => {
+    const was = openCell?.name;
+    if (was && was !== pending) putBack(was);
+    if (pending && pending !== was) {
+      toggle(pending, LOAN_PIECES.includes(pending as never) ? 'loan' : 'owned');
+    }
+    closePicker();
+  };
+
+  const removePick = () => {
+    if (openCell?.name) putBack(openCell.name);
+    closePicker();
+  };
 
   const ribbon = statesFor(
     ENTRY_STEPS.map((s) => ({ label: s.label })),
@@ -159,60 +200,16 @@ export default function Build() {
 
       <StepRibbonBleed steps={ribbon} />
 
-      {/* ══ YOUR LOOK SITS ABOVE THE BRIEF (Katya, 4 Sep) ══
-          They were the other way round. The two swapped because only one of
-          them needs to be permanently on screen: the slot strip is the thing
-          you are filling and it has to stay put while you scroll a grid of
-          sixty garments, whereas the brief is read once at the start.
-
-          STICKY BY CONSTRUCTION, not by a prop — `Pinned` sits OUTSIDE the
-          `Scroll`, so it cannot move. The brief moved INTO the Scroll for the
-          same reason, and now yields its space as you browse rather than
-          holding the top of the screen for the rest of the session. */}
-      {step === 1 ? (
-        <Pinned>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <Kick>your look</Kick>
-            <Tiny color={palette.ink} style={{ fontFamily: 'Archivo_700Bold' }}>
-              {picks.length} of {MAX_PIECES}
-            </Tiny>
-          </View>
-          <View style={{ marginTop: 8 }}>
-            <SlotStrip slots={strip} onClear={(name: string) => putBack(name)} />
-          </View>
-          <View style={{ marginTop: 9 }}>
-            <Bar progress={picks.length / MAX_PIECES} />
-          </View>
-          {/* NO INSTRUCTION UNDER THE STRIP (Katya, 4 Sep). "Tap a filled slot
-              to put it back. The last two are both for extras." explained two
-              things the strip itself shows: a filled slot is obviously filled,
-              and the two EXTRA labels are already side by side. It was the
-              last thing between the strip and the grid on the one screen where
-              seeing the clothes is the whole job. Both behaviours are
-              unchanged. */}
-        </Pinned>
-      ) : null}
+      {/* ══ NOTHING IS PINNED ANY MORE (Katya, 7 Sep) ══
+          The slot strip used to be sticky, outside the `Scroll`, and the
+          reason was the sixty-tile grid it had to survive: you needed to see
+          what you were filling while you scrolled the catalogue. There is no
+          catalogue on this screen now — the slots ARE the screen and the
+          catalogue is what a slot opens — so there is nothing to stay put
+          against, and `Pinned` came off with the grid. */}
 
       {step === 1 ? (
-        /* `contentStyle` trims the Scroll's own 20pt top pad. `Pinned` already
-           contributes 12 of its own, so the default put ~36pt between the slot
-           strip and the brief — see the note on the Lede below. */
-        <Scroll contentStyle={{ paddingTop: 8 }}>
-          {/* The job, and only the job. Its explainer line ("Cold field, warm
-              marquee…") came off on 4 Sep — the brief is the title, and the
-              sentence under it was read once and then occupied the top of the
-              screen for the rest of the session. It is still the first thing a
-              new user meets, on the first-challenge screen.
-
-              STEP 1 ONLY. Step 2 states the job itself under its own kicker,
-              so leaving this there printed the same title twice on one
-              screen. */}
-          {/* Tight to the slot strip above it (Katya, 4 Sep). Between
-              `Pinned`'s own 12pt bottom pad, the Scroll's 20pt top pad and a
-              13pt margin here, there were ~36pt between the thing you are
-              filling and the job it answers — they belong together. Now 20,
-              and NOT zero: the earlier note on this file records that when the
-              two blocks touched they read as one. */}
+        <Scroll>
           {/* A kicker names it, so the title does not have to carry the job of
               saying what it is (Katya, 4 Sep) — which is why it can come down
               from `Lede`'s 23px. */}
@@ -221,61 +218,40 @@ export default function Build() {
             {TONIGHTS_BRIEF.title}
           </Lede>
 
-          {/* NO LABEL OVER THE FILTERS, and that is settled rather than
-              missing (Katya, 4 Sep). It read "everything we have" — which
-              describes the POOL rather than the task, and said "your wardrobe"
-              on Day 2, which the Wardrobe tab already owns. Renaming it to
-              "Pick your pieces" put that phrase on the screen twice, since the
-              header says it too, so it came off entirely. The header names the
-              screen; the chips are self-evident.
-
-              The count went with it: sixty is a fact about the catalogue, not
-              about the decision, and it sat where the eye lands after reading
-              the brief. */}
-          <View style={{ marginTop: 18 }}>
-            <ChipRow
-              items={['All', ...railsFor(pool)]}
-              value={filter}
-              onChange={(v) => setFilter(v as Category | 'All')}
-            />
-          </View>
-
-          <GarmentGrid
-            style={{ marginTop: 11 }}
-            items={visible.map((n) => ({
-              name: n,
-              image: garmentImage(n),
-              selected: isPicked(picks, n),
-              /* A FULL slot dims, but stays tappable — picking into it swaps
-                 rather than refusing. Extra with one piece in it is not full,
-                 so it does not dim. */
-              dimmed: isSlotOccupied(picks, slotOf(n)) && !isPicked(picks, n),
-            }))}
-            onPress={(n) => toggle(n, 'owned')}
-          />
-
-          {/* ── the two loaners. Not on the first run: you already have the
-                whole catalogue, so "pieces you don't own" would be untrue. ── */}
-          {firstRun ? null : (
-            <View style={{ marginTop: 18, paddingTop: 14, borderTopWidth: border.hair, borderTopColor: palette.ink }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <Kick tone="alert">new — unlocked for tonight</Kick>
-                <Tiny color={palette.ink}>{loansLeft}</Tiny>
-              </View>
-              <Body style={{ marginTop: 6 }}>
-                Two pieces you don&apos;t own, yours to use for this job only. They go back at close.
-              </Body>
-              <GarmentGrid
-                style={{ marginTop: 10 }}
-                items={LOAN_PIECES.map((n) => ({
-                  name: n,
-                  image: garmentImage(n),
-                  selected: isPicked(picks, n),
-                }))}
-                onPress={(n) => toggle(n, 'loan')}
-              />
+          {/* ══ THE SIX SLOTS, 3 x 2, AND THEY ARE THE SCREEN NOW ══
+              What came off with the grid (Katya, 7 Sep):
+                · the category chips — a slot IS the category, so choosing one
+                  and then filtering to it was the same decision twice
+                · sixty garment tiles — now behind whichever slot you tap
+                · the separate loaner section — the two loaners live inside the
+                  drawer for their own slot, flagged NEW, which is where
+                  someone filling that slot will actually meet them
+              See ui/SlotBuilder.tsx for why this shape is the right way round. */}
+          <View style={{ marginTop: 20 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <Kick>your look</Kick>
+              <Tiny color={palette.ink} style={{ fontFamily: 'Archivo_700Bold' }}>
+                {picks.length} of {MAX_PIECES}
+              </Tiny>
             </View>
-          )}
+
+            <View style={{ marginTop: 9 }}>
+              <SlotGrid cells={cells} onOpen={openSlot} />
+            </View>
+
+            <View style={{ marginTop: 12 }}>
+              <Bar progress={picks.length / MAX_PIECES} />
+            </View>
+
+            {/* THE RULE, SUCCINCTLY — and derived, so it cannot drift from the
+                gate that enforces it. See PIECE_RULE in domain/entry.ts. */}
+            <Tiny style={{ marginTop: 9 }}>
+              {PIECE_RULE}
+              {firstRun || loansLeft <= 0
+                ? ''
+                : ` ${loansLeft} of the pieces on offer are loaners for tonight.`}
+            </Tiny>
+          </View>
 
           <Gap />
         </Scroll>
@@ -295,9 +271,17 @@ export default function Build() {
               screen ask "which job was this again" on the reader's behalf,
               and answered it with the loudest type on the page. */}
           <Hero>{'Preview\nyour look.'}</Hero>
+          {/* Katya's copy, 7 Sep — replacing "Once you enter, nothing can be
+              changed." It says the same thing and adds what the button does,
+              which on the commit screen is the whole point.
+
+              ⚠ ONE TYPO FIXED: "All look generations and final" → "ARE
+              final". Left as dictated it is the one sentence on the screen
+              that has to be unambiguous, so it was corrected rather than
+              shipped. Say if you meant something else by it. */}
           <Body style={{ marginTop: 10 }}>
-            Once you enter, <B>nothing can be changed</B>. The generation comes after, and at 8pm
-            you judge the field alongside everyone else.
+            Press &lsquo;Submit&rsquo; below and your outfit will be submitted for generation.{' '}
+            <B>All look generations are final</B>, so use wisely!
           </Body>
           <View style={{ marginTop: 16 }}>
             {/* Tightened, so the pieces read as one arrangement rather than a
@@ -307,6 +291,21 @@ export default function Build() {
           <Gap />
         </Scroll>
       )}
+
+      {/* Outside the Scroll — a Modal has to float over the screen rather than
+          scroll with it. Mounted for both steps: harmless on step 2, where it
+          is never visible, and it keeps the tree stable across the step
+          change. */}
+      <PiecePicker
+        visible={open !== null}
+        slot={openCell?.slot ?? null}
+        items={pickerItems}
+        pending={pending}
+        onSelect={(n) => setPending((cur) => (cur === n ? null : n))}
+        onConfirm={confirmPick}
+        onRemove={openCell?.name ? removePick : undefined}
+        onCancel={closePicker}
+      />
 
       <Foot>
         <Button

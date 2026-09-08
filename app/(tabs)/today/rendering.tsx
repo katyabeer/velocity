@@ -48,7 +48,7 @@
 import { useEffect } from 'react';
 import { router } from 'expo-router';
 import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
-import { Big, Body, Kick, B } from '@/ui/text';
+import { Big, Body, Kick } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { StepRibbonBleed, statesFor } from '@/ui/StepRibbon';
 import { ENTRY_STEPS } from '@/domain/entry';
@@ -138,10 +138,27 @@ export default function Rendering() {
         <Big style={{ marginTop: 7 }}>
           {`We’re building your\nlook right now.`}
         </Big>
+        {/* ⚠ TWO THINGS TO RAISE, BOTH ONE LINE TO FIX, NEITHER DECIDED HERE.
+            1. The heading above says "We're building your look right now" and
+               this opens "We're creating your look" — the same statement
+               twice, in two verbs. Dropping the body's first clause leaves
+               "It takes about a minute! Why not complete today's
+               challenge…", which loses nothing.
+            2. THREE VERBS for one thing on one screen: the ribbon step says
+               GENERATE, the heading says BUILDING, this says CREATING. The
+               4 Sep ruling was that every user-visible string says GENERATE
+               ("render is generate in COPY ONLY"). Same class as the
+               brief/job/challenge sweep in domain/magazine.ts.
+
+            Katya's copy, 7 Sep. What it replaced: "All N pieces, exactly as
+            you picked them. It takes about a minute, and you don't have to sit
+            here for it — go and vote, and we'll put a dot on Today the moment
+            it's ready." The piece count was a receipt for a decision two
+            screens back, and "you don't have to sit here for it" argued
+            against a worry the reader may not have had. This one offers the
+            vote as the way to FINISH THE JOB, which is what it is. */}
         <Body style={{ marginTop: 8 }}>
-          All {picks.length} pieces, exactly as you picked them. It takes about a minute, and you
-          don&apos;t have to sit here for it — <B>go and vote</B>, and we&apos;ll put a dot on Today
-          the moment it&apos;s ready.
+          {'We’re creating your look — it takes about a minute!\nWhy not complete today’s challenge by voting on other people’s entries — and we’ll let you know when your look is ready.'}
         </Body>
 
         <Gap />

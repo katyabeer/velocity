@@ -32,13 +32,18 @@
  * decisions to the client, and do not "correct" them without asking.
  */
 
+import { useState } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Gap, LogoBlock, Screen, Scroll, Sig } from '@/ui/layout';
-import { SigHead, Lede, Body, Tiny, Kick, B, Link } from '@/ui/text';
-import { Button } from '@/ui/controls';
-import { Milestones, Reach, Stat, Roundel, Trend } from '@/ui/cards';
-import { LookPlate } from '@/ui/LookPlate';
+import { SigHead, Hero, Lede, Body, Tiny, Kick, B, Link } from '@/ui/text';
+import { Button, ChipRow } from '@/ui/controls';
+import { Card, Milestones, Reach, Roundel, StatGrid, Trend } from '@/ui/cards';
+import { ConfirmSheet } from '@/ui/ConfirmSheet';
+import { PostRow } from '@/ui/PostRow';
+import { ReactionsChart } from '@/ui/ReactionsChart';
+import { RenderedLook } from '@/ui/RenderedLook';
+import { radius } from '@/theme/tokens';
 import { chipLabel } from '@/domain/tags';
 import {
   REACTIONS_CAPTION,
@@ -54,17 +59,27 @@ import {
   showReactionsCaption,
   showTrend,
   showWardrobeRoute,
-  statRows,
+  statCells,
   topTags,
   type YouRollup,
 } from '@/domain/you';
 import { TAG_HISTORY_ESTABLISHED } from '@/data/inventory';
+import {
+  YOU_DAY_TWO_CAPTION,
+  YOU_DAY_TWO_DAYS,
+  YOU_DAY_TWO_INSIGHT,
+  YOU_DAY_TWO_POSTS,
+  YOU_DAY_TWO_REACTIONS,
+  YOU_DAY_TWO_TAGS,
+} from '@/data/you';
 import { dayConfig } from '@/config/testState';
 import { useSession } from '@/state/session';
 import { useWardrobe } from '@/state/wardrobe';
 import { useEconomy } from '@/state/economy';
 import { useEntry } from '@/state/entry';
 import { useCreate } from '@/state/create';
+import { useMagazine } from '@/state/magazine';
+import { useSubmission } from '@/state/submission';
 
 /** OPEN QUESTION B. Set to false to take the recommendation. */
 const SHOW_STREAK = true;
@@ -90,27 +105,52 @@ function useRollup(): YouRollup {
   const tagHistory = useCreate((s) => s.tagHistory);
 
   const mature = day >= 3;
-  const looks = mature ? 118 : archive.length;
+  /**
+   * ⚠ DAY 2 IS A FIXTURE NOW (Katya, 7 Sep: "for Day 2 please mock data and
+   * display what is suggested for Day 3"). It used to be read entirely from
+   * the stores, and that is why the screen had almost nothing on it: on day 2
+   * the prototype genuinely holds one archive row and zero reactions, because
+   * there is no server and nobody has reacted to anything.
+   *
+   * The point of the change is to make the PROGRESSION demonstrable — day 1
+   * empty, day 2 forming — which cannot be shown from real state in a
+   * prototype that reboots on save. See data/you.ts for what that costs: a
+   * participant who enters a look on day 2 will not see it here, and the
+   * numbers do not move.
+   *
+   * DAY 1 IS STILL ENTIRELY REAL. Enter a look on day 1 and every figure on
+   * this screen moves, which is the case that matters for the walkthrough.
+   */
+  const seeded = day === 2;
+  const looks = mature ? 118 : seeded ? YOU_DAY_TWO_POSTS.length : archive.length;
 
   return {
     looks,
     /* SETTLED, not filed. A look banded 'live' or 'free' has no result yet,
        and the trend line is a line through results. */
-    looksSettled: mature ? 74 : archive.filter((a) => a.band !== 'live' && a.band !== 'free').length,
+    looksSettled: mature
+      ? 74
+      : seeded
+        ? 2
+        : archive.filter((a) => a.band !== 'live' && a.band !== 'free').length,
     piecesOwned: count,
-    piecesTaken: mature ? 31 : held.length,
-    distinctTakers: mature ? 6 : day === 2 ? 2 : 0,
-    jobsEntered: mature ? 74 : entered || day === 2 ? 1 : 0,
-    freestylePosts: mature ? 44 : archive.filter((a) => a.band === 'free').length,
-    judgingRounds: mature ? 96 : roundComplete || day === 2 ? 1 : 0,
-    streakDays: mature ? 9 : day === 2 ? 2 : 0,
-    reactionsReceived: mature ? 212 : 0,
-    distinctReactors: mature ? 88 : 0,
+    piecesTaken: mature ? 31 : seeded ? 4 : held.length,
+    distinctTakers: mature ? 6 : seeded ? 1 : 0,
+    jobsEntered: mature ? 74 : seeded ? 2 : entered ? 1 : 0,
+    freestylePosts: mature ? 44 : seeded ? 1 : archive.filter((a) => a.band === 'free').length,
+    judgingRounds: mature ? 96 : seeded ? 3 : roundComplete ? 1 : 0,
+    streakDays: mature ? 9 : seeded ? 3 : 0,
+    /* The reaction totals the chart and the counting number both read. Keep
+       them and YOU_DAY_TWO_REACTIONS in step — the series sums to 6. */
+    reactionsReceived: mature ? 212 : seeded ? 6 : 0,
+    distinctReactors: mature ? 88 : seeded ? 5 : 0,
     /* FROM THE REACTION VOCABULARY (AC 11). It used to be the word `brave`,
        which is in neither vocabulary — the old register list — so the screen
        could say "you build quiet and the room reads you as sharp" out of a
        vocabulary containing neither word. */
-    modalRead: mature ? 'bold' : null,
+    /* Day 2 has been read twice `fresh` and once `bold`, so the modal read is
+       `fresh` — the sentence says what the room said MOST, not last. */
+    modalRead: mature ? 'bold' : seeded ? 'fresh' : null,
     /* YOUR OWN construction words, not the room's. AC 11 constrains words
        describing how the room read you; these describe what you build, so they
        are free to stay. */
@@ -118,7 +158,13 @@ function useRollup(): YouRollup {
     /* Real tags typed this session rank ALONGSIDE Established's fixture
        history rather than replacing it, so the section still responds to what
        you do. Days 1 and 2 are entirely real. */
-    topTags: topTags(mature ? [...tagHistory, ...TAG_HISTORY_ESTABLISHED] : tagHistory),
+    topTags: topTags(
+      mature
+        ? [...tagHistory, ...TAG_HISTORY_ESTABLISHED]
+        : seeded
+          ? [...tagHistory, ...YOU_DAY_TWO_TAGS]
+          : tagHistory,
+    ),
     mostUsedPieces: mature
       ? [
           { value: '9', label: 'black knit' },
@@ -127,7 +173,7 @@ function useRollup(): YouRollup {
           { value: '5', label: 'red bag' },
         ]
       : [],
-    closeCallsJudged: mature ? 61 : 0,
+    closeCallsJudged: mature ? 61 : seeded ? 3 : 0,
   };
 }
 
@@ -143,8 +189,40 @@ export default function You() {
   const tips = qualifyingTips(r);
   const chips = sentenceChips(r);
   const read = roomClause(r.modalRead);
-  const stats = statRows(r, SHOW_STREAK);
+  /* ZEROS KEPT ON DAY ONE ONLY. See `statCells` in domain/you.ts — this is
+     the one line that decides it, and it reopens you-brief q1. */
+  const stats = statCells(r, SHOW_STREAK, { keepZeros: r.looks === 0 });
   const words = r.topTags;
+
+  const seeded = day === 2;
+  const [postFilter, setPostFilter] = useState<string>('All');
+  const [confirmOut, setConfirmOut] = useState(false);
+
+  /* Every store back to its day-1 shape, then out to the front door. There is
+     no auth in this prototype, so "log out" can only mean "start again" —
+     which is also the most useful thing it can do in a moderated session
+     (it is how you reset between participants without editing testState).
+
+     ⚠ IT IS BEHIND A CONFIRM DELIBERATELY. A participant tapping this out of
+     curiosity mid-session would lose the whole run, and that is the one
+     genuinely destructive control on the screen. */
+  const logOut = () => {
+    useSession.getState().resetToDay(1);
+    useEconomy.getState().resetToDay(1);
+    useEntry.getState().reset();
+    useCreate.getState().startAgain();
+    useMagazine.getState().reset();
+    useSubmission.getState().reset();
+    router.replace('/onboarding/splash');
+  };
+
+  const posts = seeded
+    ? YOU_DAY_TWO_POSTS.filter(
+        (post) =>
+          postFilter === 'All' ||
+          (postFilter === 'Freestyle' ? post.kind === 'freestyle' : post.band === postFilter),
+      )
+    : [];
 
   return (
     <Screen>
@@ -194,6 +272,49 @@ export default function You() {
           </Sig>
         ) : null}
 
+        {/* ══ DAY ONE'S LEAD — the only thing on the page that is a PROMISE ══
+            Katya's day-1 concept, 7 Sep. Every other section on this screen
+            waits until it has something true to say, which on day one leaves
+            the page opening on an empty state — so the one line that IS
+            honest on day one is the page introducing itself.
+
+            ONE SENTENCE, not the mock's three ("less wordy, more visual").
+            The mock's paragraph lists what the page will eventually hold —
+            what you reach for, how the room reads it, where your eye is sharp
+            — which is the page describing its own feature set. The sections
+            below already show their shape; this only has to say that they
+            fill themselves in. */}
+        {r.looks === 0 ? (
+          <Sig>
+            <Hero size={30}>{'Nice to\nmeet you.'}</Hero>
+            <Body style={{ marginTop: 10 }}>
+              This page fills itself in as you build, judge and get read.
+            </Body>
+          </Sig>
+        ) : null}
+
+        {/* ══ NOTICED — the first insight, and it is the CHEAP kind ══
+            Day 2 only. Her note: it counts the user's OWN WARDROBE — no cohort
+            maths, no vote history — which is why it can exist on day 2 while
+            `Just for you` below is still absent. Those tips need results
+            behind them and a cohort query; this needs only what you own.
+
+            It is the one place on You with a route out of it, because it is
+            the one observation that names an action. */}
+        {seeded ? (
+          <Sig>
+            <SigHead>Noticed</SigHead>
+            <Card style={{ marginTop: 8, borderRadius: radius.lg, padding: 15 }}>
+              <Kick tone="accent">{YOU_DAY_TWO_INSIGHT.kick}</Kick>
+              <Lede style={{ marginTop: 8 }}>{YOU_DAY_TWO_INSIGHT.title}</Lede>
+              <Body style={{ marginTop: 8 }}>{YOU_DAY_TWO_INSIGHT.body}</Body>
+              <Link style={{ marginTop: 11 }} onPress={() => router.push('/(tabs)/magazine')}>
+                {YOU_DAY_TWO_INSIGHT.cta}
+              </Link>
+            </Card>
+          </Sig>
+        ) : null}
+
         {/* ══ Just for you — ABSENT, not empty, until a tip qualifies ══
             The tips are the expensive item. "Keep going and we'll tell you
             about your eye" is an IOU against a cohort query, and a lone
@@ -230,18 +351,47 @@ export default function You() {
                 onPress={() => router.push('/(tabs)/today')}
               />
             </>
+          ) : seeded ? (
+            <>
+              {/* THE CHIPS ARE LIVE, not decoration. A dead filter rail is on
+                  the do-not-re-propose list (the magazine had one), and with
+                  three posts a working filter costs one `.filter`. They appear
+                  only because there is now more than one category to filter
+                  — on day 1 there is nothing to sort. */}
+              <View style={{ marginTop: 10 }}>
+                <ChipRow
+                  items={POST_FILTERS}
+                  value={postFilter}
+                  onChange={setPostFilter}
+                />
+              </View>
+
+              <View style={{ marginTop: 6 }}>
+                {posts.map((post, i) => (
+                  <PostRow key={post.title} post={post} last={i === posts.length - 1} />
+                ))}
+              </View>
+
+              {/* Why there is no trend line, said once. Two settled results
+                  is a point and a point; `TREND_MIN_SETTLED` is five. */}
+              <Tiny style={{ marginTop: 10 }}>No trend line yet — that needs five settled results.</Tiny>
+            </>
           ) : day >= 3 ? (
             <>
-              <View style={{ flexDirection: 'row', gap: 6, marginTop: 9 }}>
-                <View style={{ flex: 1 }}>
-                  <LookPlate tint="t5" occasion="Top of the room" pieces="Airport" height={120} label="·" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <LookPlate tint="t2" occasion="Upper half" pieces="Interview" height={120} label="·" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <LookPlate tint="t3" occasion="Freestyle" pieces="4 took a piece" height={120} label="·" />
-                </View>
+              {/* PHOTOGRAPHS, not the grey plates (7 Sep). These are finished
+                  generations, and the ruling from earlier the same day is
+                  that every ready look shows as a look — the flat lay and the
+                  grey plate both belong to the states BEFORE one exists. The
+                  band each one earned is under it, because a picture with no
+                  result attached is just clothes. */}
+              <View style={{ flexDirection: 'row', gap: 7, marginTop: 9 }}>
+                {ESTABLISHED_POSTS.map((post, i) => (
+                  <View key={post.band} style={{ flex: 1 }}>
+                    <RenderedLook index={i} />
+                    <Tiny style={{ marginTop: 5 }}>{post.band}</Tiny>
+                    <Tiny>{post.job}</Tiny>
+                  </View>
+                ))}
               </View>
               {/* A trend line through two points is a decoration. */}
               {showTrend(r) ? (
@@ -268,7 +418,7 @@ export default function You() {
                pretending there is one. */
             <View style={{ flexDirection: 'row', gap: 9, marginTop: 9 }}>
               <View style={{ width: '33%' }}>
-                <LookPlate tint="t2" occasion="Upper half" pieces="Interview" height={120} label="·" />
+                <RenderedLook />
               </View>
               <View style={{ flex: 1 }}>
                 <Lede>Your first one is in.</Lede>
@@ -281,20 +431,41 @@ export default function You() {
           )}
         </Sig>
 
-        {/* ══ Stats — ZEROS SUPPRESSED, section kept ══
+        {/* ══ REACTIONS — the animated one ══
+            AFTER the posts, and her note says why: "the posts are the
+            evidence and the chart is the summary of them, so it reads in that
+            order."
+
+            ABSENT until there is something in it. Day one shows no chart at
+            all rather than an empty frame — the same rule as `Just for you`.
+            From day two it is a fixed seven-day window, so filling in reads
+            as progress rather than as the chart changing size.
+
+            See ui/ReactionsChart.tsx for why the animation is a timer and not
+            an `Animated` value; the short version is that the preview pane
+            never fires `requestAnimationFrame`, and an animation that fails
+            there leaves an EMPTY graph rather than a still one. */}
+        {r.reactionsReceived > 0 && seeded ? (
+          <Sig>
+            <SigHead>Reactions</SigHead>
+            <View style={{ marginTop: 9 }}>
+              <ReactionsChart
+                values={YOU_DAY_TWO_REACTIONS}
+                labels={YOU_DAY_TWO_DAYS}
+                caption={YOU_DAY_TWO_CAPTION}
+              />
+            </View>
+          </Sig>
+        ) : null}
+
+        {/* ══ Stats — A GRID OF NUMBERS, zeros greyed on day one ══
               A wall of zeros on day one is the single most demoralising thing
               this screen could do, and it teaches nothing Milestones is not
               already teaching in the register of goals rather than deficits.
               `SUPPRESS_ZERO_STATS` in domain/you.ts is the one-line flip. */}
         <Sig>
           <SigHead>Stats</SigHead>
-          {stats.length ? (
-            <View style={{ marginTop: 6 }}>
-              {stats.map((row, i) => (
-                <Stat key={row.label} label={row.label} value={row.value} last={i === stats.length - 1} />
-              ))}
-            </View>
-          ) : null}
+          {stats.length ? <StatGrid cells={stats} /> : null}
 
           {/* Pre-empts the reading of these numbers as a ranking. Never a
               rate, rank or percentile — reaction volume depends on how often
@@ -348,18 +519,62 @@ export default function You() {
           <View style={{ marginTop: 9 }}>
             <Milestones earned={cfg.milestonesEarned} />
           </View>
+          {/* The count reads back, so the line moves with the ticks rather
+              than needing a case per day. Day 2 earns two now (Filed and
+              Borrowed — see her mock's day 3), which is what broke the old
+              `=== 1` special case. */}
           <Body style={{ marginTop: 9 }}>
-            {cfg.milestonesEarned === 1
-              ? 'One down. Six is all there are — no levels, no leaderboard.'
-              : "Six, and that's all there are. No levels, no leaderboard."}
+            {cfg.milestonesEarned === 0
+              ? "Six, and that's all there are. No levels, no leaderboard."
+              : `${cfg.milestonesEarned} of six. That is all there are — no levels, no leaderboard.`}
           </Body>
         </Sig>
 
+        {/* ══ LOG OUT — last thing on the page, and quiet ══
+            Katya, 7 Sep. Ghost rather than solid: it is the least likely
+            thing anyone came here to do, and a filled button at the foot of a
+            profile reads as the page's primary action. Behind a confirm
+            because it resets the whole run — see `logOut`. */}
+        <Button
+          label="Log out"
+          variant="ghost"
+          style={{ marginTop: 22 }}
+          onPress={() => setConfirmOut(true)}
+        />
+
         <Gap />
       </Scroll>
+
+      {/* Outside the Scroll — a Modal has to float over the screen rather
+          than scroll with it. */}
+      <ConfirmSheet
+        visible={confirmOut}
+        kick="log out"
+        question="Log out of Editorial?"
+        note="There is no account to come back to in this build — logging out starts the whole run again from onboarding."
+        confirmLabel="Log out"
+        cancelLabel="Stay"
+        onConfirm={() => {
+          setConfirmOut(false);
+          logOut();
+        }}
+        onCancel={() => setConfirmOut(false)}
+      />
     </Screen>
   );
 }
+
+/** The post filters. `All` first, then the two categories day 2 actually has
+ *  — a filter for a band nobody has placed in would be a dead chip. */
+const POST_FILTERS = ['All', 'Upper half', 'Freestyle'] as const;
+
+/** Established's three most recent, as bands rather than as a mock post list:
+ *  this branch shows a strip of pictures, not the day-2 row list. */
+const ESTABLISHED_POSTS = [
+  { band: 'Top of the room', job: 'Airport' },
+  { band: 'Upper half', job: 'Interview' },
+  { band: 'Freestyle', job: '4 took a piece' },
+] as const;
 
 /** The tip copy, keyed off the pool in domain/you.ts. Kept out of the domain
  *  module because that one owns the thresholds, not the prose. */

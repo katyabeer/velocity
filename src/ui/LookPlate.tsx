@@ -134,8 +134,11 @@ export function LookPair({
   onPick,
   onExitDone,
 }: {
-  left: { tint: PlateTint; occasion: string; pieces: string; image?: ImageSourcePropType };
-  right: { tint: PlateTint; occasion: string; pieces: string; image?: ImageSourcePropType };
+  /** `pieces` is optional and the pair does not render it — the judging
+   *  plates carry NO caption (Katya, 7 Sep). Kept on the type because
+   *  `LookPlate` still captions elsewhere (You, ResultCard, the magazine). */
+  left: { tint: PlateTint; occasion: string; pieces?: string; image?: ImageSourcePropType };
+  right: { tint: PlateTint; occasion: string; pieces?: string; image?: ImageSourcePropType };
   height?: number;
   /** Which side the screen has committed to. Non-null starts the exit. */
   leaving?: PickSide | null;
@@ -246,6 +249,7 @@ export function LookPair({
           {...left}
           height={height}
           label="Look A"
+          showCaption={false}
           onPress={onPick && !leaving ? () => onPick('a') : undefined}
         />
       </Animated.View>
@@ -254,6 +258,7 @@ export function LookPair({
           {...right}
           height={height}
           label="Look B"
+          showCaption={false}
           onPress={onPick && !leaving ? () => onPick('b') : undefined}
         />
       </Animated.View>

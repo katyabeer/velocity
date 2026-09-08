@@ -55,16 +55,23 @@ import { TONIGHTS_BRIEF } from '@/data/challenges';
  * Row 2 carries the reciprocity in both directions on purpose: "everyone else
  * votes on yours" is what makes the round feel like a room rather than a form.
  */
+/**
+ * Katya's copy, 7 Sep — ONE LINE PER STEP, replacing a label-plus-sentence
+ * pair each. What went: "Be the stylist / Build a look that answers the
+ * brief.", "Vote on the rest / Pick the looks that nailed it. Everyone else
+ * votes on yours.", "See how you did / Results and the winning look land
+ * tomorrow morning."
+ *
+ * ⚠ ROW 2 LOST HALF ITS MECHANIC. "Everyone else votes on yours" was the only
+ * place onboarding said the voting goes BOTH ways, which is what made row 2
+ * more than a chore — see this file's own note on open question D. The new
+ * line says you vote on theirs and stops. Still no "no judging, no clothes"
+ * anywhere either. Katya's call; flagged, not restored.
+ */
 const LOOP = [
-  { title: 'Be the stylist', body: 'Build a look that answers the brief.' },
-  {
-    title: 'Vote on the rest',
-    body: 'Pick the looks that nailed it. Everyone else votes on yours.',
-  },
-  {
-    title: 'See how you did',
-    body: 'Results and the winning look land tomorrow morning.',
-  },
+  { body: 'Build a look that answers a brief' },
+  { body: 'Vote on other people’s submissions' },
+  { body: 'Check back in tomorrow for your results!' },
 ] as const;
 
 export default function FirstChallenge() {
@@ -97,7 +104,12 @@ export default function FirstChallenge() {
         <Big size={21} style={{ marginTop: 7 }}>
           {TONIGHTS_BRIEF.title}
         </Big>
-        <Body style={{ marginTop: 7 }}>{TONIGHTS_BRIEF.note}</Body>
+        {/* `shortNote`, not `note` (Katya, 7 Sep) — "Dress for both, and
+            don't upstage anyone." comes off HERE only. This screen is read
+            while someone decides whether to start, so the brief's second
+            sentence is detail they get in the builder, where the same brief
+            sits above the grid all the way through. */}
+        <Body style={{ marginTop: 7 }}>{TONIGHTS_BRIEF.shortNote}</Body>
       </View>
     </OnboardingFrame>
   );

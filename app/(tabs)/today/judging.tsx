@@ -97,10 +97,20 @@ export default function Judging() {
 
         {/* Keyed on the call index: a new pair is a fresh mount, which is what
             resets the exit animation. */}
+        {/* NO CAPTIONS ON THE PLATES (Katya, 7 Sep). Each one carried the
+            occasion as a kicker and then the full piece list — five garment
+            names in an accent-filled block over the bottom of the photograph,
+            twice, on every one of the round's pairs. Three things wrong with
+            it: the occasion is the same on both plates and already stated
+            above them, the piece list is a spec sheet under a question that
+            asks which look WORKS, and reading two of them is most of the
+            work on a screen that wants a glance and a tap.
+
+            `pieces` is no longer passed at all — see LookPair's props. */}
         <LookPair
           key={callsCast}
-          left={{ tint: left.tint, occasion: left.occasion, pieces: left.pieces, image: left.image }}
-          right={{ tint: right.tint, occasion: right.occasion, pieces: right.pieces, image: right.image }}
+          left={{ tint: left.tint, occasion: left.occasion, image: left.image }}
+          right={{ tint: right.tint, occasion: right.occasion, image: right.image }}
           leaving={leaving}
           onPick={setLeaving}
           onExitDone={settle}
@@ -108,10 +118,15 @@ export default function Judging() {
 
         <View style={{ paddingHorizontal: 22, paddingTop: 12 }}>
           <Bar progress={callsCast / quota} />
+          {/* ONE LINE, EVERY PAIR (Katya, 7 Sep). The first pair used to get
+              its own: "The same job you just answered. Nobody can enter now,
+              so seeing these can't change anyone's look — including yours."
+              It argued the anti-copying rule at someone who had not asked —
+              and that rule is a consequence of the 8pm schedule (invariant
+              17), which the black strip at the top of this screen already
+              states as a fact. The count is what a voter actually wants. */}
           <Body style={{ marginTop: 9 }}>
-            {callsCast === 0
-              ? "The same job you just answered. Nobody can enter now, so seeing these can't change anyone's look — including yours."
-              : `${quota - callsCast} to go. Mark anything you fancy on the way through; it lands when you finish.`}
+            {`${quota - callsCast} to go. Mark anything you fancy on the way through; it lands when you finish.`}
           </Body>
         </View>
       </Scroll>
@@ -143,13 +158,23 @@ const s = StyleSheet.create({
     textAlign: 'center',
     color: palette.ink,
   },
-  /** Demoted to the label it is: which job these ten pairs belong to, stated
-   *  once and then not competing for attention again. */
+  /**
+   * Which job these pairs belong to. Still quieter than the question above it
+   * — the question is what each pair asks and the job is constant for the
+   * whole round — but BIGGER (Katya, 7 Sep): at 13px it read as a caption on
+   * the headline rather than as the challenge, and the plates' own captions
+   * used to say the occasion twice below it. Now this is the only place the
+   * job is named on the screen, so it has to look like the job.
+   *
+   * 19 with the italic Archivo of `T.lede`, which is the challenge title's
+   * voice everywhere else — the Today card and the builder's brief both set it
+   * that way. Grey rather than ink keeps it under the question.
+   */
   qTitle: {
-    marginTop: 6,
-    fontFamily: 'Archivo_600SemiBold',
-    fontSize: 13,
-    letterSpacing: 0.6,
+    marginTop: 7,
+    fontFamily: 'Archivo_500Medium_Italic',
+    fontSize: 19,
+    lineHeight: 24,
     textAlign: 'center',
     color: palette.grey,
   },

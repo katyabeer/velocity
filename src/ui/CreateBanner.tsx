@@ -30,21 +30,10 @@
  */
 
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
 import { palette, border, radius } from '@/theme/tokens';
-
-function Plus({ size = 26 }: { size?: number }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24">
-      <Path
-        d="M12 4v16M4 12h16"
-        stroke={palette.ink}
-        strokeWidth={2.6}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
+/* Was a local `Plus` until 7 Sep — onboarding's empty slots wanted the same
+   mark, so it moved to where the app's icons live. */
+import { PlusIcon } from './TabIcon';
 
 export function CreateBanner({
   ready,
@@ -64,7 +53,7 @@ export function CreateBanner({
       style={({ pressed }) => [s.wrap, pressed && { opacity: 0.9 }]}
     >
       <View style={s.mark}>
-        <Plus />
+        <PlusIcon />
       </View>
 
       {/* The badge shares the SECOND line rather than taking a column of its

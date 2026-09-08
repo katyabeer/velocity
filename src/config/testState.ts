@@ -95,7 +95,7 @@ export const DAY_CONFIG = {
     wardrobeCount: 11,
     showOvernightRoundel: true,
     showTryTheseRail: true,
-    milestonesEarned: 1,
+    milestonesEarned: 2,
   },
   3: {
     dayName: 'Thursday',

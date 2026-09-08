@@ -101,12 +101,43 @@ export default function CastingScreen() {
       />
 
       <Scroll>
-        <Hero>{'Who’s\nwearing it?'}</Hero>
+        {/* ══ RENAMED FROM "WHO'S WEARING IT?" (Katya, 7 Sep) ══
+            ⚠ AND IT MOVES THE SCREEN'S FRAMING, WHICH IS WHY THIS NOTE IS
+            LONG. Katya's call, built as asked — but Jack should see it, because
+            the old words were load-bearing rather than decorative.
+
+            Brief §10.7 and resolution §13.4 both hold *no bodies, no fit*, with
+            ART DIRECTION as the defensible claim. "Who's wearing it?" plus
+            "changes the generation, not the clothes" is what made this screen
+            CASTING — a production decision about the photograph — rather than a
+            description of the person using the app. The unsigned-off framing in
+            naming-and-art-direction.md puts it plainly: YOU ARE THE DRESSER,
+            NOT THE ONE GOING OUT. That is the sentence that makes the absence
+            of fit correct rather than missing.
+
+            "Model customisation" and "customise the model" are configuration
+            words. They read closer to the body-picker the casting framing was
+            built to avoid, and they drop the "not the clothes" clause that kept
+            the two apart. It is also Jack's open question 2 (render on a body
+            vs flat lay) leaning further toward the body.
+
+            The nearest thing that keeps her structure and the position:
+            "Model customisation" / "Customise the model wearing your outfit —
+            it changes the generation, not the clothes." One clause back.
+
+            BRITISH SPELLING, deliberately: she typed "customization", and the
+            product's copy is British throughout ("One colour", "optimising",
+            "itemised"). This would have been the only US spelling on screen.
+
+            ALSO GONE: the flow-specific closer. For the brief that was "The
+            next tap enters your look — nothing can be changed after it", which
+            is invariant 4 stated at the point of no return. It is still said
+            one screen earlier — step 2 now reads "All look generations are
+            final, so use wisely!" — and the footer button says "Build and
+            submit", so it is not unsaid. It is no longer said HERE. */}
+        <Hero size={32}>{'Model\ncustomisation'}</Hero>
         <Tiny style={{ marginTop: 8 }}>
-          Changes the render, not the clothes. Set it once and reuse it.
-          {origin === 'brief'
-            ? ' The next tap enters your look — nothing can be changed after it.'
-            : ' The next tap starts the generation — it posts itself when it lands.'}
+          Here you can customise the model wearing your outfit.
         </Tiny>
 
         <View style={{ marginTop: 16 }}>

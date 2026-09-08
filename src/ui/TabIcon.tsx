@@ -140,6 +140,36 @@ export function LockIcon({ open, size = 15 }: { open: boolean; size?: number }) 
   );
 }
 
+/**
+ * THE PLUS — "add one of these".
+ *
+ * Lifted out of `ui/CreateBanner.tsx` on 7 Sep, where it was a local
+ * component, because onboarding's empty slots want the same mark. Two files
+ * drawing the same two lines is how an icon set starts drifting; this is where
+ * the app's icons live (`LockIcon`, `SearchIcon`), so it lives here.
+ *
+ * A PATH, NOT A "+". A glyph renders in the platform's font and cannot take
+ * the ink colour — the same reason the tick on the onboarding slots is drawn
+ * and the reaction thumbs stopped being emoji.
+ */
+export function PlusIcon({
+  size = 26,
+  color = palette.ink,
+  /** 2.6 at 26 reads as the chunky mark in the Create banner; a smaller plus
+   *  needs proportionally less or it turns into a blob. */
+  weight = 2.6,
+}: {
+  size?: number;
+  color?: string;
+  weight?: number;
+}) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path d="M12 4v16M4 12h16" stroke={color} strokeWidth={weight} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 /** The magazine's search affordance. Fills its stroke when a garment filter is
  *  active, so the icon reports state as well as offering the action — the rail
  *  next to it has no room for a second chip saying "search is on". */

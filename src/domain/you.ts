@@ -232,8 +232,33 @@ export function sentenceChips(
 export const SUPPRESS_ZERO_STATS = true;
 
 export type StatRow = { label: string; value: string };
+/** A grid cell knows whether it is a zero, so the view can grey it rather than
+ *  drop it. See `statCells`. */
+export type StatCell = StatRow & { zero: boolean };
 
-export function statRows(r: YouRollup, showStreak: boolean): StatRow[] {
+/**
+ * EVERY stat, zeros included, for the grid on You.
+ *
+ * ⟲ THIS REOPENS you-brief q1, AND IT IS KATYA'S CALL (7 Sep). `statRows`
+ * below suppresses zeros, and "a day-one grid of zeros under Stats" is on the
+ * do-not-re-propose list — the objection being that Milestones is the roadmap
+ * and zeros are an accusation.
+ *
+ * Her day-1 mock (`you-days-1-2-3.html`, rev 2) answers that objection rather
+ * than ignoring it: the zeros are set in the RULE COLOUR, not in ink —
+ * "present enough to teach what's coming, quiet enough not to read as an
+ * accusation." They also carry the shape of the page on the one day there is
+ * nothing else to carry it. So the grid gets them, greyed, and `SUPPRESS_ZERO_STATS`
+ * still governs the row list.
+ *
+ * If the accusation reading wins after all, `keepZeros: false` at the call
+ * site is the whole change.
+ */
+export function statCells(
+  r: YouRollup,
+  showStreak: boolean,
+  opts: { keepZeros?: boolean } = {},
+): StatCell[] {
   const all: readonly { label: string; n: number; on?: boolean }[] = [
     { label: 'Streak', n: r.streakDays, on: showStreak },
     { label: 'Jobs entered', n: r.jobsEntered },
@@ -252,8 +277,20 @@ export function statRows(r: YouRollup, showStreak: boolean): StatRow[] {
 
   return all
     .filter((s) => s.on !== false)
-    .filter((s) => !SUPPRESS_ZERO_STATS || s.n > 0)
-    .map((s) => ({ label: s.label, value: String(s.n) }));
+    .filter((s) => opts.keepZeros || s.n > 0)
+    .map((s) => ({ label: s.label, value: String(s.n), zero: s.n === 0 }));
+}
+
+/**
+ * The label/value ROW list — zeros suppressed per `SUPPRESS_ZERO_STATS`.
+ * Delegates to `statCells` so there is one list of stats and one order, not
+ * two that can drift.
+ */
+export function statRows(r: YouRollup, showStreak: boolean): StatRow[] {
+  return statCells(r, showStreak, { keepZeros: !SUPPRESS_ZERO_STATS }).map(({ label, value }) => ({
+    label,
+    value,
+  }));
 }
 
 /** Pre-empts the reading of the reaction numbers as a ranking. Shown only

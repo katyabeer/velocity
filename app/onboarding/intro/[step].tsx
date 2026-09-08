@@ -101,6 +101,7 @@ import { OnboardingFrame } from '@/ui/OnboardingFrame';
 import { Hero, Lede, Kick } from '@/ui/text';
 import { type as T } from '@/theme/type';
 import { palette, border, radius, rotation, useReducedMotion } from '@/theme/tokens';
+import { PlusIcon } from '@/ui/TabIcon';
 import { garment } from '@/data/catalogue';
 import { FEED_LOOKS, JUDGING_LOOKS, isEditorial, type FeedLook } from '@/data/looks';
 import {
@@ -178,9 +179,17 @@ const SLIDES = [
  *  recommendation about what goes with what. */
 const SLOT_PIECES = ['structured trench coat', 'pleated wool trouser'] as const;
 
-/** Both are members of `SLOTS` in domain/garments — the builder's own slot
- *  names, not invented labels. Not imported: the grid holds four of the five
- *  slots, so picking two by index would read as arbitrary either way. */
+/**
+ * Both are members of `SLOTS` in domain/garments — the builder's own slot
+ * names, not invented labels. Not imported: the grid holds four of the five
+ * slots, so picking two by index would read as arbitrary either way.
+ *
+ * THEY READ "ADD SHOES" / "ADD EXTRA" NOW, under a plus (Katya, 7 Sep). The
+ * bare slot name was a caption on an empty box; with the verb and the mark it
+ * is an invitation, which is what the unfinished half of this grid is for —
+ * "a completed collage says look at this, a look with gaps in it says your
+ * turn". Lower-cased in the label so the uppercase treatment does the shouting.
+ */
 const EMPTY_SLOTS = ['Shoes', 'Extra'] as const;
 
 /** The lime tick. An SVG stroke, not a "✓" — a glyph would render in the
@@ -223,7 +232,13 @@ function FilledSlot({ name, tilt }: { name: string; tilt: number }) {
 function EmptySlot({ label, tilt }: { label: string; tilt: number }) {
   return (
     <View style={[s.slotEmpty, { transform: [{ rotate: `${tilt}deg` }] }]}>
-      <Text style={s.slotLabel}>{label}</Text>
+      {/* Icon then label, on one row and centred — the shape of a button
+          without being one. The plus takes the label's own colour rather than
+          ink: an empty slot is an offer, and a full-strength mark on it would
+          out-weigh the two filled cells above, which are the things actually
+          in the look. */}
+      <PlusIcon size={13} color={palette.greyMute} weight={2.2} />
+      <Text style={s.slotLabel}>Add {label.toLowerCase()}</Text>
     </View>
   );
 }
@@ -686,6 +701,8 @@ const s = StyleSheet.create({
   slotPhoto: { width: '86%', height: '86%' },
   slotEmpty: {
     flex: 1,
+    flexDirection: 'row',
+    gap: 5,
     borderRadius: radius.sm,
     borderWidth: border.mid,
     borderStyle: 'dashed',
