@@ -453,6 +453,22 @@ A fresh session will be tempted by several of these. They were tried and rejecte
 - The `tonight's job` block on the day's step 2 — a kicker, the challenge title
   and a divider above them. The brief is on the screen you just came from,
   permanently, above the grid you picked the pieces out of
+- **True relative scale on the flat lay.** `flatlay_scale` is the delivery's
+  real-world ratio — 1.0 a coat, 0.104 a pump heel, 0.052 sunglasses — and
+  rendered faithfully it made a shoe a speck (Katya, 7 Sep: "some of the items
+  appear disproportionately small"). Two causes, both fixed: the 19× scale
+  range, and the fact that every piece was contain-fitted into a SQUARE, so a
+  2.5:1 shoe drew a quarter of the area its number implied. A placement now
+  carries width AND height from the cutout's own aspect, sized to equal visual
+  mass — `EQUALISE` in `ui/ComposedFlatLay.tsx` blends back to true scale in one
+  constant. **`BOX_SLACK` must stay near 1**: at 1.18 the equalised heel and
+  sunglasses grew out of their boxes and sat on the skirt, and the template's
+  box widths are the collision geometry
+- `Image.resolveAssetSource` for a cutout's dimensions. **It does not exist on
+  react-native-web** — a static require resolves to a plain URL there — and it
+  threw on the first placement, invisible to tsc because the web shim still
+  declares it. The aspects are generated at build time instead:
+  `node scripts/gen-cutout-aspects.js`, re-run after any re-crop
 - **The builder as a catalogue.** It was a scrolling grid of every garment in
   the pool with category chips over it and a sticky six-cell strip above
   reading back what you had picked — so the slots were a read-out and the

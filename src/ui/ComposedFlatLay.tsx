@@ -63,6 +63,7 @@ import { Image, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { palette, border, radius } from '@/theme/tokens';
 import { slotOf, type Slot } from '@/domain/garments';
 import { garment } from '@/data/catalogue';
+import { CUTOUT_ASPECT, DEFAULT_ASPECT } from '@/data/cutoutAspects';
 
 /** The delivery's canvas, in its own units. Everything below is relative. */
 const CANVAS_W = 1200;
@@ -108,15 +109,104 @@ function split(box: Box, n: number): Box[] {
   return Array.from({ length: n }, (_, i) => ({ ...box, x: box.x + i * (w + EXTRAS_GAP), w }));
 }
 
-/** True scale, then the legibility floor, capped so nothing outgrows its box.
- *  Returns the side of a SQUARE the garment is contain-fitted into, so for a
- *  tall piece this is its height and for a wide one its width. */
-function sideFor(box: Box, scale: number): number {
+/**
+ * ─── EVERY PIECE GETS ROUGHLY THE SAME VISUAL MASS (Katya, 7 Sep) ──────────
+ * "Some of the items appear disproportionately small compared to others. Is it
+ * possible to make them roughly the same size? Keep the overlapping."
+ *
+ * TWO THINGS WERE MAKING A SHOE A SPECK, and it needed both fixed.
+ *
+ * 1. TRUE RELATIVE SCALE. `flatlay_scale` is the delivery's real-world ratio —
+ *    1.0 a full-length coat, 0.104 a pump heel, 0.052 sunglasses. A 19x range,
+ *    faithfully rendered. `MIN_BOX_FRACTION` floored it, but the floor is a
+ *    fraction of the piece's OWN box, and the Shoes box is smaller than the
+ *    Outer one, so the floor did not close the gap either.
+ *
+ * 2. THE PIECE WAS CONTAIN-FITTED INTO A SQUARE. A shoe cutout is about 2.5:1,
+ *    so in a 114-unit square it drew 114 wide and 46 tall — a quarter of the
+ *    area the number implied. This is the bigger of the two effects and it was
+ *    invisible in the arithmetic, because the arithmetic only ever produced
+ *    one number per piece.
+ *
+ * So a placement now carries WIDTH AND HEIGHT, derived from the cutout's own
+ * aspect, sized so every piece's geometric mean — sqrt(w*h), its visual mass —
+ * lands on one shared value. Equal mass rather than equal longest side: a
+ * shoe as wide as a trouser is tall would be the same problem upside down.
+ *
+ * `EQUALISE` blends between the delivery's true scale and full equality, so
+ * this is one constant to dial and 0 restores the old picture exactly.
+ */
+
+/** 0 = the delivery's true relative scale. 1 = every piece the same mass. */
+const EQUALISE = 1;
+
+/** The shared geometric-mean side, in canvas units. Sized so a full-length
+ *  coat still fills most of the 560x700 Outer box rather than shrinking to
+ *  meet the small pieces — equalising should lift the specks, not flatten
+ *  everything to the smallest common size. */
+const EQUAL_MASS = 380;
+
+/**
+ * How far a piece may exceed its template box before it is clamped.
+ *
+ * ⚠ THIS WAS 1.18 AND IT WAS WRONG. Equalising made the small pieces big
+ * enough that the slack let them spread out of their own boxes — the pump heel
+ * and the sunglasses grew leftward across the Shoes/Extra boundary at x=680
+ * and sat on top of the skirt. Measured on a five-piece look: at 1.18 the heel
+ * drew 519 units wide in a 440 box.
+ *
+ * The template's box widths are the collision geometry: the sheet spaced them
+ * so nothing touches. Equalising is allowed to change how big a piece is
+ * WITHIN its box; it is not allowed to move it into the next one. 1.02 leaves
+ * the tighten's growth a hair of room on already-small pieces and clamps the
+ * ones that would otherwise trespass.
+ */
+const BOX_SLACK = 1.02;
+
+/**
+ * The cutout's natural aspect (w/h), from a GENERATED table.
+ *
+ * ⚠ `Image.resolveAssetSource` WAS THE OBVIOUS CALL AND IT DOES NOT EXIST ON
+ * WEB. A static require resolves to a plain URL under react-native-web, so the
+ * first version of this threw `_Image.default.resolveAssetSource is not a
+ * function` on the first placement — caught by running the screen, not by tsc,
+ * because the web shim's types still declare it. `Image.getSize` works on both
+ * platforms but is asynchronous, which would lay the plate out square and then
+ * re-flow it.
+ *
+ * The cutouts are static files whose dimensions cannot change at runtime, so
+ * they are read once at build time: `node scripts/gen-cutout-aspects.js`.
+ * Re-run it after any re-crop of the delivery.
+ *
+ * A name with no entry falls back to square — which is exactly what the plate
+ * did before any of this, so a missing row degrades to the old picture rather
+ * than to a broken one.
+ */
+const aspectOf = (name: string): number => CUTOUT_ASPECT[name] ?? DEFAULT_ASPECT;
+
+/**
+ * The piece's equalised box in canvas units, BEFORE the tighten's growth and
+ * before the box clamp.
+ *
+ * Both of those live in the render, and the clamp has to: `grow` is applied
+ * there, so clamping here would let a grown piece exceed its box by the growth
+ * factor — which is how a shoe at tighten 1 ended up wider than the canvas in
+ * the first version of this.
+ */
+function dimsFor(box: Box, scale: number, aspect: number): { w: number; h: number } {
+  /* The mass the delivery's own scale would give it, and the mass everything
+     converges on. `MIN_BOX_FRACTION` still floors the true-scale end so
+     EQUALISE = 0 behaves as it always did. */
   const fit = Math.min(box.w, box.h);
-  return Math.min(fit, Math.max(scale * SCALE_ANCHOR, fit * MIN_BOX_FRACTION));
+  const trueMass = Math.max(scale * SCALE_ANCHOR, fit * MIN_BOX_FRACTION);
+  const mass = trueMass + (EQUAL_MASS - trueMass) * EQUALISE;
+
+  /* mass = sqrt(w * h) with w/h = aspect, so w = mass*sqrt(aspect). */
+  const r = Math.sqrt(aspect);
+  return { w: mass * r, h: mass / r };
 }
 
-type Placement = { name: string; box: Box; side: number };
+type Placement = { name: string; box: Box; w: number; h: number };
 
 /**
  * Where each piece lands. Exported and pure so the arithmetic can be read (and
@@ -150,7 +240,7 @@ export function compose(pieces: readonly string[]): {
       placements.push({
         name,
         box,
-        side: sideFor(box, garment(name)?.flatlayScale ?? UNKNOWN_SCALE),
+        ...dimsFor(box, garment(name)?.flatlayScale ?? UNKNOWN_SCALE, aspectOf(name)),
       });
     });
   });
@@ -219,29 +309,38 @@ export function ComposedFlatLay({
 
   return (
     <View style={[s.stage, style]}>
-      {placements.map(({ name, box, side }) => {
+      {placements.map(({ name, box, w, h }) => {
         const image = garment(name)?.image;
-        const grown = side * grow;
-        /* Move the box's centre toward the hub, then draw the square around
+        /* Grow on both axes, so a piece expands about its own centre without
+           changing shape — then clamp the RESULT to its box plus the slack.
+           Clamping before the growth is what let a shoe run off the canvas. */
+        const k = Math.min(1, (box.w * BOX_SLACK) / (w * grow), (box.h * BOX_SLACK) / (h * grow));
+        const gw = w * grow * k;
+        const gh = h * grow * k;
+        /* Move the box's centre toward the hub, then draw the frame around
            wherever it ended up. */
         const cx = box.x + box.w / 2;
         const cy = box.y + box.h / 2;
         const x = cx + (hub.x - cx) * pull;
         const y = cy + (hub.y - cy) * pull;
         /* Percentages of the two canvas axes. The stage's aspect ratio is the
-           canvas's, so a square in canvas units renders square on screen. */
+           canvas's, so canvas units render true on both axes — which is what
+           lets the frame be the garment's real proportion rather than a
+           square it has to fit inside. */
         const frame = {
-          left: `${((x - grown / 2) / CANVAS_W) * 100}%`,
-          top: `${((y - grown / 2) / CANVAS_H) * 100}%`,
-          width: `${(grown / CANVAS_W) * 100}%`,
-          height: `${(grown / CANVAS_H) * 100}%`,
+          left: `${((x - gw / 2) / CANVAS_W) * 100}%`,
+          top: `${((y - gh / 2) / CANVAS_H) * 100}%`,
+          width: `${(gw / CANVAS_W) * 100}%`,
+          height: `${(gh / CANVAS_H) * 100}%`,
         } as const;
 
         return (
           <View key={name} style={[s.slot, frame]}>
             {image ? (
-              /* `contain`, so a cropped non-square cutout keeps its proportions
-                 inside the square the scale maths produced. */
+              /* `contain` still, but the frame is now the cutout's own
+                 proportion — so contain has nothing left to letterbox and the
+                 garment fills it. That is the whole fix for effect 2 in the
+                 note above. */
               <Image source={image} style={s.image} resizeMode="contain" />
             ) : (
               /* Legacy fixture names carry no cutout — the labelled tile the
