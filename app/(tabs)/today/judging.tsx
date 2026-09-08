@@ -118,15 +118,27 @@ export default function Judging() {
 
         <View style={{ paddingHorizontal: 22, paddingTop: 12 }}>
           <Bar progress={callsCast / quota} />
-          {/* ONE LINE, EVERY PAIR (Katya, 7 Sep). The first pair used to get
-              its own: "The same job you just answered. Nobody can enter now,
-              so seeing these can't change anyone's look — including yours."
-              It argued the anti-copying rule at someone who had not asked —
-              and that rule is a consequence of the 8pm schedule (invariant
-              17), which the black strip at the top of this screen already
-              states as a fact. The count is what a voter actually wants. */}
+          {/* Katya's copy, 7 Sep. What it replaced, twice over: the first-pair
+              line arguing the anti-copying rule at someone who had not asked,
+              and then "N to go. Mark anything you fancy on the way through; it
+              lands when you finish." — a progress read the black strip's 1/5
+              and the bar directly above it both already give.
+
+              This one says whose looks these are and that the exchange goes
+              both ways, which is the thing onboarding never manages to state
+              (open question D) and the only fact on the screen a first-time
+              voter is actually missing.
+
+              THE 7am SENTENCE CAME OFF (Katya, 7 Sep), which closes the
+              duplication flagged when this copy landed: the black strip at
+              the top of this screen already says "Results at 7am." and it is
+              permanent, so the prose repeating it was the redundant half.
+
+              ⚠ ONE TYPO FIXED: "This is what other have submitted" → "otherS
+              have". Corrected rather than shipped. */}
           <Body style={{ marginTop: 9 }}>
-            {`${quota - callsCast} to go. Mark anything you fancy on the way through; it lands when you finish.`}
+            This is what others have submitted for the same styling brief. Vote on their looks
+            whilst they vote on yours!
           </Body>
         </View>
       </Scroll>

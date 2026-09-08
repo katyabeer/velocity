@@ -46,10 +46,12 @@
  */
 
 import { useEffect } from 'react';
+import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
-import { Big, Body, Kick } from '@/ui/text';
+import { Hero, Body, Kick, B } from '@/ui/text';
 import { Button } from '@/ui/controls';
+import { palette } from '@/theme/tokens';
 import { StepRibbonBleed, statesFor } from '@/ui/StepRibbon';
 import { ENTRY_STEPS } from '@/domain/entry';
 import { FIRST_LOOK_BONUS_ENABLED, TOKENS_FOR_FIRST_LOOK } from '@/domain/economy';
@@ -134,32 +136,57 @@ export default function Rendering() {
       />
 
       <Scroll>
-        <Kick>we&apos;re on it</Kick>
-        <Big style={{ marginTop: 7 }}>
-          {`We’re building your\nlook right now.`}
-        </Big>
-        {/* ⚠ TWO THINGS TO RAISE, BOTH ONE LINE TO FIX, NEITHER DECIDED HERE.
-            1. The heading above says "We're building your look right now" and
-               this opens "We're creating your look" — the same statement
-               twice, in two verbs. Dropping the body's first clause leaves
-               "It takes about a minute! Why not complete today's
-               challenge…", which loses nothing.
-            2. THREE VERBS for one thing on one screen: the ribbon step says
-               GENERATE, the heading says BUILDING, this says CREATING. The
-               4 Sep ruling was that every user-visible string says GENERATE
-               ("render is generate in COPY ONLY"). Same class as the
-               brief/job/challenge sweep in domain/magazine.ts.
+        {/* ══ THE HERO TREATMENT, LIKE THE REST OF THE FLOW (Katya, 7 Sep:
+              "match the other heading style") ══
+            It was `Big` — the italic `Lede` at 23px — which made it the one
+            screen of the day's flow not leading in the display face. Step 2's
+            "Preview your look." and step 1's brief are the reference.
 
-            Katya's copy, 7 Sep. What it replaced: "All N pieces, exactly as
-            you picked them. It takes about a minute, and you don't have to sit
-            here for it — go and vote, and we'll put a dot on Today the moment
-            it's ready." The piece count was a receipt for a decision two
-            screens back, and "you don't have to sit here for it" argued
-            against a worry the reader may not have had. This one offers the
-            vote as the way to FINISH THE JOB, which is what it is. */}
-        <Body style={{ marginTop: 8 }}>
-          {'We’re creating your look — it takes about a minute!\nWhy not complete today’s challenge by voting on other people’s entries — and we’ll let you know when your look is ready.'}
-        </Body>
+            The kicker went with it. "WE'RE ON IT" over "we're building your
+            look" was the same reassurance twice, and a `Hero` does not need a
+            label telling you it is about to speak.
+
+            ⚠ HEADING TEXT TAKEN FROM HER MESSAGE. She wrote it as if quoting
+            the existing heading ("Hold tight, we're building your look…"),
+            which it was not — so this is now her words rather than a restyle
+            of mine. Say if you only meant the style to change. */}
+        <Hero>{'Hold tight,\nwe’re building\nyour look.'}</Hero>
+
+        {/* ⚠ STILL THREE VERBS FOR ONE THING ON ONE SCREEN, and this copy
+            keeps two of them: the ribbon step says GENERATE, the heading says
+            BUILDING, and the line below says CREATE. The 4 Sep ruling is that
+            every user-visible string says *generate*. One word in each place;
+            her copy, so still her call. */}
+        <Body style={{ marginTop: 12 }}>It takes about a minute to create.</Body>
+
+        <Kick tone="muted" style={{ marginTop: 18 }}>
+          what next
+        </Kick>
+        <View style={{ marginTop: 9 }}>
+          {/* A DOT, NOT A "·" GLYPH. Same habit as the tick and the plus: a
+              drawn mark takes the ink token, a character takes whatever the
+              platform font gives it. Aligned to the first line's cap height
+              rather than centred, so a two-line bullet hangs correctly. */}
+          <Bullet>We&apos;ll notify you as soon as it&apos;s ready.</Bullet>
+          <Bullet>
+            Once it&apos;s up it will be entered into a head-to-head vote against other
+            designers.
+          </Bullet>
+          {/* Bold because it is the one bullet that asks for something. The
+              other two report; this one routes.
+
+              ⚠ IT SAYS "VOTING" AND NOTHING IS CALLED THAT. The ribbon step
+              is VOTE, the footer button below says "Vote now", and there is no
+              Voting tab — the round is reached from Today. Not changed,
+              because it is her word and it is clear in context, but it is the
+              only nav reference in the app that names a place by a word the
+              app does not use. */}
+          <Bullet last>
+            <B>
+              In the meantime, head over to Voting to rate on other players&apos; submissions.
+            </B>
+          </Bullet>
+        </View>
 
         <Gap />
       </Scroll>
@@ -173,3 +200,30 @@ export default function Rendering() {
   );
 }
 
+/**
+ * A bullet row. Local to this screen because it is the only bulleted list in
+ * the app — `NumberedList` in ui/cards.tsx is the numbered one, and it earns
+ * its place in the shared module by being used on o7 and nowhere near here.
+ * If a second list turns up, move this.
+ */
+function Bullet({ children, last }: { children: React.ReactNode; last?: boolean }) {
+  return (
+    <View style={[s_bullet, last && { marginBottom: 0 }]}>
+      <View style={s_dot} />
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Body>{children}</Body>
+      </View>
+    </View>
+  );
+}
+
+const s_bullet = { flexDirection: 'row' as const, gap: 10, marginBottom: 9 };
+/** 5pt, and nudged down 8 so it sits on the first line's x-height rather than
+ *  its top — `body` is a 16px face on a 21px line. */
+const s_dot = {
+  width: 5,
+  height: 5,
+  borderRadius: 999,
+  backgroundColor: palette.ink,
+  marginTop: 8,
+};
