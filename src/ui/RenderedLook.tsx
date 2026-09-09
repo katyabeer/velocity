@@ -46,6 +46,7 @@
  */
 
 import { Image, StyleSheet, View, type ImageSourcePropType, type ViewStyle } from 'react-native';
+import { LookWatermark } from './LookWatermark';
 import { palette, border, radius } from '@/theme/tokens';
 
 /**
@@ -78,6 +79,10 @@ export function RenderedLook({
           other has to change with it, or this starts cutting into the subject
           the way the onboarding collage did on 4 Sep. */}
       <Image source={source} style={s.photo} resizeMode="cover" />
+      {/* THE PLACEHOLDER MARK. None of this photography is output — see
+          ui/LookWatermark.tsx for what it is for and the one picture in the
+          app that deliberately does not carry it. */}
+      <LookWatermark />
     </View>
   );
 }

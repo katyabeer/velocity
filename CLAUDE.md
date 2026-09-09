@@ -453,6 +453,15 @@ A fresh session will be tempted by several of these. They were tried and rejecte
 - The `tonight's job` block on the day's step 2 — a kicker, the challenge title
   and a divider above them. The brief is on the screen you just came from,
   permanently, above the grid you picked the pieces out of
+- Unmarked look photography. **Every photograph standing in for a generated
+  look now carries a `PLACEHOLDER` watermark** (Katya, 9 Sep) —
+  `ui/LookWatermark.tsx`, applied inside `RenderedLook`, `LookPlate`'s photo
+  branch and `FeedCards`' bleed photo, so all fourteen surfaces get it from
+  three edits. ⚠ **NOT `ComposedFlatLay`**, and that is the point: the flat lay
+  is real garment cutouts and it is what the app shows when nothing has been
+  generated (pre-commit, pending, and the failed-generation fallback), so
+  marking it would label the one honest picture as the fake one. Not the
+  cutouts anywhere else either
 - **True relative scale on the flat lay.** `flatlay_scale` is the delivery's
   real-world ratio — 1.0 a coat, 0.104 a pump heel, 0.052 sunglasses — and
   rendered faithfully it made a shoe a speck (Katya, 7 Sep: "some of the items

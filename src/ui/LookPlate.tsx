@@ -26,6 +26,7 @@ import {
   type ImageSourcePropType,
   type ViewStyle,
 } from 'react-native';
+import { LookWatermark } from './LookWatermark';
 import { palette, border, radius, tintFor, useReducedMotion, type PlateTint } from '@/theme/tokens';
 
 const SCREEN_W = Dimensions.get('window').width;
@@ -55,7 +56,13 @@ export function LookPlate({
   const body = (
     <View style={[s.plate, { height, backgroundColor: tintFor(tint) }, style]}>
       {image ? (
-        <Image source={image} style={s.photo} resizeMode="cover" />
+        <>
+          <Image source={image} style={s.photo} resizeMode="cover" />
+          {/* ONLY OVER A PHOTOGRAPH. The tinted-plate branch below is a grey
+              box with a word in it — already obviously not a look — and a
+              watermark on it would be marking a placeholder as a placeholder. */}
+          <LookWatermark />
+        </>
       ) : (
         <View style={s.image}>
           <Text style={s.ghost}>{(label ?? occasion).replace(' ', '\n')}</Text>
