@@ -43,7 +43,6 @@ import { palette, border, radius, rotation, tintFor, useReducedMotion } from '@/
 import { shareForTierGap, splitVerdict } from '@/domain/magazine';
 import { ownerStats, publicStats, type ReactionValue } from '@/domain/reactions';
 import { LookPlate, SplitBar } from './LookPlate';
-import { LookWatermark } from './LookWatermark';
 import { LockIcon } from './TabIcon';
 import { OwnReactionRead, ReactionCluster } from './Reactions';
 import { Hero, Tiny } from './text';
@@ -90,13 +89,7 @@ export function LookCard({
           style={[s.bleedPlate, { backgroundColor: tintFor(look.tint), transform: [{ rotate: `${tilt}deg` }] }]}
         >
           {look.image ? (
-            <>
-              <Image source={look.image} style={s.bleedPhoto} resizeMode="cover" />
-              {/* Over the photograph, not the ghost fallback below it — see
-                  ui/LookWatermark.tsx. It sits UNDER the Save-pieces tag,
-                  which is the card's one control and has to stay legible. */}
-              <LookWatermark />
-            </>
+            <Image source={look.image} style={s.bleedPhoto} resizeMode="cover" />
           ) : (
             <Text style={s.bleedGhost}>{look.tags[0]?.replace(' ', '\n')}</Text>
           )}

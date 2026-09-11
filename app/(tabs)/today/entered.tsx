@@ -92,7 +92,9 @@ export default function Entered() {
             flat lay is also the state a FAILED generation enters the pool as
             (R-L6), so it has to exist regardless. */}
         {mode === 'model' ? (
-          <RenderedLook />
+          /* WATERMARKED — the finished look at the end of the day's flow.
+             One of four sites; see ui/LookWatermark.tsx. */
+          <RenderedLook watermark />
         ) : (
           <ComposedFlatLay pieces={picks.map((p) => p.name)} />
         )}

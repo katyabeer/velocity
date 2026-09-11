@@ -453,15 +453,21 @@ A fresh session will be tempted by several of these. They were tried and rejecte
 - The `tonight's job` block on the day's step 2 — a kicker, the challenge title
   and a divider above them. The brief is on the screen you just came from,
   permanently, above the grid you picked the pieces out of
-- Unmarked look photography. **Every photograph standing in for a generated
-  look now carries a `PLACEHOLDER` watermark** (Katya, 9 Sep) —
-  `ui/LookWatermark.tsx`, applied inside `RenderedLook`, `LookPlate`'s photo
-  branch and `FeedCards`' bleed photo, so all fourteen surfaces get it from
-  three edits. ⚠ **NOT `ComposedFlatLay`**, and that is the point: the flat lay
-  is real garment cutouts and it is what the app shows when nothing has been
-  generated (pre-commit, pending, and the failed-generation fallback), so
-  marking it would label the one honest picture as the fake one. Not the
-  cutouts anywhere else either
+- **A `PLACEHOLDER` watermark on every look photograph.** ⟲ Asked for on 9 Sep
+  and NARROWED on the 11th, and the first version is the cautionary tale: put
+  inside all three components that draw a look photo (`RenderedLook`,
+  `LookPlate`, `FeedCards`) it landed on every magazine card, both plates of
+  every judging pair, the results screen, You's strips and the wardrobe
+  thumbnails — "they're EVERYWHERE now in the app which isn't great". A mark on
+  everything marks nothing. `RenderedLook` is the only host now and it takes
+  `watermark` as an **opt-in prop, default off**, passed at EXACTLY FOUR sites:
+  a14, a17, `SubmissionSheet`, and Create's `spent`. The risk the mark covers —
+  a stakeholder reading a stand-in as real output — lives where the app has
+  just claimed to have generated something, not on a feed of other people's
+  looks. ⚠ **NOT `ComposedFlatLay`**, and that was never an omission: the flat
+  lay is real garment cutouts and it is what the app shows when NOTHING has
+  been generated (pre-commit, pending, the failed-generation fallback), so
+  marking it would label the one honest picture as the fake one
 - **True relative scale on the flat lay.** `flatlay_scale` is the delivery's
   real-world ratio — 1.0 a coat, 0.104 a pump heel, 0.052 sunglasses — and
   rendered faithfully it made a shoe a speck (Katya, 7 Sep: "some of the items

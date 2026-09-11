@@ -101,7 +101,9 @@ export default function Posted() {
         {/* The published look, worn (Katya, 7 Sep) — not the flat lay. It has
             generated and posted by the time this screen exists. */}
         <View style={s_preview}>
-          <RenderedLook />
+          {/* WATERMARKED — the finished look at the end of the Create
+              journey. One of four sites; see ui/LookWatermark.tsx. */}
+          <RenderedLook watermark />
         </View>
 
         {view.tags.length ? (

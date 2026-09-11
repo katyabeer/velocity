@@ -635,7 +635,12 @@ function Spent() {
             never going to carry that. The flat lay stays on the PENDING state
             above, where §6 wants it. */}
         <View style={{ marginTop: 4 }}>
-          <RenderedLook />
+          {/* WATERMARKED, and this is the one JUDGEMENT CALL in the set: it is
+              the same generated look as a17's, shown at full size for the rest
+              of the day. Marking a17 and leaving this bare would put the label
+              on a look one screen and not the next. Drop the prop if the mark
+              should live only on the two terminal screens. */}
+          <RenderedLook watermark />
         </View>
 
         {tags.length ? (

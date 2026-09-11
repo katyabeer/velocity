@@ -5,39 +5,54 @@
  * Katya, 9 Sep: "Watermark all 'generated' looks visuals across the app — put
  * some semi-transparent layer over them with a copy: Placeholder."
  *
+ * ⟲ NARROWED THE NEXT DAY, and the first version is the cautionary tale. I put
+ * it inside all three components that draw a look photograph — `RenderedLook`,
+ * `LookPlate` and `FeedCards` — which is every photograph in the app: every
+ * magazine card, both plates of every judging pair, the results screen, You's
+ * strips, the wardrobe thumbnails. Katya: "They're EVERYWHERE now in the app
+ * which isn't great." She was right. A mark on everything marks nothing, and
+ * the magazine is the one screen whose whole job is to be looked at.
+ *
  * ─── WHAT IT IS ACTUALLY FOR ───────────────────────────────────────────────
  * None of this photography is output. It is 28 stock frames in
- * `assets/looks/d1`, standing in for Jack's pipeline, and the better the
- * screens got the more likely a stakeholder was to read them as real
- * generations. The mark exists so nobody in a review has to be told.
+ * `assets/looks/d1` standing in for Jack's pipeline, and the mark exists so a
+ * stakeholder looking at YOUR FINISHED GENERATION does not read it as real
+ * output. That risk lives at the end of a build flow, where the app has just
+ * claimed to have made something — not on a feed of other people's looks,
+ * which nobody thinks this app generated.
  *
- * ─── WHERE IT GOES, AND THE ONE PLACE IT MUST NOT ──────────────────────────
- * Three components draw a look photograph and all three take it:
+ * ─── EXACTLY FOUR CALL SITES ───────────────────────────────────────────────
+ * `RenderedLook` is the only host, and it takes `watermark` as an OPT-IN prop
+ * (default off — the failure mode above was a default of always-on):
  *
- *   `RenderedLook`   your own finished generation — 7 surfaces
- *   `LookPlate`      the judging pair, `ResultCard`, the results screen, You
- *   `FeedCards`      the magazine feed
+ *   `today/entered.tsx`      a14 — the day's flow, finished look
+ *   `create/posted.tsx`      a17 — the end of the Create journey
+ *   `ui/SubmissionSheet.tsx` the drawer, from Create's ready state and the
+ *                            day's completed card
+ *   `create/index.tsx`       Create's `spent` state — the judgement call; see
+ *                            the note at that call site
  *
- * ⚠ NOT `ComposedFlatLay`, and that is the point rather than an omission. The
- * flat lay is built from real garment cutouts — actual product photography of
- * actual clothes — and it is the picture the app shows when NOTHING has been
- * generated: the pre-commit preview, the pending state, and the fallback a
- * failed generation enters the pool as (R-L6). Watermarking it would label the
- * one honest picture in the app as the fake one.
+ * ⚠ NOT `LookPlate` or `FeedCards` any more: the judging pair, the results
+ * screen, the magazine feed, You's strips. Other people's looks, and a list
+ * of your own past ones, are not the thing being mistaken for output.
+ *
+ * ⚠ NOT `ComposedFlatLay`, and that was never an omission. The flat lay is
+ * built from real garment cutouts — actual product photography — and it is the
+ * picture the app shows when NOTHING has been generated: the pre-commit
+ * preview, the pending state, and the fallback a failed generation enters the
+ * pool as (R-L6). Marking it would label the one honest picture as the fake
+ * one.
  *
  * ⚠ NOT the garment cutouts anywhere else either — the wardrobe, the picker
  * drawers, the slot cells. Same reason.
  *
- * ─── IT SIZES ITSELF, BECAUSE THE SURFACES RANGE 46pt TO 560pt ─────────────
- * The same mark has to sit on a 46pt post-row thumbnail and a 560pt feed
- * plate. A fixed font size is either illegible on one or shouting on the
- * other, so the band is measured off the container (`onLayout`) and the type
- * scales with it.
- *
- * Below `MIN_TEXT_W` the word cannot be set legibly at any size, so those
- * cells get the WASH ONLY. That is deliberate: the wash still visibly marks
- * them, and the risk the mark exists to cover — a hero image mistaken for
- * output — does not live on a 46pt thumbnail.
+ * ─── IT STILL SIZES ITSELF ─────────────────────────────────────────────────
+ * The four remaining surfaces run about 170pt (a17's preview is 46% of the
+ * width) to full-bleed, so the band is measured off its container
+ * (`onLayout`) and the type scales. `MIN_TEXT_W`'s wash-only fallback no
+ * longer fires anywhere — it was for the 46pt thumbnails, which are unmarked
+ * now — and it is kept because it is what stops a future small call site
+ * rendering an illegible smear.
  *
  * ─── NO NEW TOKENS ─────────────────────────────────────────────────────────
  * The wash is `ink` at low alpha and the band is `cream` at low alpha, both

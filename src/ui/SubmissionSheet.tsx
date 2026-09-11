@@ -71,7 +71,10 @@ export function SubmissionSheet({
           belongs to the two moments before that: the pre-commit preview and
           the pending state. */}
       <View style={{ marginTop: 14 }}>
-        <RenderedLook />
+        {/* WATERMARKED. Both drawers this serves are the end of a flow — the
+            day's completed card and Create's ready state — so both show a
+            finished generation and both carry the mark. */}
+        <RenderedLook watermark />
       </View>
 
       {caption ? <Tiny style={{ marginTop: 12 }}>{caption}</Tiny> : null}

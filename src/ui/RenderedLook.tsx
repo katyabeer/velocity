@@ -65,9 +65,17 @@ const RENDERED: readonly ImageSourcePropType[] = [
 export function RenderedLook({
   /** Which of the stand-ins. Defaults to 0 — the fixture flagged as yours. */
   index = 0,
+  /**
+   * The PLACEHOLDER mark. OFF by default and passed at four call sites — see
+   * the note above. Opt-in rather than opt-out because "every look in the app"
+   * is the thing that went wrong the first time: a default of `true` makes the
+   * next call site marked unless someone remembers not to be.
+   */
+  watermark = false,
   style,
 }: {
   index?: number;
+  watermark?: boolean;
   style?: ViewStyle;
 }) {
   const source = RENDERED[Math.abs(index) % RENDERED.length]!;
@@ -79,10 +87,7 @@ export function RenderedLook({
           other has to change with it, or this starts cutting into the subject
           the way the onboarding collage did on 4 Sep. */}
       <Image source={source} style={s.photo} resizeMode="cover" />
-      {/* THE PLACEHOLDER MARK. None of this photography is output — see
-          ui/LookWatermark.tsx for what it is for and the one picture in the
-          app that deliberately does not carry it. */}
-      <LookWatermark />
+      {watermark ? <LookWatermark /> : null}
     </View>
   );
 }
