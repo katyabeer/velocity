@@ -311,7 +311,15 @@ export function Tip({
   );
 }
 
-/** `.newbox` — the Klein "something changed overnight" notice. */
+/**
+ * ⚠ NO CALLER SINCE 13 Sep. Its only one was the Wardrobe's "two arrived
+ * overnight" panel, which came off because it restated what the grid beneath
+ * it already showed — the arrivals carry the `NEW` outline on their own tiles.
+ *
+ * Kept rather than deleted, the same way `Tip` was: it is a designed piece and
+ * the shape is worth having if an announcement panel is ever wanted again.
+ * Nothing renders it today, so it cannot be the reason a screen looks wrong.
+ */
 export function NewBox({ kick, title, body }: { kick: string; title: string; body: string }) {
   return (
     <View style={s.newBox}>

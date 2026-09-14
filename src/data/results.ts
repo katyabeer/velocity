@@ -59,6 +59,19 @@ export type DayResult = {
   closeCallsBadge: string;
   /** Did you back the look that won the room? */
   backedTheWinner: string;
+  /**
+   * ⚠ WHICH PHOTOGRAPHS, as indices into `yesterdayLooks()` — the pool of the
+   * job this result is about, NOT tonight's field. See that accessor in
+   * data/looks.ts for why the two are different on the returning state.
+   *
+   * They live on the fixture because the RESULT CARD's thumbnail and the
+   * results screen's plate must be the SAME PHOTOGRAPH (Katya, 13 Sep: "it
+   * should be the same one that is shown next to the Upper quarter heading").
+   * The card is the summary of the screen; two different looks across a single
+   * tap says the app does not know which one was yours.
+   */
+  yourLookIndex: number;
+  winnerLookIndex: number;
 };
 
 /**
@@ -87,6 +100,21 @@ const DAY_ONE: DayResult = {
   closestPairs: '2 of 3',
   closeCallsBadge: '6 of 7 close calls',
   backedTheWinner: 'You backed it',
+  /**
+   * ⟲ WAS `JUDGING_LOOKS[3]` for yours, computed in today/result.tsx. That is
+   * `look_d1_judge_13` — a `weak`-tier biker jacket, poplin shirt and straight
+   * jean, which is not a wedding look at all, sitting under a heading about an
+   * autumn wedding and a band of Upper half. Index 6 is the camel coat, brown
+   * dress and suede knee boots on a country-house drive, and index 0 (the
+   * winner) is green velvet under a camel coat among the guests.
+   *
+   * Nothing on screen changes for day 1 — its result act does not render
+   * (`yesterday: 'none'`) and `FORCE_RESULTS_READY` is the only way to reach
+   * it — but the two days report on the SAME brief, so there is no reason for
+   * them to name different photographs.
+   */
+  yourLookIndex: 6,
+  winnerLookIndex: 0,
 };
 
 /**
@@ -122,6 +150,9 @@ const DAY_TWO: DayResult = {
   closestPairs: '1 of 3',
   closeCallsBadge: '4 of 5 close calls',
   backedTheWinner: 'You backed it',
+  /** The same two frames as day 1 — it is the same job. */
+  yourLookIndex: 6,
+  winnerLookIndex: 0,
 };
 
 export const dayResult = (): DayResult => (ACTIVE_DAY === 2 ? DAY_TWO : DAY_ONE);

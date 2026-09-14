@@ -21,7 +21,7 @@ import { router } from 'expo-router';
 import { Foot, Gap, LogoBlock, Screen, Scroll, SectionHead } from '@/ui/layout';
 import { Body, Tiny, Kick, B } from '@/ui/text';
 import { Button, ChipRow, Segmented } from '@/ui/controls';
-import { EmptyState, NewBox } from '@/ui/cards';
+import { EmptyState } from '@/ui/cards';
 import { InventoryTile } from '@/ui/pieces';
 import { ComposedFlatLay } from '@/ui/ComposedFlatLay';
 import { RenderedLook } from '@/ui/RenderedLook';
@@ -55,8 +55,6 @@ export default function Wardrobe() {
    *  should not survive navigating away mid-question. */
   const [pendingDrop, setPendingDrop] = useState<string | null>(null);
 
-  /** What landed since yesterday — the `isNew` pieces, counted. */
-  const arrivals = w.pieces.filter((p) => p.isNew).length;
   const groups = groupByCategory(w.pieces, w.filter);
   const populatedCategories = CATEGORIES.filter((c) => w.pieces.some((p) => p.category === c));
 
@@ -100,21 +98,14 @@ export default function Wardrobe() {
         {/* ══ PIECES ══ */}
         {w.view === 'pieces' ? (
           <>
-            {/* ⚠ COUNTED, NOT WRITTEN. The kick and the body both said "three"
-                against `isNew` in the day-2 fixture — which was three then and
-                is two now, so the card was announcing an arrival that was not
-                in the grid below it. The fixture is free to change; the copy
-                reads off it. */}
-            {day === 2 && arrivals > 0 ? (
-              <View style={{ marginTop: 12 }}>
-                <NewBox
-                  kick={`${numberWord(arrivals)} arrived overnight`}
-                  title={`${w.count} pieces.`}
-                  body={`${numberWord(arrivals, true)} came out of last night's judging. Nothing you own can ever leave.`}
-                />
-              </View>
-            ) : null}
+            {/* ⟲ THE "TWO ARRIVED OVERNIGHT" PANEL IS GONE (Katya, 13 Sep).
+                It was the loudest thing on the screen and it reported a fact
+                the grid below already carries: the arrivals wear the `NEW`
+                outline on their own tiles, and the piece count is in the
+                masthead's subtitle. Same reasoning as every other panel this
+                app has lost — it restated what the thing underneath it shows.
 
+                `isNew` is untouched, so the outline still marks them. */}
             {w.count >= WARDROBE_CAP ? (
               <View style={s.full}>
                 <Kick tone="alert">wardrobe full · {WARDROBE_CAP} of {WARDROBE_CAP}</Kick>
@@ -352,19 +343,6 @@ export default function Wardrobe() {
     </Screen>
   );
 }
-
-/**
- * "two", not "2". The overnight card is a sentence, and a numeral mid-sentence
- * in a card of prose reads as a stat. Only small counts need words — a
- * wardrobe cannot take more than a handful of arrivals in one night — so
- * anything past six falls back to the numeral rather than pretending to be a
- * general-purpose number speller.
- */
-const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six'] as const;
-const numberWord = (n: number, capitalised = false): string => {
-  const w = WORDS[n] ?? String(n);
-  return capitalised ? w.charAt(0).toUpperCase() + w.slice(1) : w;
-};
 
 const s = StyleSheet.create({
   /** No alert hue survives the v3 collapse — ink border, sunk ground. */

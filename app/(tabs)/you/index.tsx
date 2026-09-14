@@ -152,7 +152,11 @@ function useRollup(): YouRollup {
     jobsEntered: mature ? 74 : seeded ? 5 : entered ? 1 : 0,
     freestylePosts: mature ? 44 : seeded ? 5 : archive.filter((a) => a.band === 'free').length,
     judgingRounds: mature ? 96 : seeded ? 7 : roundComplete ? 1 : 0,
-    streakDays: mature ? 9 : seeded ? 5 : 0,
+    /* SIX — every one of the six days in `ARCHIVE_DAY_TWO` has something
+       filed on it, so a shorter streak would contradict the list. ⚠ The row
+       itself is open question B; the recommendation is still that it comes off
+       and the `Week straight` milestone carries the idea. */
+    streakDays: mature ? 9 : seeded ? 6 : 0,
     /* ⚠ SUMMED FROM THE SERIES, not written. The chart's own header counts
        the series and the Stats grid prints this stat, one scroll apart on the
        same screen — so a literal here is a contradiction waiting for someone
@@ -277,13 +281,25 @@ export default function You() {
     router.replace('/onboarding/splash');
   };
 
-  const posts = seeded
+  /**
+   * THREE, AND THE REST IS BEHIND THE LINK (Katya, 13 Sep: "reduce Your posts
+   * to display three recent posts, the rest can go behind a click").
+   *
+   * The list is newest-first, so the slice is the three most recent — and it is
+   * applied AFTER the filter, so a chip still narrows the whole history rather
+   * than narrowing the three that happen to be on screen. `All 10 looks →`
+   * below is where the rest lives; the Looks archive in the Wardrobe holds all
+   * ten of them.
+   */
+  const POSTS_SHOWN = 3;
+  const filteredPosts = seeded
     ? YOU_DAY_TWO_POSTS.filter(
         (post) =>
           postFilter === 'All' ||
           (postFilter === 'Freestyle' ? post.kind === 'freestyle' : post.band === postFilter),
       )
     : [];
+  const posts = filteredPosts.slice(0, POSTS_SHOWN);
 
   return (
     <Screen>
@@ -309,7 +325,12 @@ export default function You() {
             the header of domain/you.ts. */}
         {sentenceState(r) !== 'hidden' ? (
           <Sig>
-            <SigHead>You in a sentence</SigHead>
+            {/* ⟲ "You in a sentence" until 13 Sep. It described the FORM of
+                the thing rather than its subject — every other head on this
+                screen names what is under it (Your posts, Reactions, Stats,
+                Milestones) — and a section called "in a sentence" is a section
+                promising to be brief, which is the app talking about itself. */}
+            <SigHead>Your style</SigHead>
             <Lede style={{ marginTop: 8 }}>
               You build <B>{buildClause(r.buildWords)}</B>
               {read ? (

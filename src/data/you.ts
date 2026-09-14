@@ -93,13 +93,24 @@ export const YOU_DAY_TWO_CAPTION = 'Thirty-four so far, from nineteen people. Ye
  * in domain/you.ts). The chart draws no axis and prints no numbers; the caption
  * carries the meaning.
  *
- * One value per day, five days, oldest first. Day one has no freestyle post —
- * the second render allowance went unused — which is a zero rather than a gap.
+ * One value per day, the five days behind today, oldest first. The earliest
+ * has no freestyle post — the second render allowance went unused — which is a
+ * zero rather than a gap.
  */
 export const YOU_DAY_TWO_SUBMISSIONS = {
   challenge: [3, 5, 2, 8, 11] as const,
   freestyle: [0, 2, 4, 3, 6] as const,
-  days: ['d1', 'd2', 'd3', 'd4', 'd5'] as const,
+  /**
+   * ⟲ WAS `d1…d5`, WHICH BROKE WHEN THE TENURE MOVED TO DAY 6 — ordinal ticks
+   * under a header reading "day 6" invite the question of where day 6 went,
+   * and the answer is boring: today's only filing is the saved set that never
+   * generated, so it has no reactions to plot.
+   *
+   * Labelled by RECENCY instead, which is the same vocabulary the reactions
+   * chart above uses ('yest', 'today') and does not have to be kept in step
+   * with `dayNumber`.
+   */
+  days: ['5d', '4d', '3d', '2d', 'yest'] as const,
   caption:
     'Reactions per submission, day by day. Your brief entries are getting a stronger read than your free posts — and both are climbing.',
 } as const;

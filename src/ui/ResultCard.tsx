@@ -15,6 +15,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { palette, border } from '@/theme/tokens';
 import { LookPlate } from './LookPlate';
 import { dayResult } from '@/data/results';
+import { yesterdayLooks } from '@/data/looks';
 import type { YesterdayState } from '@/domain/clock';
 
 export function ResultCard({ state, onPress }: { state: YesterdayState; onPress: () => void }) {
@@ -63,9 +64,19 @@ export function ResultCard({ state, onPress }: { state: YesterdayState; onPress:
   return (
     <Pressable onPress={onPress} style={s.card} accessibilityRole="button">
       <View style={{ width: 58 }}>
+        {/* ⟲ A REAL PHOTOGRAPH SINCE 13 Sep, and it is THE SAME ONE the results
+            screen shows next to the band (Katya's ask). This was a bare tinted
+            plate with a `·` ghosted across it — on the one card whose whole
+            subject is a look you made. The image comes off the fixture both
+            screens read, so the card and the screen it opens cannot drift.
+
+            `LookPlate` falls back to the ghost when `image` is undefined, so
+            the `label` and `tint` below are still doing their job on any state
+            whose pool has no frame at that index. */}
         <LookPlate
           tint={config.tint}
           occasion={config.title}
+          image={yesterdayLooks()[r.yourLookIndex]?.image}
           height={73}
           label={config.label}
           showCaption={false}

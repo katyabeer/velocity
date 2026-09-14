@@ -169,11 +169,20 @@ export const DAY_CONFIG = {
      *  this screen that has changed since the first sitting. */
     subtitle: 'Your best placing yet',
     /**
-     * FIVE, not two. The story is "a few days in": yesterday's result landed,
-     * the wardrobe has been accumulating, and You has enough history to show a
-     * pattern rather than a first data point. Two days cannot carry any of it.
+     * "A few days in" — yesterday's result landed, the wardrobe has been
+     * accumulating, and You has enough history to show a pattern rather than a
+     * first data point. Two days cannot carry any of it.
+     *
+     * ⟲ SIX, NOT FIVE, AND THE ARCHIVE IS WHY. `ARCHIVE_DAY_TWO` holds ten
+     * looks across today plus the five days behind it — TWO A DAY, which is
+     * exactly what invariant 22 allows (one brief, one freestyle). Five briefs
+     * at one a day need five days behind today, so the account is on its sixth.
+     * At five the fixture quietly claimed two briefs on one day.
+     *
+     * Stays under `NEW_FOR_DAYS` (7), so the header reads `day 6 · 10 looks`
+     * rather than switching to the weeks form.
      */
-    dayNumber: 5,
+    dayNumber: 6,
     /** Unchanged, and deliberately. Invariant 1 is the whole economy — a big
      *  token float on the demo state quietly says clothes are free. */
     startingTokens: 2,
@@ -253,7 +262,23 @@ export const SIMULATED_FAILURE = false;
  * Set it to `'entry'` for an evening session, and put it back to `null`
  * afterwards. Same class of thing as ACTIVE_DAY: a build constant, not a HUD.
  */
-export const FORCE_PHASE: Phase | null = null;
+export const FORCE_PHASE: Phase | null = 'entry';
+
+/* ⟲ SET TO `'entry'` ON 13 Sep. Katya: "make the build journey available
+   regardless of the time of the day."
+
+   This is the one control that does it, and it is the only place that needs
+   touching — `canBuild` in domain/today.ts's `jobSteps` and the CTA in
+   today/index.tsx are the ONLY two phase gates in the day's flow. `build.tsx`,
+   `judging.tsx` and `entered.tsx` read the phase nowhere, so voting stays
+   reachable through the flow's own replace chain and nothing is traded away by
+   holding the app in `entry`.
+
+   ⚠ The cost, stated: the clock copy no longer moves. "Build by 8pm" reads the
+   same at 22:00, and the card never shows the after-8pm or overnight faces —
+   which are real states with their own copy ("closed, now judging", "Results at
+   7am"). They are unreachable while this is set. Put it back to `null` to get
+   the real clock, which is the design. */
 
 /**
  * ⚠ HAS TODAY'S RESULT LANDED? Normally impossible to be true — see

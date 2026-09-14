@@ -663,3 +663,23 @@ export const judgingLooks = (): readonly Look[] =>
  *  keeps drawing from the judging pool — which is what every day did before. */
 export const spreadLooks = (): readonly Look[] =>
   ACTIVE_DAY === 2 ? SPREAD_LOOKS_DAY_TWO : JUDGING_LOOKS;
+
+/**
+ * ⚠ THE JOB THAT SETTLED THIS MORNING — **not tonight's field**, and the
+ * distinction is the whole reason this exists separately.
+ *
+ * The result card and the results screen report on YESTERDAY. On the returning
+ * state yesterday's job is the autumn wedding (`playedBriefs()[0]`), while
+ * tonight's is the office — so drawing those two screens from `judgingLooks()`
+ * put office photography under a heading about a wedding. Caught by Katya,
+ * 13 Sep: "the results screen should be all about the autumn wedding look, so
+ * use the day 1 looks for the results screen so the visuals match the brief."
+ *
+ * It returns `JUDGING_LOOKS` on every day, and that is correct rather than
+ * lazy: on day 2 yesterday's job IS day 1's job, and on day 1 the result act
+ * does not render at all (`yesterday: 'none'`). It is a FUNCTION NAMED FOR ITS
+ * ROLE because the value and the role are only incidentally the same — add a
+ * third sitting and this is the one that has to change, and a call site reading
+ * `JUDGING_LOOKS` directly would silently be wrong again.
+ */
+export const yesterdayLooks = (): readonly Look[] => JUDGING_LOOKS;

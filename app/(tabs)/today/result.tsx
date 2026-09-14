@@ -23,7 +23,7 @@ import { Button } from '@/ui/controls';
 import { BandLadder, Card, Stat } from '@/ui/cards';
 import { LookPlate } from '@/ui/LookPlate';
 import { JUDGING_QUOTA } from '@/domain/economy';
-import { judgingLooks } from '@/data/looks';
+import { yesterdayLooks } from '@/data/looks';
 import { dayResult } from '@/data/results';
 
 /**
@@ -38,16 +38,27 @@ import { dayResult } from '@/data/results';
  *   ⚠ Both are FIXTURES. There is no per-look settled record (Jack's open
  *   question 5), so nothing here is your actual entry.
  */
-const POOL = judgingLooks();
-const YOUR_LOOK = POOL[3]!;
-const THE_WINNER = POOL.find((l) => l.tier === 'strong')!;
-
 export default function Result() {
   /* ⚠ ONE FIXTURE, SHARED WITH THE CARD THAT OPENS THIS SCREEN. Every number
      and sentence below used to be written here AND again in ui/ResultCard.tsx,
      with nothing keeping the summary and the detail of one result in step. See
      data/results.ts. */
   const r = dayResult();
+
+  /**
+   * ⚠ `yesterdayLooks()`, NOT `judgingLooks()` — see that accessor in
+   * data/looks.ts. This screen is about the job that SETTLED, and on the
+   * returning state that is the autumn wedding while tonight's field is the
+   * office; the judging pool put a man in an office lobby under "you placed
+   * Upper quarter" on an autumn wedding.
+   *
+   * ⟲ The indices moved onto the fixture too. They were `POOL[3]` and
+   * `find(tier === 'strong')` computed here at module scope, so the result card
+   * had no way to show the same photograph as the screen it opens.
+   */
+  const pool = yesterdayLooks();
+  const yourLook = pool[r.yourLookIndex];
+  const theWinner = pool[r.winnerLookIndex];
 
   return (
     <Screen>
@@ -83,7 +94,7 @@ export default function Result() {
             <LookPlate
               tint="t2"
               occasion="Your look"
-              image={YOUR_LOOK.image}
+              image={yourLook?.image}
               height={146}
               showCaption={false}
             />
@@ -117,7 +128,7 @@ export default function Result() {
             <LookPlate
               tint="t5"
               occasion="Top of the room"
-              image={THE_WINNER.image}
+              image={theWinner?.image}
               height={126}
               showCaption={false}
             />

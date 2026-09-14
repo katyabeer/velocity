@@ -237,11 +237,26 @@ export type ArchiveEntry = {
 export const ARCHIVE_DAY_ONE: readonly ArchiveEntry[] = [];
 
 /**
- * SIX PAST LOOKS, and every one of them carries `pieces` — which is what turns
- * the archive row's thumbnail into a real composed flat lay instead of the
- * empty grey plate the old single fixture got. Job names come from
- * `playedBriefs()` in data/challenges.ts, most recent first, so the archive,
- * the result card and the You screen's post list are all telling one story.
+ * TEN PAST LOOKS, and every one carries `pieces` — which is what turns the
+ * archive row's thumbnail into a real composed flat lay instead of the empty
+ * grey plate the old single fixture got. Job names come from `playedBriefs()`
+ * in data/challenges.ts, most recent first, so the archive, the result card and
+ * the You screen's post list all tell one story.
+ *
+ * ⟲ IT WAS SIX UNTIL 13 Sep, and that was a visible hole: the You screen's
+ * `All 10 looks →` reads `r.looks`, so the link promised ten and the list it
+ * opened held six. Ten rows also make the day arithmetic work — TWO A DAY,
+ * which is exactly what invariant 22 allows (one brief, one freestyle), across
+ * the five days behind today. Today's brief is not in here because it has not
+ * been entered yet; the card still says Complete now.
+ *
+ * ⚠ FIVE OF THE TEN CARRY A BAND. The rest are `free` (no brief settles a look
+ * nobody asked for) or `flat` (saved, never generated). So `looksSettled: 10`
+ * in the You rollup is looser than this list — it is the figure that clears the
+ * `Strength` tip's threshold, and dropping it to five deletes the whole
+ * `Just for you` section, because `qualifyingTips` holds a lone Weakness.
+ * Flagged rather than reconciled: the thresholds are themselves unmeasured
+ * estimates (you-brief q4).
  *
  * ⚠ ONE ROW IS A `flat` BAND, and that is a state rather than a result: a saved
  * combination that never generated. Its thumbnail stays a flat lay even once
@@ -252,6 +267,8 @@ export const ARCHIVE_DAY_ONE: readonly ArchiveEntry[] = [];
  * look nobody was briefed for, so a band would be an invention.
  */
 export const ARCHIVE_DAY_TWO: readonly ArchiveEntry[] = [
+  /* ── today. The brief is still open (the card reads Complete now), so the
+        only thing filed is the freestyle — and it never generated ── */
   {
     job: 'Rain, and a long walk',
     band: 'flat',
@@ -259,6 +276,8 @@ export const ARCHIVE_DAY_TWO: readonly ArchiveEntry[] = [
     note: '4 pieces · saved as a set',
     pieces: ['structured trench coat', 'black fine turtleneck', 'wide leg wool trouser', 'chunky lug loafer'],
   },
+
+  /* ── yesterday ── */
   {
     job: 'The autumn wedding',
     band: 'Upper quarter',
@@ -269,10 +288,12 @@ export const ARCHIVE_DAY_TWO: readonly ArchiveEntry[] = [
   {
     job: 'Freestyle',
     band: 'free',
-    when: '2 days ago',
+    when: 'yesterday',
     note: 'no brief · 27 reactions',
     pieces: ['black leather biker jacket', 'black fine turtleneck', 'charcoal suit trouser', 'pointed stiletto knee boot', 'maxi wrap scarf'],
   },
+
+  /* ── 2 days ago ── */
   {
     job: 'The airport',
     band: 'Upper half',
@@ -281,6 +302,15 @@ export const ARCHIVE_DAY_TWO: readonly ArchiveEntry[] = [
     pieces: ['belted double breasted overcoat', 'fair isle cable jumper', 'dark indigo straight jean', 'chocolate suede boot', 'supersized tote'],
   },
   {
+    job: 'Freestyle',
+    band: 'free',
+    when: '2 days ago',
+    note: 'no brief · 9 reactions',
+    pieces: ['suede jacket', 'crisp poplin shirt', 'leather tailored skirt', 'slim penny loafer', 'leather gloves'],
+  },
+
+  /* ── 3 days ago ── */
+  {
     job: 'One bold piece',
     band: 'Lower half',
     when: '3 days ago',
@@ -288,11 +318,36 @@ export const ARCHIVE_DAY_TWO: readonly ArchiveEntry[] = [
     pieces: ['plaid check overcoat', 'silk charmeuse blouse', 'leather tailored skirt', 'glove pump heel', 'jewelled evening clutch'],
   },
   {
+    job: 'Freestyle',
+    band: 'free',
+    when: '3 days ago',
+    note: 'no brief · 4 reactions',
+    pieces: ['Le Smoking tuxedo jacket', 'crisp poplin shirt', 'pleated wool trouser', 'slim penny loafer'],
+  },
+
+  /* ── 4 days ago ── */
+  {
     job: 'Monochrome',
     band: 'Upper half',
     when: '4 days ago',
-    note: 'your first · 2 took a piece',
+    note: '2 took a piece',
     pieces: ['charcoal suit jacket', 'black fine turtleneck', 'charcoal suit trouser', 'slim penny loafer', 'supersized tote'],
+  },
+  {
+    job: 'Freestyle',
+    band: 'free',
+    when: '4 days ago',
+    note: 'no brief · 2 reactions',
+    pieces: ['funnel neck wool coat', 'boxy broad shoulder knit', 'charcoal check pencil skirt', 'chocolate suede boot'],
+  },
+
+  /* ── 5 days ago — the first look they ever entered ── */
+  {
+    job: 'Sunday, nowhere',
+    band: 'Upper half',
+    when: '5 days ago',
+    note: 'your first · 1 took a piece',
+    pieces: ['structured trench coat', 'crisp poplin shirt', 'dark indigo straight jean', 'chunky lug loafer', 'maxi wrap scarf'],
   },
 ];
 

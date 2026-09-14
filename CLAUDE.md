@@ -537,6 +537,23 @@ A fresh session will be tempted by several of these. They were tried and rejecte
 - "You won't know when each lands…" under *See upcoming challenges*. It argued
   for the tap instead of offering it, and the screen it leads to makes the
   point with the list in front of you
+- **The Wardrobe's "two arrived overnight" panel** (`NewBox`). Cut 13 Sep: it
+  was the loudest thing on the screen and reported a fact the grid beneath it
+  already carried — the arrivals wear the `NEW` outline on their own tiles and
+  the piece count is in the masthead's subtitle. Same reasoning as every other
+  panel this app has lost. `isNew` is untouched; `NewBox` is kept with no
+  caller, like `Tip`
+- **"You in a sentence"** as the first head on a10. It is **Your style**
+  (13 Sep): it named the FORM of the thing rather than its subject, where every
+  other head on that screen names what is under it, and a section called "in a
+  sentence" is a section promising to be brief — the app talking about itself
+- **`judgingLooks()` on the result card and the results screen.** They report on
+  the job that SETTLED, and on the returning state that is the autumn wedding
+  while tonight's field is the office — so the results screen put a man in an
+  office lobby under "you placed Upper quarter" on an autumn wedding.
+  `yesterdayLooks()` in `data/looks.ts` is the pool for both, and the two
+  photographs are named on the fixture (`yourLookIndex`, `winnerLookIndex`) so
+  the card's thumbnail and the screen's plate cannot be different looks
 - `title="Challenges"` in the challenges screen's bar, and the two lines of
   copy under it — the derived count kicker ("14 this month, in no particular
   order") and "You won't know which lands when…", which spent three lines
@@ -728,6 +745,14 @@ copy was unreachable to anyone who did not enter. **`FORCE_PHASE` in
 needs that**: without it a 21:00 session boots into `judging` and the
 participant cannot build a look at all.
 
+⚠ **It is set to `'entry'`** (13 Sep, Katya: "make the build journey available
+regardless of the time of the day"), so the app is held in daytime and the
+build flow is always reachable. `canBuild` in `jobSteps` and the CTA in
+`today/index.tsx` are the only two phase gates in the day's flow — `build.tsx`,
+`judging.tsx` and `entered.tsx` read the phase nowhere — so nothing is traded
+away except the clock copy moving: "Build by 8pm" reads the same at 22:00, and
+the after-8pm and overnight faces of the card are unreachable while it is set.
+
 ## Test states
 
 There is no HUD. The seed state is one constant: `SEED_DAY` in
@@ -746,11 +771,11 @@ Check it there after any work on a shared file.
 |---|---|---|---|
 | the loading screen | shown → carousel | **shown → Today** | shown → Today |
 | onboarding | yes, from slide 1 | skipped | skipped |
-| `dayNumber` | 1 | **5** | 124 |
+| `dayNumber` | 1 | **6** | 124 |
 | tonight's job | the autumn wedding | **the new job** (office) | the autumn wedding |
-| yesterday's result | **absent entirely** | the wedding · **Upper quarter** · 38 | as before |
+| yesterday's result | **absent entirely** | the wedding · **Upper quarter** · 38, on d1 photography | as before |
 | wardrobe | **0**, then the 4–6 you enter | **30**, real catalogue names | 96 (legacy names, grey) |
-| looks archive | empty | **6**, all with piece lists | 9 |
+| looks archive | empty | **10**, all with piece lists | 9 |
 | tokens at start | 0 | 2 | 2 |
 | overnight roundel | hidden | shown | shown |
 | photography | `assets/looks/d1` | **`d2` + `spreads`, no d1 frame** | d1 |
