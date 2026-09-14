@@ -736,8 +736,15 @@ reboots into that state. **On web, `?day=1` / `?day=2` / `?day=3` overrides it
 for one load** — added 13 Sep so both demo states can be checked on the
 deployed URL without a commit.
 
-| | Day 1 | Day 2 · **the returning state** | Established |
+⚠ **`SEED_DAY` IS `2`.** The default inverted on 13 Sep (Katya: *"I need the
+user to load the app and immediately see the day 2+ experience. Hide away day 1
+but don't override it"*) — so **a bare URL is the returning state, and Day 1
+lives at `?day=1`**. Day 1's content is unchanged; it is hidden, not gone.
+Check it there after any work on a shared file.
+
+| | Day 1 · `?day=1` | Day 2 · **shipped default** | Established |
 |---|---|---|---|
+| the loading screen | shown → carousel | **shown → Today** | shown → Today |
 | onboarding | yes, from slide 1 | skipped | skipped |
 | `dayNumber` | 1 | **5** | 124 |
 | tonight's job | the autumn wedding | **the new job** (office) | the autumn wedding |
@@ -758,8 +765,20 @@ The overnight roundel is hidden because a zero there would be a lie. The shuffle
 
 The prototype is shown to Frame 23 twice — Day 1, then the **same URL** the next
 day. Nothing persists, so the second sitting is a different SEED and the switch
-is one line. **Day 1 must stay byte-for-byte intact**; check it with `?day=1`
-before shipping anything.
+is one line — **and that line now ships as `2`**, so the URL opens on the
+returning state. **Day 1 must stay byte-for-byte intact**; it is at `?day=1`,
+which is the only route to it from the front door, so check it there before
+shipping anything.
+
+**Every day shows the loading screen** (13 Sep). `app/index.tsx` used to branch
+— splash for a new user, straight to Today for everyone else — which left the
+brief's "keep the loading screen" half-done on the returning state. It always
+redirects to the splash now and **the splash chooses its own exit**, off the
+SESSION's day rather than `ACTIVE_DAY`: `logOut` resets the session to day 1 and
+routes here, so reading the build constant would send someone who just logged
+out back into the state they were leaving. `logOut` also clears the wardrobe now
+(`hydrate(1)`, which is what that dead function was kept for) — without it,
+logging out of a day-2 build opens onboarding owning thirty pieces.
 
 Slot 2 was repurposed rather than a fourth day added: `DayConfig` is a union of
 the three literal shapes, so **a key added to one day must be added to all

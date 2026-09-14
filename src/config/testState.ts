@@ -8,12 +8,19 @@
  * participant would read it (open question E). Here the seed state is a build
  * constant instead.
  *
- * Change ACTIVE_DAY, save, and Fast Refresh reboots the app into that state.
+ * Change `SEED_DAY`, save, and Fast Refresh reboots the app into that state.
  *
  *   1  brand new       onboarding from slide 1, EMPTY wardrobe, no result act
- *   2  returning       FIVE DAYS IN — see below. Skips onboarding, yesterday's
- *                      result is their best yet, ~30 pieces, 6 looks, 3 badges
- *   3  established     skips onboarding, 96 pieces, 9 looks, all five You sections
+ *   2  returning       ⟵ WHAT THE BUILD SHIPS IN. Five days in; see below.
+ *                      No onboarding, yesterday's result is their best yet,
+ *                      ~30 pieces, 6 looks, 3 badges
+ *   3  established     no onboarding, 96 pieces, 9 looks, all five You sections
+ *
+ * ⚠ THE DEFAULT INVERTED ON 13 Sep. Katya: "I need the user to load the app and
+ * immediately see the day 2+ experience. Hide away day 1 (but don't override
+ * it)." So a bare URL is the RETURNING STATE, and Day 1 is hidden rather than
+ * gone — `?day=1` is the whole way back to it, and nothing about its content
+ * changed. Check it there before shipping any work that touches a shared file.
  *
  * If you want in-session switching back for a moderated session, add it as a
  * dev-only overlay gated on __DEV__ — not as a panel beside the phone.
@@ -54,15 +61,22 @@ import type { MilestoneKey } from '@/domain/bands';
 
 export type TestDay = 1 | 2 | 3;
 
-/** What the build ships in. ONE LINE IS THE SWITCH between the two sittings. */
-const SEED_DAY: TestDay = 1;
+/**
+ * What the build ships in, and ONE LINE IS THE SWITCH between the two sittings.
+ *
+ * `2` as of 13 Sep — the deployed URL opens on the returning state. Set it to
+ * `1` to put the first sitting back in front of a bare URL; `?day=1` reaches
+ * Day 1 either way without touching this.
+ */
+const SEED_DAY: TestDay = 2;
 
 /**
  * ⚠ WEB-ONLY PREVIEW OVERRIDE — `?day=1`, `?day=2`, `?day=3`.
  *
  * So both sittings can be checked on the deployed URL without a commit, and so
- * Day 1 can be proven unchanged after any work on Day 2. `SEED_DAY` is still
- * what a bare URL serves.
+ * Day 1 can be proven unchanged after any work on Day 2. `SEED_DAY` is what a
+ * bare URL serves — which since 13 Sep is day 2, making this override the ONLY
+ * route to Day 1 from the front door.
  *
  * IT HAS TO LIVE HERE AND NOWHERE ELSE. Several modules compute day-dependent
  * constants at MODULE SCOPE — `YOUR_LOOK` in today/result.tsx, `RENDERED` in

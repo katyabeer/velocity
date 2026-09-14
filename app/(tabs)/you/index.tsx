@@ -261,6 +261,15 @@ export default function You() {
   const logOut = () => {
     useSession.getState().resetToDay(1);
     useEconomy.getState().resetToDay(1);
+    /* ⟲ THE WARDROBE WAS MISSING FROM THIS LIST, and on a build seeded to day 2
+       it shows: log out, and onboarding opens owning thirty pieces — on the run
+       whose entire premise is that the wardrobe starts EMPTY and the look you
+       enter becomes it (`adoptLook`). It was harmless while the shipped seed
+       was day 1, because day 1 seeds nothing.
+
+       `hydrate` in state/wardrobe.ts existed for exactly this and had no
+       caller; it does now. */
+    useWardrobe.getState().hydrate(1);
     useEntry.getState().reset();
     useCreate.getState().startAgain();
     useMagazine.getState().reset();

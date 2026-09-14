@@ -9,6 +9,30 @@
  * rendered as APP_WORDMARK plus a separately animated dot rather than as one
  * APP_NAME string — see config/app.ts.
  *
+ * ─── IT IS NOT AN ONBOARDING SCREEN ANY MORE (13 Sep) ──────────────────────
+ * ⟲ `app/index.tsx` used to branch — splash for a new user, straight to Today
+ * for everyone else — so the loading beat only existed on day 1. The brief for
+ * the returning state wants it kept ("No onboarding — we need to keep the
+ * loading screen though — as they would have been logged in already"), so every
+ * day lands here now and THIS SCREEN chooses what follows:
+ *
+ *   onboarding  →  /onboarding/intro/1   the carousel, then the setup chain
+ *   otherwise   →  /(tabs)/today         a returning user is already in
+ *
+ * ⚠ THE DAY COMES FROM THE SESSION, NOT FROM `ACTIVE_DAY`, and that is
+ * load-bearing rather than incidental. `logOut` in you/index.tsx calls
+ * `resetToDay(1)` on the session and then routes here — so on a build seeded
+ * to day 2, reading `ACTIVE_DAY` would send someone who has just logged out
+ * straight back into the state they were leaving. Reading the session is what
+ * keeps "log out" meaning "start again".
+ *
+ * ⚠ AND IT STILL LIVES UNDER `app/onboarding/`, which now slightly
+ * misdescribes it. Kept there on purpose: moving a route between folders makes
+ * Metro serve the old tree for several minutes (see CLAUDE.md — the ghost
+ * `create` tab), and the path is the only onboarding thing about it. It renders
+ * `Screen`, not `OnboardingFrame`, so it carries none of onboarding's chrome,
+ * gap or dot sequence.
+ *
  * The progress bar that used to sit under the wordmark is gone with it. Two
  * loading indicators for one load is one too many, and the mockup has no bar.
  *
@@ -24,6 +48,8 @@ import { useEffect, useRef } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Screen } from '@/ui/layout';
+import { dayConfig } from '@/config/testState';
+import { useSession } from '@/state/session';
 import { palette, useReducedMotion } from '@/theme/tokens';
 import { APP_WORDMARK } from '@/config/app';
 
@@ -44,10 +70,21 @@ export default function Splash() {
   const pulse = useRef(new Animated.Value(1)).current;
   const reduced = useReducedMotion();
 
+  /* ONE DESTINATION, TWO EXITS. The timeout below and the tap-to-skip on the
+     Pressable both use it — computing it twice is how the tap ends up going
+     somewhere the wait does not. See the header for why this reads the session
+     rather than ACTIVE_DAY. */
+  const day = useSession((s) => s.day);
+  const next = dayConfig(day).onboarding ? '/onboarding/intro/1' : '/(tabs)/today';
+
   useEffect(() => {
-    const t = setTimeout(() => router.replace('/onboarding/intro/1'), LOADING_MS);
+    /* A `setTimeout`, not an animation callback — and on this screen that is
+       the difference between the app starting and not. A starved JS frame loop
+       never runs `Animated.timing`'s callback (it lost the judging round's vote
+       on 4 Sep), and here it would leave the wordmark on screen for ever. */
+    const t = setTimeout(() => router.replace(next), LOADING_MS);
     return () => clearTimeout(t);
-  }, []);
+  }, [next]);
 
   useEffect(() => {
     /* Reduced motion gets a solid dot, not a slower one — the pulse is
@@ -79,7 +116,7 @@ export default function Splash() {
     <Screen>
       <Pressable
         style={s.wrap}
-        onPress={() => router.replace('/onboarding/intro/1')}
+        onPress={() => router.replace(next)}
         accessibilityRole="button"
         accessibilityLabel={`${APP_WORDMARK} — loading`}
       >

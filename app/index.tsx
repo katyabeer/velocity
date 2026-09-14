@@ -1,17 +1,20 @@
 /**
- * Entry point. Sends a new user to onboarding and everyone else to Today.
+ * Entry point. EVERY day lands on the splash; the splash decides what follows.
  *
- * Day 1 lands on the splash screen, then the intro carousel. Day 2 and
- * Established land on Today, because a returning user has already seen it.
- * That is the prototype's `applyDay()` behaviour, minus the HUD.
+ * ⟲ IT USED TO BRANCH HERE — `onboarding ? '/onboarding/splash' : '/(tabs)/today'`
+ * — which meant the loading screen existed on day 1 only. That was wrong
+ * against the brief for the returning state (Katya, 13 Sep: "No onboarding — we
+ * need to keep the loading screen though — as they would have been logged in
+ * already"), and it put the decision in the wrong place: the splash IS the
+ * load, and what follows a load is a property of the account rather than of the
+ * router's front door. So the branch moved into `onboarding/splash.tsx`.
+ *
+ * Note this is the `/` route only. A deep link goes straight to its screen and
+ * sees no splash, which is correct — nothing is loading.
  */
 
 import { Redirect } from 'expo-router';
-import { dayConfig } from '@/config/testState';
-import { useSession } from '@/state/session';
 
 export default function Index() {
-  const day = useSession((s) => s.day);
-  const onboarding = dayConfig(day).onboarding;
-  return <Redirect href={onboarding ? '/onboarding/splash' : '/(tabs)/today'} />;
+  return <Redirect href="/onboarding/splash" />;
 }

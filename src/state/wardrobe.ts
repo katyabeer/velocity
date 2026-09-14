@@ -151,11 +151,16 @@ export const useWardrobe = create<WardrobeState>((set) => ({
     }),
 
   /**
-   * ⚠ NOTHING CALLS THIS. Kept because it is the one piece of machinery a
-   * runtime day switch would need — the stores only seed at boot, so changing
-   * `ACTIVE_DAY` without a reload leaves this one stale. The `?day=` URL
-   * override sidesteps it by BEING a reload, and switching between the two
-   * sittings is a push. Lost its `capsule` argument with `inventoryDayTwo`.
+   * Re-seed to a given day. ⟲ It had no caller until 13 Sep; **`logOut` in
+   * you/index.tsx calls it now** (`hydrate(1)`), because that function resets
+   * six stores and this was the one it skipped — invisible while the shipped
+   * seed was day 1 and empty, obvious on a day-2 default, where logging out
+   * opened onboarding with thirty pieces already owned.
+   *
+   * It is also the machinery a runtime day switch would need: the stores only
+   * seed at boot, so changing `SEED_DAY` without a reload would leave this one
+   * stale. The `?day=` override sidesteps that by BEING a reload. Lost its
+   * `capsule` argument with `inventoryDayTwo`.
    */
   hydrate: (day) => set({ ...seed(day), view: 'pieces', filter: 'All' }),
 }));
