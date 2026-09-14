@@ -70,10 +70,25 @@ export const STRIP_SLOTS: readonly Slot[] = SLOTS.flatMap((s) =>
 );
 
 /**
- * Two loaner pieces per brief, so a thin wardrobe can never lock you out of
+ * Loaner pieces per brief, so a thin wardrobe can never lock you out of
  * entering. They go back at close. (Handover §5.)
+ *
+ * ⟲ 2 → 4 ON 13 Sep, and it is a real loosening rather than a number tweak.
+ * Katya: the returning state should offer "everything they own plus a few
+ * more". The shelf it is drawn from went from two hand-picked pieces to every
+ * catalogue garment the user does not own — see `today/build.tsx` — so a cap of
+ * two would have put thirty tempting things in the drawer and let you use two
+ * of them.
+ *
+ * ⚠ WHAT IT COSTS. At four of a six-piece look, a look can now be two-thirds
+ * borrowed, and the wardrobe is correspondingly less of a constraint. The
+ * economy still bites — you cannot enter on loaners alone, and nothing
+ * borrowed enters the wardrobe (invariant 1 is about OWNERSHIP, and loaners go
+ * back at close) — but this is the dial between "your clothes matter" and
+ * "the drawer is a shop", and it just moved towards the shop. Katya's call,
+ * made knowingly; drop it back to 2 or 3 if looks start reading as borrowed.
  */
-export const LOANS_PER_BRIEF = 2;
+export const LOANS_PER_BRIEF = 4;
 
 /**
  * The rule, in one line, for the builder to print.

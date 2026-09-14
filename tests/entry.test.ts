@@ -101,15 +101,37 @@ test('clearing a slot removes whatever is in it', () => {
   assert.equal(slotOf(cleared[0]!.name), 'Top');
 });
 
-test('at most two loaners per brief', () => {
+/* ⟲ DERIVED FROM THE CAP, NOT FROM THE NUMBER TWO. This test hardcoded two
+   loaners and asserted the third was refused; it broke the moment
+   LOANS_PER_BRIEF moved to 4 on 13 Sep, which is the test doing its job — but
+   it was asserting a FIXTURE VALUE rather than the rule. The rule is "you may
+   fill up to the cap and the next one is refused", and that is what this says
+   now, at whatever the cap happens to be.
+
+   One name per slot, because SLOT_CAPACITY would refuse the second Outer for a
+   reason that has nothing to do with loans and would fake a pass. */
+const LOANABLE = ['sequin blazer', 'roll neck', 'grey trouser', 'gold sandal', 'gold hoop'];
+
+test('loaners are capped at LOANS_PER_BRIEF per brief', () => {
+  assert.ok(
+    LOANABLE.length > LOANS_PER_BRIEF,
+    'the fixture must have one more loanable piece than the cap, or nothing is refused',
+  );
+  assert.equal(
+    new Set(LOANABLE.map(slotOf)).size,
+    LOANABLE.length,
+    'one loanable piece per slot, or SLOT_CAPACITY refuses it instead of the loan cap',
+  );
+
   let picks: Pick[] = [];
-  picks = togglePick(picks, { name: 'sequin blazer', source: 'loan' });
-  picks = togglePick(picks, { name: 'gold sandal', source: 'loan' });
+  for (const name of LOANABLE.slice(0, LOANS_PER_BRIEF)) {
+    picks = togglePick(picks, { name, source: 'loan' });
+  }
   assert.equal(loansUsed(picks), LOANS_PER_BRIEF);
 
-  // A third loaner is refused, and does not disturb what is already in.
+  // One past the cap is refused, and does not disturb what is already in.
   const before = picks.length;
-  picks = togglePick(picks, { name: 'gold hoop', source: 'loan' });
+  picks = togglePick(picks, { name: LOANABLE[LOANS_PER_BRIEF]!, source: 'loan' });
   assert.equal(loansUsed(picks), LOANS_PER_BRIEF);
   assert.equal(picks.length, before);
 });

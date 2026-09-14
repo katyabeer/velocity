@@ -537,6 +537,17 @@ A fresh session will be tempted by several of these. They were tried and rejecte
 - "You won't know when each lands…" under *See upcoming challenges*. It argued
   for the tap instead of offering it, and the screen it leads to makes the
   point with the list in front of you
+- **The day-2 builder offering only what you own.** It did until 14 Sep, and it
+  made the returning state offer HALF of day 1 — sixty pieces on the first run,
+  thirty on day 2, every drawer halved (Shoes 12 → 5). The loan shelf is the
+  catalogue minus your wardrobe now, flagged `NEW`, computed in
+  `today/build.tsx` rather than written down so it cannot drift from the
+  wardrobe fixture. `LOANS_PER_BRIEF` went 2 → 4 with it. ⚠ That is the dial
+  between "your clothes matter" and "the drawer is a shop" and it moved towards
+  the shop — a six-piece look can now be two-thirds borrowed. ⚠ `isLoanName`
+  must stay false on the FIRST RUN: day 1 lends nothing, so without that guard
+  the two fallback shelf names wear a NEW badge in a drawer where nothing is
+  borrowed
 - **Three more explanatory lines on the results screen**, cut 13 Sep: "Never a
   number — 20 comparisons can't carry one", "Five bands, always relative to
   people who started when you did", and the two `Stat` rows under *your calls*

@@ -91,11 +91,52 @@ export default function Build() {
    * cold-start floor. Established keeps the fixed twelve; Day 2 uses inventory.
    */
   const firstRun = day === 1;
+  const catalogue = cataloguePool(rails).map((g) => g.name);
   const pool: readonly string[] = firstRun
-    ? cataloguePool(rails).map((g) => g.name)
+    ? catalogue
     : day >= 3
       ? BUILDER_POOL_ESTABLISHED
       : owned.map((p) => p.name);
+
+  /**
+   * ⟲ THE LOAN SHELF IS THE WHOLE CATALOGUE MINUS WHAT YOU OWN, ON DAY 2.
+   *
+   * Katya, 13 Sep: "I'd have expected more garments available on day 2+ —
+   * show everything they own plus a few more, otherwise it all looks like
+   * their day 1 options." She was right, and it was worse than it looked: day
+   * 1 offers all SIXTY and day 2 offered the thirty you own, so the returning
+   * state had HALF the choice of the first run. Every drawer was halved —
+   * Shoes went from twelve to five.
+   *
+   * Computed rather than written down, so it cannot drift from the wardrobe
+   * fixture: whatever you own is yours, and everything else in the catalogue
+   * is on the shelf, flagged NEW. `data/inventory.ts` could not hold this —
+   * it must not import the catalogue (sixty image requires, and the tests
+   * import the fixtures under plain Node) — but this screen already has both.
+   *
+   * ⚠ IT IS STILL CAPPED. `LOANS_PER_BRIEF` (now 4) is what keeps the shelf
+   * from being a shop, and the copy below counts down as you spend it. Once it
+   * is gone the shelf empties and the drawer shows only what you own, which is
+   * the honest read of "they go back at close".
+   */
+  const ownedNames = new Set(owned.map((p) => p.name));
+  const loanShelf: readonly string[] =
+    day === 2 ? catalogue.filter((n) => !ownedNames.has(n)) : LOAN_PIECES;
+  /**
+   * Is this piece borrowed?
+   *
+   * INDEPENDENT of how many loans are LEFT — a piece does not stop being
+   * borrowed because you have run out of borrowings.
+   *
+   * ⚠ BUT FALSE ON THE FIRST RUN, AND THAT BIT IMMEDIATELY. Day 1 offers the
+   * whole catalogue outright and lends nothing (`loanable` is empty when
+   * `firstRun`), yet the shelf constant still names two catalogue pieces — so
+   * without this guard `leopard faux fur coat` and `embellished kitten heel`
+   * wore a NEW badge on day 1, in a drawer where nothing is borrowed. Caught
+   * on the day-1 pass; it could not have shown up before, because the badge
+   * never reached the drawer at all.
+   */
+  const isLoanName = (n: string) => !firstRun && loanShelf.includes(n);
 
   const loansLeft = LOANS_PER_BRIEF - loansUsed(picks);
 
@@ -125,11 +166,11 @@ export default function Build() {
    * as a de-selection and quietly remove it from the look.
    */
   const usedElsewhere = new Set(picks.map((p) => p.name).filter((n) => n !== openCell?.name));
-  const loanable: readonly string[] = firstRun || loansLeft <= 0 ? [] : LOAN_PIECES;
+  const loanable: readonly string[] = firstRun || loansLeft <= 0 ? [] : loanShelf;
   const pickerItems = openCell
     ? [...pool, ...loanable]
         .filter((n) => slotOf(n) === openCell.slot && !usedElsewhere.has(n))
-        .map((n) => ({ name: n, image: garmentImage(n), isLoan: LOAN_PIECES.includes(n as never) }))
+        .map((n) => ({ name: n, image: garmentImage(n), isLoan: isLoanName(n) }))
     : [];
 
   const openSlot = (i: number) => {
@@ -149,7 +190,7 @@ export default function Build() {
     const was = openCell?.name;
     if (was && was !== pending) putBack(was);
     if (pending && pending !== was) {
-      toggle(pending, LOAN_PIECES.includes(pending as never) ? 'loan' : 'owned');
+      toggle(pending, isLoanName(pending) ? 'loan' : 'owned');
     }
     closePicker();
   };
@@ -245,11 +286,20 @@ export default function Build() {
 
             {/* THE RULE, SUCCINCTLY — and derived, so it cannot drift from the
                 gate that enforces it. See PIECE_RULE in domain/entry.ts. */}
+            {/* ⟲ THE LOAN LINE COUNTED THE WRONG THING AS SOON AS THE SHELF
+                GREW. It read "N of the pieces on offer are loaners for
+                tonight" — true when the shelf WAS the allowance (two pieces,
+                two loans), and false the moment day 2's shelf became every
+                garment you do not own. Thirty are on offer; four is what you
+                may keep for the night.
+
+                So it counts the ALLOWANCE now, which is the number that
+                changes as you pick and the only one the reader can act on. */}
             <Tiny style={{ marginTop: 9 }}>
               {PIECE_RULE}
               {firstRun || loansLeft <= 0
                 ? ''
-                : ` ${loansLeft} of the pieces on offer are loaners for tonight.`}
+                : ` Anything marked NEW is borrowed for tonight — ${loansLeft} left.`}
             </Tiny>
           </View>
 

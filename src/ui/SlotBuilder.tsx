@@ -17,6 +17,12 @@
  * filter the chips did, except you cannot get it wrong and there is no state
  * to read back.
  *
+ * ⟲ THE LOANERS ARE FLAGGED IN THE DRAWER NOW (14 Sep), which this comment
+ * claimed from the day it was written and which was not true until then — the
+ * flag was dropped between `PiecePicker` and `GarmentGrid`. It matters more
+ * than it did: day 2's shelf is every garment you do not own, so without the
+ * badge there is nothing separating your wardrobe from the loan shelf.
+ *
  * ⚠ INVARIANT 15 IS UNTOUCHED, and worth checking against because this looks
  * like a filter change. "Builder filters are by garment type and nothing
  * else." A slot IS a garment type (`slotOf` derives it from the name), so this
@@ -186,6 +192,14 @@ export function PiecePicker({
               name: it.name,
               image: it.image,
               selected: it.name === pending,
+              /* ⟲ `isLoan` WAS ACCEPTED HERE AND THEN DROPPED — the type took
+                 it, this map did not forward it, and `GarmentGrid` had no prop
+                 for it anyway. So the header's claim that loaners "appear
+                 inside their own slot's drawer, flagged NEW" was false: the
+                 badge only showed on the slot once you had already picked
+                 blind. Fixed 14 Sep, when day 2's shelf grew from two pieces
+                 to every garment you do not own. */
+              isLoan: it.isLoan,
             }))}
             /* Tapping the pending piece again clears it, so the drawer can
                empty a slot as well as fill one without a second control doing

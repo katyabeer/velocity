@@ -111,6 +111,20 @@ export function GarmentGrid({
     selected?: boolean;
     dimmed?: boolean;
     image?: ImageSourcePropType;
+    /**
+     * ⚠ BORROWED FOR TONIGHT, NOT OWNED — and the grid could not say so until
+     * 14 Sep. `PiecePicker` has always accepted `isLoan` on its items and had
+     * nowhere to send it: this prop did not exist, so the flag was dropped on
+     * the way in. `ui/SlotBuilder.tsx`'s own header claimed "the loaners appear
+     * inside their own slot's drawer, flagged NEW", and that was simply untrue
+     * — the badge only ever appeared on the FILLED SLOT, after you had already
+     * chosen it blind.
+     *
+     * Invisible while the shelf was two pieces. With day 2 offering every
+     * garment you do not own, it is the whole distinction between your
+     * wardrobe and the loan shelf, while you are choosing.
+     */
+    isLoan?: boolean;
   }[];
   onPress: (name: string) => void;
   style?: ViewStyle;
@@ -137,6 +151,11 @@ export function GarmentGrid({
                 <Text style={s.cellTickMark}>✓</Text>
               </View>
             ) : null}
+            {/* Top-LEFT, because the selected tick owns the top-right and a
+                borrowed piece can also be the selected one. Same treatment as
+                the filled slot's badge in ui/SlotBuilder.tsx, so one piece
+                wears the same mark in both places. */}
+            {it.isLoan ? <Text style={s.cellLoan}>NEW</Text> : null}
           </View>
           {/* Fixed-height box, not just numberOfLines: react-native-web's
               line clamp still lets a third line spill, and one taller cell
@@ -314,6 +333,24 @@ const s = StyleSheet.create({
     fontSize: 17,
     textTransform: 'uppercase',
     color: 'rgba(18,17,16,0.15)',
+  },
+  /** The borrowed mark. Matches `s.loan` on the filled slot cell in
+   *  ui/SlotBuilder.tsx — same size, same accent, same corner radius — so a
+   *  piece carries one badge from the drawer through to the slot. */
+  cellLoan: {
+    position: 'absolute',
+    top: 5,
+    left: 5,
+    fontFamily: 'DMMono_500Medium',
+    fontSize: 7.5,
+    letterSpacing: 0.8,
+    color: palette.ink,
+    backgroundColor: palette.accent,
+    borderWidth: border.hair,
+    borderColor: palette.accentEdge,
+    borderRadius: radius.xs,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
   },
   cellTick: {
     position: 'absolute',

@@ -206,8 +206,21 @@ export const BUILDER_POOL_ESTABLISHED = [
   'silk scarf',
 ] as const;
 
-/** The two loaner pieces offered per brief. They go back at close. */
-export const LOAN_PIECES = ['sequin blazer', 'gold sandal'] as const;
+/**
+ * The fallback loan shelf — the pieces offered when there is no better answer.
+ *
+ * ⟲ WAS `sequin blazer` / `gold sandal`, 13 Sep. Neither is a catalogue name,
+ * so both rendered as grey named boxes in the drawer: the mechanism that exists
+ * so a thin wardrobe cannot lock you out was itself showing placeholders. Same
+ * rot as the day-2 wardrobe fixture had.
+ *
+ * ⚠ THE RETURNING STATE DOES NOT USE THIS. Day 2 draws its shelf from the
+ * catalogue minus what you own, computed in `today/build.tsx` where the
+ * catalogue is already imported — which is both bigger and always correct.
+ * This is what day 3 falls back to, and `BUILDER_POOL_ESTABLISHED` below is
+ * still twelve legacy names, so that day's drawer is grey with or without it.
+ */
+export const LOAN_PIECES = ['leopard faux fur coat', 'embellished kitten heel'] as const;
 
 /** Looks archive fixtures. */
 export type ArchiveEntry = {
