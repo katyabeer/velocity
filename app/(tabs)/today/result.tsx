@@ -10,9 +10,16 @@
  *      day-one fairness fix undoes itself in a single glance
  *   3. YOUR CALLS — how you read the room, which is the actual skill
  *
- * The copy "Never a number — 20 comparisons can't carry one" is not a hedge. It
- * is the design's honest statement about its own resolution, and it is why there
- * is no percentage anywhere on this screen except the bands' definitions.
+ * ⟲ "Never a number — 20 comparisons can't carry one" CAME OFF 13 Sep, and
+ * this comment used to defend it: not a hedge, the design's honest statement
+ * about its own resolution, and the reason no percentage appears here except
+ * the bands' own definitions.
+ *
+ * ⚠ THE RULE IT STATED IS UNCHANGED AND STILL ENFORCED — invariant 6, named
+ * bands and never numbers. What went is the screen SAYING SO. Worth knowing
+ * that the argument is now made only by the absence of a figure, so the next
+ * person to reach for "you placed 9th of 38" has nothing on the page telling
+ * them not to. `BANDS` in domain/bands.ts carries the reasoning.
  */
 
 import { View } from 'react-native';
@@ -20,7 +27,7 @@ import { router } from 'expo-router';
 import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
 import { H2, PageTitle, Body, Tiny, Num, Kick, Link } from '@/ui/text';
 import { Button } from '@/ui/controls';
-import { BandLadder, Card, Stat } from '@/ui/cards';
+import { BandLadder, Card } from '@/ui/cards';
 import { LookPlate } from '@/ui/LookPlate';
 import { JUDGING_QUOTA } from '@/domain/economy';
 import { yesterdayLooks } from '@/data/looks';
@@ -105,9 +112,12 @@ export default function Result() {
         <View style={{ marginTop: 6 }}>
           <BandLadder active={r.bandKey} />
         </View>
-        <Body style={{ marginTop: 7 }}>
-          Five bands, always relative to people who started when you did.
-        </Body>
+        {/* ⟲ "Five bands, always relative to people who started when you did."
+            came off 13 Sep. The ladder draws all five and labels its own
+            ranges, so the count was a caption on a thing you can count. The
+            COHORT half is still said once, in `bandNote` above — "people who
+            started around when you did" — which is where it matters, next to
+            the band you actually got. */}
 
         <Kick style={{ marginTop: 17 }}>what beat you</Kick>
         {/* Same order as the band above: the explanation first, the winning
@@ -143,10 +153,15 @@ export default function Result() {
               of the {JUDGING_QUOTA} pairs you judged, you picked the look that finished ahead.
             </Body>
           </View>
-          <View style={{ marginTop: 10 }}>
-            <Stat label="On the three closest pairs" value={r.closestPairs} />
-            <Stat label="The look that won the room" value={r.backedTheWinner} last />
-          </View>
+          {/* ⟲ TWO `Stat` ROWS CAME OFF HERE, 13 Sep — "On the three closest
+              pairs · 1 of 3" and "The look that won the room · You backed it".
+              The section is one number and one sentence now, which is the
+              shape the rest of this screen uses.
+
+              ⚠ `Stat` has NO OTHER CALLER in the app. Kept in ui/cards.tsx
+              because it is the one component that sets a value which is a
+              SENTENCE rather than a figure — `StatGrid` on You cannot do that,
+              it is built to make the number the thing you see. */}
         </Card>
 
         <Gap />

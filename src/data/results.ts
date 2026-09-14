@@ -53,6 +53,13 @@ export type DayResult = {
   band: string;
   bandKey: BandKey;
   bandLines: string;
+  /**
+   * ⟲ BOTH DAYS LOST A SECOND SENTENCE ON 13 Sep: "Never a number — 20
+   * comparisons can't carry one." The COHORT clause is what survives, and it
+   * has to — it is now the only place on the screen saying the band is
+   * relative to people who started when you did, since the ladder's caption
+   * went in the same pass.
+   */
   bandNote: string;
   /** What beat you (invariant 9 — movement, not level). */
   beatYou: string;
@@ -60,11 +67,17 @@ export type DayResult = {
   wonBy: string;
   /** Of `JUDGING_QUOTA` pairs, how many you called the way the room did. */
   callsAhead: number;
-  /** The closest pairs, as "n of m". */
+  /**
+   * ⚠ NO READER SINCE 13 Sep — the "On the three closest pairs" row came off
+   * the results screen. Kept with `backedTheWinner` below: they are the only
+   * two figures describing how you READ the room rather than how you placed,
+   * which is the half of the result the screen still names in its kicker
+   * ("your calls").
+   */
   closestPairs: string;
   /** The `judged-only` state's badge. */
   closeCallsBadge: string;
-  /** Did you back the look that won the room? */
+  /** Did you back the look that won the room? ⚠ No reader — see `closestPairs`. */
   backedTheWinner: string;
   /**
    * ⚠ WHICH PHOTOGRAPHS, as indices into `yesterdayLooks()` — the pool of the
@@ -98,8 +111,7 @@ const DAY_ONE: DayResult = {
   band: 'Upper half',
   bandKey: 'upperHalf',
   bandLines: 'Upper\nhalf',
-  bandNote:
-    'Above the middle of people who started around when you did. Never a number — 20 comparisons can’t carry one.',
+  bandNote: 'Above the middle of people who started around when you did.',
   beatYou:
     'Four of your five pieces were identical to the winner’s. The bag did it — theirs was red, yours was the tote.',
   wonBy: 'Won by a red bag',
@@ -148,8 +160,7 @@ const DAY_TWO: DayResult = {
   band: 'Upper quarter',
   bandKey: 'upperQuarter',
   bandLines: 'Upper\nquarter',
-  bandNote:
-    'Top quarter of people who started around when you did, and your best yet. Never a number — 20 comparisons can’t carry one.',
+  bandNote: 'Top quarter of people who started around when you did, and your best yet.',
   beatYou:
     'The room moved on the shoes. The looks that finished ahead of you nearly all went flat; yours was the heel.',
   wonBy: 'Won by a flat loafer',

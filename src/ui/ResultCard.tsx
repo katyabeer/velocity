@@ -9,16 +9,125 @@
  * The fourth state, `none`, is DAY ONE — and it renders nothing at all. Today
  * handles that by not mounting this component. There is deliberately no empty
  * state here.
+ *
+ * ─── IT ANNOUNCES ITSELF, ONCE (Katya, 13 Sep) ─────────────────────────────
+ * "A slight animation when the user arrives on Today after the loading screen,
+ * to draw attention to it." See `useAnnounce` below — the short version is
+ * that it is a NUDGE ON A CARD ALREADY AT REST, not an entrance, and that
+ * distinction is a safety property rather than a matter of taste.
  */
 
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { palette, border } from '@/theme/tokens';
+import { useEffect, useRef } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { palette, border, useReducedMotion } from '@/theme/tokens';
 import { LookPlate } from './LookPlate';
 import { dayResult } from '@/data/results';
 import { yesterdayLooks } from '@/data/looks';
 import type { YesterdayState } from '@/domain/clock';
 
+/**
+ * ══════════════════════════════════════════════════════════════════════════
+ *  THE ARRIVAL NUDGE
+ * ══════════════════════════════════════════════════════════════════════════
+ *
+ * ⚠ A POP ON A CARD AT REST, NOT AN ENTRANCE, AND THAT IS THE WHOLE DESIGN.
+ * Both ends of the tween are the card's correct resting state; the
+ * displacement exists only in the middle.
+ *
+ * The obvious build — fade and rise in from nothing — is the one this codebase
+ * has already been bitten by. A JS-driven `Animated.Value` sits at its START
+ * value forever when the frame loop is starved: the Claude preview pane never
+ * fires `requestAnimationFrame` while it is hidden, which is what lost the
+ * judging round's vote on 4 Sep and why `ui/ReactionsChart.tsx` is driven by
+ * `setInterval` instead. An entrance degrades in that case to AN INVISIBLE
+ * CARD — the most important thing on the screen, missing. This shape degrades
+ * to "no animation", which is merely disappointing.
+ *
+ * A `setTimeout` backstop lands the value on rest whatever happens, the same
+ * belt-and-braces `ui/LookPlate.tsx` and `ui/BottomSheet.tsx` carry. Here it
+ * only matters if the loop stalls MID-tween, which would otherwise leave the
+ * card a few percent oversized for the rest of the session.
+ *
+ * ─── ONCE PER LOAD, NOT ONCE PER VISIT ─────────────────────────────────────
+ * Katya asked for it "when the user arrives on Today after the loading
+ * screen". A tab navigator KEEPS ITS SCREENS MOUNTED, so `useFocusEffect`
+ * would replay this every time the Today tab is pressed — attention-seeking
+ * furniture rather than an announcement. A module-scope flag is the right
+ * scope: it survives tab switches and dies with the JS context, and since
+ * nothing in this app persists, a fresh context IS an arrival from the splash.
+ *
+ * ⚠ Fast Refresh resets module state, so it replays on save in dev. That is
+ * the flag working, not a bug.
+ */
+let announced = false;
+
+/** The route transition off the splash has to finish first, or the pop happens
+ *  underneath it and the eye never catches it. */
+const NUDGE_DELAY_MS = 420;
+const NUDGE_MS = 700;
+
+function useAnnounce(active: boolean) {
+  const v = useRef(new Animated.Value(0)).current;
+  const reduced = useReducedMotion();
+
+  useEffect(() => {
+    /* REDUCED MOTION GETS NOTHING. The pop is pure decoration over a card that
+       already reads — there is no information in it to lose, which is the test
+       tokens.ts sets for zeroing decorative motion rather than softening it. */
+    if (!active || reduced || announced) return;
+    announced = true;
+
+    const anim = Animated.timing(v, {
+      toValue: 1,
+      duration: NUDGE_MS,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    });
+    let settle: ReturnType<typeof setTimeout> | undefined;
+
+    const start = setTimeout(() => {
+      anim.start();
+      settle = setTimeout(() => {
+        anim.stop();
+        v.setValue(1);
+      }, NUDGE_MS + 260);
+    }, NUDGE_DELAY_MS);
+
+    return () => {
+      clearTimeout(start);
+      if (settle) clearTimeout(settle);
+      anim.stop();
+    };
+  }, [active, reduced, v]);
+
+  /* ONE VALUE, FOUR STOPS — a single timing that reads as a spring settling.
+     It overshoots, dips just past rest, and comes back. Scale and lift move
+     together because either alone reads as a fault: scale on its own is a
+     throb, translate on its own a twitch.
+
+     ⚠ 0 AND 1 ARE BOTH IDENTITY (scale 1, translateY 0). That is what makes
+     the resting state correct at either end of the tween — see above. */
+  const stops = [0, 0.22, 0.46, 0.7, 1];
+  return {
+    transform: [
+      { scale: v.interpolate({ inputRange: stops, outputRange: [1, 1.045, 0.995, 1.013, 1] }) },
+      { translateY: v.interpolate({ inputRange: stops, outputRange: [0, -6, 1.5, -2, 0] }) },
+    ],
+  };
+}
+
+/** `Pressable` is not an animated component, so a plain one would ignore the
+ *  interpolated transform entirely. Wrapping it in an `Animated.View` instead
+ *  would work and would reindent the whole card for nothing. */
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 export function ResultCard({ state, onPress }: { state: YesterdayState; onPress: () => void }) {
+  /* ⚠ ABOVE THE EARLY RETURN. Rules of hooks — `state === 'none'` bails out on
+     the next line, and a hook after it is a conditional hook. This project has
+     made that exact mistake once (create/index.tsx, 7 Sep, caught by eslint).
+     The argument is what stops day 1 arming a nudge it never shows. */
+  const nudge = useAnnounce(state !== 'none');
+
   if (state === 'none') return null;
 
   /**
@@ -77,7 +186,7 @@ export function ResultCard({ state, onPress }: { state: YesterdayState; onPress:
   }[state];
 
   return (
-    <Pressable onPress={onPress} style={s.card} accessibilityRole="button">
+    <AnimatedPressable onPress={onPress} style={[s.card, nudge]} accessibilityRole="button">
       <View style={{ width: 58 }}>
         {/* ⟲ A REAL PHOTOGRAPH SINCE 13 Sep, and it is THE SAME ONE the results
             screen shows next to the band (Katya's ask). This was a bare tinted
@@ -111,7 +220,7 @@ export function ResultCard({ state, onPress }: { state: YesterdayState; onPress:
         </Text>
       </View>
       <Text style={s.chevron}>›</Text>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

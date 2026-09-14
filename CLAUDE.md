@@ -537,6 +537,24 @@ A fresh session will be tempted by several of these. They were tried and rejecte
 - "You won't know when each lands…" under *See upcoming challenges*. It argued
   for the tap instead of offering it, and the screen it leads to makes the
   point with the list in front of you
+- **Three more explanatory lines on the results screen**, cut 13 Sep: "Never a
+  number — 20 comparisons can't carry one", "Five bands, always relative to
+  people who started when you did", and the two `Stat` rows under *your calls*
+  ("On the three closest pairs · 1 of 3", "The look that won the room · You
+  backed it"). ⚠ THE FIRST ONE WAS DEFENDED IN THAT FILE'S OWN HEADER as "not a
+  hedge … the design's honest statement about its own resolution". The RULE is
+  untouched — invariant 6, named bands and never numbers — but the screen no
+  longer says it, so the argument is now made only by the absence of a figure.
+  The cohort half survives once, in `bandNote`, next to the band you got.
+  `Stat`, `closestPairs` and `backedTheWinner` all lose their last reader
+- **The result card announces itself on arrival** (`useAnnounce` in
+  `ui/ResultCard.tsx`, Katya 13 Sep). ⚠ It is a POP ON A CARD AT REST, not an
+  entrance, and that is a safety property rather than taste: **both ends of the
+  tween are identity**, so a starved frame loop degrades it to "no animation"
+  instead of to an invisible card. A fade-and-rise from nothing is the version
+  that breaks — same class as the judging round's lost vote. Once per JS
+  context via a module flag, NOT `useFocusEffect`, which would replay it on
+  every press of the Today tab
 - **Five explanatory lines on You**, all cut 13 Sep in one pass, and the
   pattern is worth naming because a fresh session will want to caption things:
   "Built from your looks, what you take from the magazine, and what the room
