@@ -8,7 +8,7 @@
  * The handover is blunt about this one: "A can't ship without this."
  */
 
-import { ACTIVE_DAY } from '@/config/testState';
+import { ACTIVE_DAY, type TestDay } from '@/config/testState';
 
 export type Challenge = { name: string; note: string; open?: boolean };
 
@@ -30,7 +30,7 @@ const POOL: readonly Challenge[] = [
      down the pool. Move these and you move the schedule. */
   {
     name: 'Your first day at the new job',
-    note: 'Open-plan office, and nobody has told you the dress code. Show some personality, but you want to look like you belong there.',
+    note: 'Nobody told you the dress code. Fit in, or stand out?',
   },
   {
     name: 'New York Fashion Week, outside the shows',
@@ -42,7 +42,13 @@ const POOL: readonly Challenge[] = [
   { name: 'The airport', note: 'Nine hours, two climates, one outfit.' },
   { name: 'Dress it down', note: 'Take something formal somewhere it should not go.' },
   { name: 'First date', note: 'Try, but not visibly.' },
-  { name: 'The orange coat', note: 'We are giving you the coat. Good luck.' },
+  /* ⚠ KATYA'S COPY, 13 Sep, AND IT MOVES THE MECHANIC. It read "We are giving
+     you the coat. Good luck." — the app HANDS you the piece, which is what
+     `piece-brief` provenance in data/inventory.ts encodes and what separates
+     this from 'One bold piece' ("Everything else has to behave"). "Take one
+     piece" reads as the user choosing it. Written as asked; flagging because
+     the two briefs are now close enough to be the same brief. */
+  { name: 'The orange coat', note: 'Can you make it work? Take one piece and style it.' },
   { name: 'Nothing new', note: 'Only pieces you have already worn this month.' },
   { name: 'Sunday, nowhere', note: 'Nobody will see it. Does that change anything?' },
   { name: 'The oatmeal coat', note: 'Yours to keep. Also, oatmeal.' },
@@ -181,7 +187,33 @@ export const shortBriefName = (name: string): string => SHORT_NAMES[name] ?? nam
  * which was the bug: the card offered yesterday's job as tomorrow's, directly
  * beneath the result card reporting how it went.
  */
+/**
+ * ⚠ NAMED OUTRIGHT ON DAY 2, DERIVED EVERYWHERE ELSE.
+ *
+ * The derivation below is positional — the first job that is neither open nor
+ * behind you — which this file already calls "a prototype convenience, not a
+ * schedule". On the returning state it landed on **The interview**, and that
+ * put two office briefs back to back: tonight is *Your first day at the new
+ * job* and tomorrow would have been the interview for one. Katya, 13 Sep:
+ * make it the orange coat.
+ *
+ * Day 1 keeps the derivation untouched, which is deliberate — it resolves to
+ * *Your first day at the new job*, the card has been signed off saying so, and
+ * an explicit name there would be a second thing to keep in step for no gain.
+ */
+const TOMORROW: Partial<Record<TestDay, string>> = {
+  2: 'The orange coat',
+};
+
 export const nextChallenge = (): Challenge => {
+  const named = TOMORROW[ACTIVE_DAY];
+  if (named) {
+    const found = CHALLENGES.find((c) => c.name === named);
+    /* Falls through to the derivation rather than throwing if the pool is
+       reordered or renamed out from under it — the card must always name
+       something. */
+    if (found) return found;
+  }
   const behind = [...playedBriefs(), YESTERDAYS_BRIEF];
   return CHALLENGES.find((c) => !c.open && !behind.includes(c.name)) ?? CHALLENGES[1]!;
 };
@@ -241,8 +273,22 @@ const WEDDING_BRIEF = {
  */
 const NEW_JOB_BRIEF = {
   title: 'Your first day at the new job.',
-  note: 'Open-plan office, and nobody has told you the dress code. Show some personality, but you want to look like you belong there.',
-  shortNote: 'Nobody has told you the dress code.',
+  /**
+   * ⟲ SHORTER AND MORE HUMAN, 13 Sep. It was "Open-plan office, and nobody has
+   * told you the dress code. Show some personality, but you want to look like
+   * you belong there." — thirty words explaining a situation, on the card
+   * someone reads while deciding whether to start.
+   *
+   * The question is the brief. Fit in or stand out IS the decision the look
+   * has to make, so asking it does the job the old second sentence was
+   * describing, in five words instead of sixteen.
+   *
+   * ⚠ Still THREE NOTES for one brief — this, `shortNote`, and the matching
+   * entry in `POOL` above, which is set to the same string by hand. See the
+   * standing note on the open questions list.
+   */
+  note: 'Nobody told you the dress code. Fit in, or stand out?',
+  shortNote: 'Nobody told you the dress code.',
   shortName: 'The new job',
 } as const;
 
