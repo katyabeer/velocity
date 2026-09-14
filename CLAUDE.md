@@ -537,6 +537,16 @@ A fresh session will be tempted by several of these. They were tried and rejecte
 - "You won't know when each lands…" under *See upcoming challenges*. It argued
   for the tap instead of offering it, and the screen it leads to makes the
   point with the list in front of you
+- **The band LADDER on the results screen** — five equal rows with their ranges
+  in a right-hand column. It is `BandScale` now (Katya, 14 Sep): one bar with
+  the five bands drawn to their REAL share of the room off `from`/`to` in
+  domain/bands.ts, so Top of the room is a 10% sliver against Quiet night's
+  quarter, with a caret over yours. ⚠ The caret points at a REGION, never a
+  point — invariant 6, not taste: a marker at a computed offset would claim a
+  placing this product does not compute. ⚠ And the caret is ALONE in the
+  proportional row: putting the band's NAME there overflows a 10% segment off
+  the left of the screen, the same horizontal trap the result card's confetti
+  had to be capped for. `BandLadder` is kept with no caller
 - **The day-2 builder offering only what you own.** It did until 14 Sep, and it
   made the returning state offer HALF of day 1 — sixty pieces on the first run,
   thirty on day 2, every drawer halved (Shoes 12 → 5). The loan shelf is the

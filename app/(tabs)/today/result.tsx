@@ -27,11 +27,12 @@ import { router } from 'expo-router';
 import { Foot, Gap, Header, Screen, Scroll } from '@/ui/layout';
 import { H2, PageTitle, Body, Tiny, Num, Kick, Link } from '@/ui/text';
 import { Button } from '@/ui/controls';
-import { BandLadder, Card } from '@/ui/cards';
+import { BandScale, Card, Reach } from '@/ui/cards';
 import { LookPlate } from '@/ui/LookPlate';
 import { JUDGING_QUOTA } from '@/domain/economy';
 import { yesterdayLooks } from '@/data/looks';
 import { dayResult } from '@/data/results';
+import { REACTIONS_CAPTION } from '@/domain/you';
 
 /**
  * REAL PHOTOGRAPHS, not the grey plates (Katya, 4 Sep). Both were `LookPlate`
@@ -109,8 +110,12 @@ export default function Result() {
         </View>
 
         <Kick style={{ marginTop: 16 }}>the bands</Kick>
-        <View style={{ marginTop: 6 }}>
-          <BandLadder active={r.bandKey} />
+        {/* ⟲ `BandLadder` -> `BandScale`, 14 Sep. Five equal rows became one
+            bar drawn to each band's real share of the room, with a caret over
+            yours. See the component — the short version is that the bands are
+            not five equal boxes and the ladder could only say so in words. */}
+        <View style={{ marginTop: 8 }}>
+          <BandScale active={r.bandKey} />
         </View>
         {/* ⟲ "Five bands, always relative to people who started when you did."
             came off 13 Sep. The ladder draws all five and labels its own
@@ -118,6 +123,30 @@ export default function Result() {
             COHORT half is still said once, in `bandNote` above — "people who
             started around when you did" — which is where it matters, next to
             the band you actually got. */}
+
+        {/* ══ WHAT THE ROOM DID WITH IT ══
+            Katya, 14 Sep. It sits after the band because it is a different
+            question — the band is how the look PLACED against the brief, and
+            these three are what happened once the magazine surfaced it.
+
+            ⚠ `likes` IS A SUBSET OF `reactions` (the heart is `thumbs_up` in
+            the nine-value vocabulary), so the order matters: the total has to
+            follow the part or the pair reads as two separate tallies that
+            happen not to add up. See data/results.ts. */}
+        <Kick style={{ marginTop: 17 }}>in the magazine</Kick>
+        <View style={{ marginTop: 8 }}>
+          <Reach
+            items={[
+              { value: String(r.likes), label: 'likes' },
+              { value: String(r.reactions), label: 'reactions in all' },
+              { value: String(r.takers), label: 'took a piece' },
+            ]}
+          />
+        </View>
+        {/* The honest frame, and it is the existing one — the same line the
+            You screen prints over its reaction figures. Reactions are not a
+            score and this is the screen most likely to be read as one. */}
+        <Tiny style={{ marginTop: 9 }}>{REACTIONS_CAPTION}</Tiny>
 
         <Kick style={{ marginTop: 17 }}>what beat you</Kick>
         {/* Same order as the band above: the explanation first, the winning

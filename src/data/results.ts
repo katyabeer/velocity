@@ -92,6 +92,30 @@ export type DayResult = {
    */
   yourLookIndex: number;
   winnerLookIndex: number;
+
+  /* ── how the room received it, once the magazine surfaced it ─────────────
+     Katya, 14 Sep: "throw in the number of likes it got — those looks go into
+     the magazine too — reactions it received, and how many people took/saved a
+     garment from their look."
+
+     ⚠ `takers` IS NOT A BREACH OF INVARIANT 13. "Copy-minting — the owner
+     loses nothing and is never told" is about there being no LOSS and no
+     market: taking mints a copy, so nothing leaves your wardrobe and nobody is
+     told they were robbed. The aggregate is already a designed, celebrated
+     signal in four other places — the `Borrowed` milestone, You's "People who
+     took your pieces", the archive's "5 took a piece", and `EarnedRow`, which
+     is literally how tokens arrive. This is the same figure on the screen the
+     look is being reported on. */
+
+  /** The heart. ⚠ A SUBSET of `reactions`, not a separate tally — the like is
+   *  `thumbs_up` in the nine-value vocabulary (see domain/reactions.ts), so
+   *  this number must always be the smaller of the two or the pair reads as
+   *  double counting. */
+  likes: number;
+  /** Every reaction the look drew, the heart included. */
+  reactions: number;
+  /** DISTINCT PEOPLE who took a garment out of it, not pieces taken. */
+  takers: number;
 };
 
 /**
@@ -134,6 +158,9 @@ const DAY_ONE: DayResult = {
    */
   yourLookIndex: 6,
   winnerLookIndex: 0,
+  likes: 6,
+  reactions: 11,
+  takers: 3,
 };
 
 /**
@@ -171,6 +198,13 @@ const DAY_TWO: DayResult = {
   /** The same two frames as day 1 — it is the same job. */
   yourLookIndex: 6,
   winnerLookIndex: 0,
+  /* ⚠ IN STEP WITH THE OTHER TWO FIXTURES THAT REPORT ON THIS LOOK.
+     `YOU_DAY_TWO_POSTS[0]` gives the wedding 14 likes and `ARCHIVE_DAY_TWO`
+     says "5 took a piece" — so these are those numbers, not new ones. Change
+     one and change all three, or the same look has two histories. */
+  likes: 14,
+  reactions: 27,
+  takers: 5,
 };
 
 export const dayResult = (): DayResult => (ACTIVE_DAY === 2 ? DAY_TWO : DAY_ONE);

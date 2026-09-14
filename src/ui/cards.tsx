@@ -222,9 +222,95 @@ export function EarnedRow({ count }: { count: number }) {
 }
 
 /**
+ * ══════════════════════════════════════════════════════════════════════════
+ *  THE BAND SCALE — the room as one bar, with you in a slice of it
+ * ══════════════════════════════════════════════════════════════════════════
+ *
+ * Katya, 14 Sep: "make the bands more visual — a graph, pointing at where
+ * upper half is in the context."
+ *
+ * The five bands are drawn to their REAL SHARE of the room, straight off
+ * `from`/`to` in domain/bands.ts: Top of the room is a 10% sliver and Quiet
+ * night is a quarter of the bar. That is the whole argument the ladder was
+ * making in words — the bands are not five equal boxes — and it is why the
+ * segments are flexed on `to - from` rather than given equal widths.
+ *
+ * ⚠ IT POINTS AT A REGION, NEVER A POINT, and that is invariant 6 rather than
+ * a stylistic preference. Named bands, never numbers: a caret over the middle
+ * of a segment says "somewhere in here", where a marker at a computed offset
+ * would say "ninth of thirty-eight" — a placing this product does not compute
+ * and would not show.
+ *
+ * ⚠ THE CARET IS ALONE IN THE PROPORTIONAL ROW, and the naming happens in a
+ * full-width line under the bar. Putting the band's name up there instead was
+ * the obvious build and it overflows: the label is far wider than a 10%
+ * segment, so over `Top of the room` it would hang off the left edge of the
+ * screen and give the page a horizontal scrollbar — the same trap the result
+ * card's confetti had to be capped for. A caret is 10pt wide and fits
+ * anywhere.
+ */
+export function BandScale({ active }: { active: BandKey }) {
+  return (
+    <View>
+      {/* The pointer row — same flex weights as the bar, so the caret lands
+          over the middle of its own band however the width changes. */}
+      <View style={s.scaleRow} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        {BANDS.map((b) => (
+          <View key={b.key} style={{ flex: b.to - b.from, alignItems: 'center' }}>
+            {b.key === active ? <View style={s.scaleCaret} /> : null}
+          </View>
+        ))}
+      </View>
+
+      <View
+        style={s.scaleBar}
+        accessibilityRole="image"
+        accessibilityLabel={`The room in five bands. You are in ${
+          BANDS.find((b) => b.key === active)?.name ?? ''
+        }.`}
+      >
+        {BANDS.map((b, i) => (
+          <View
+            key={b.key}
+            style={[
+              s.scaleSeg,
+              { flex: b.to - b.from },
+              i === 0 && { borderTopLeftRadius: radius.xs, borderBottomLeftRadius: radius.xs },
+              i === BANDS.length - 1 && {
+                borderTopRightRadius: radius.xs,
+                borderBottomRightRadius: radius.xs,
+              },
+              b.key === active && s.scaleSegOn,
+            ]}
+          />
+        ))}
+      </View>
+
+      {/* THE VOCABULARY, KEPT. The ladder listed all five names and the graph
+          would have shown only yours — so they run along one line underneath,
+          in order, with yours in ink. Five names is what there are (invariant
+          12) and the reader should be able to see the whole set. */}
+      <Text style={s.scaleNames}>
+        {BANDS.map((b, i) => (
+          <Text key={b.key} style={b.key === active ? s.scaleNameOn : undefined}>
+            {i > 0 ? '  ·  ' : ''}
+            {b.name}
+          </Text>
+        ))}
+      </Text>
+    </View>
+  );
+}
+
+/**
  * The band ladder. Five rows, the user's band inverted.
  * NEVER a number — locked decision 5. The percentile column is the band's
  * definition, not the user's score.
+ *
+ * ⚠ NO CALLER SINCE 14 Sep — `BandScale` above replaced it on the results
+ * screen, which was its only one. Kept rather than deleted, like `Tip` and
+ * `NewBox`: it is the one place the bands' RANGES are written out, and if the
+ * graph ever needs a companion that spells them out, this is it.
  */
 export function BandLadder({ active }: { active: BandKey }) {
   return (
@@ -678,6 +764,33 @@ const s = StyleSheet.create({
     lineHeight: 20,
     color: palette.grey,
   },
+  /* ── the band scale ── */
+  scaleRow: { flexDirection: 'row', height: 9, marginBottom: 3 },
+  /** A CSS triangle, because the app has no icon for this and a text glyph
+   *  would render in the platform font — the one thing the thumbs emoji was
+   *  cut for on 4 Sep. */
+  scaleCaret: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 5,
+    borderRightWidth: 5,
+    borderTopWidth: 7,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: palette.ink,
+  },
+  scaleBar: { flexDirection: 'row', height: 22, gap: 2 },
+  scaleSeg: { backgroundColor: palette.creamSunk, borderWidth: border.hair, borderColor: palette.rule },
+  /** Accent fill takes its ink edge on a light ground — see tokens.ts. */
+  scaleSegOn: { backgroundColor: palette.accent, borderColor: palette.accentEdge },
+  scaleNames: {
+    marginTop: 8,
+    fontFamily: 'Archivo_400Regular',
+    fontSize: 9.5,
+    lineHeight: 15,
+    color: palette.greyMute,
+  },
+  scaleNameOn: { fontFamily: 'Archivo_700Bold', color: palette.ink },
   bands: { borderWidth: border.hair, borderColor: palette.rule, backgroundColor: palette.creamRaised },
   bandRow: {
     flexDirection: 'row',
