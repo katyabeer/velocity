@@ -547,14 +547,21 @@ A fresh session will be tempted by several of these. They were tried and rejecte
   longer says it, so the argument is now made only by the absence of a figure.
   The cohort half survives once, in `bandNote`, next to the band you got.
   `Stat`, `closestPairs` and `backedTheWinner` all lose their last reader
-- **The result card announces itself on arrival** (`useAnnounce` in
-  `ui/ResultCard.tsx`, Katya 13 Sep). ⚠ It is a POP ON A CARD AT REST, not an
-  entrance, and that is a safety property rather than taste: **both ends of the
-  tween are identity**, so a starved frame loop degrades it to "no animation"
-  instead of to an invisible card. A fade-and-rise from nothing is the version
-  that breaks — same class as the judging round's lost vote. Once per JS
-  context via a module flag, NOT `useFocusEffect`, which would replay it on
-  every press of the Today tab
+- **The result card announces itself on arrival** — a decaying bounce plus a
+  22-piece confetti burst (`useAnnounce` / `Confetti` in `ui/ResultCard.tsx`,
+  Katya 13 Sep). ⚠ **BOTH ENDS OF BOTH TWEENS ARE NOTHING**: the card rests at
+  identity at value 0 AND 1, every piece is at opacity 0 at value 0 AND 1. That
+  is a safety property rather than taste — a starved frame loop leaves an
+  `Animated.Value` at its START forever, so the obvious build (card fading in,
+  confetti fading out) strands an invisible card under a frozen shower that
+  never clears. Same class as the judging round's lost vote. Once per JS
+  context via a module flag, NOT `useFocusEffect`, which would let the popper
+  off on every press of the Today tab. ⚠ The confetti's HORIZONTAL budget is
+  the load-bearing constraint: the layer spans the card, which is inset only
+  ~17px, so a wider throw crosses the viewport and gives the page a horizontal
+  scrollbar on web. Vertical is free and the layer is stretched at both ends so
+  the burst surrounds the card. No new hues — accent, ink and two greys, and
+  deliberately NOT `accentPale`, which tokens.ts reserves for a settled status
 - **Five explanatory lines on You**, all cut 13 Sep in one pass, and the
   pattern is worth naming because a fresh session will want to caption things:
   "Built from your looks, what you take from the magazine, and what the room

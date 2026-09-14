@@ -666,11 +666,16 @@ const s = StyleSheet.create({
     fontFamily: 'BigShouldersDisplay_900Black',
     fontSize: 17,
   },
+  /** ⟲ 11.5 → 14 (Katya, 13 Sep). It is the only sentence explaining where
+   *  tokens come from, sitting between the result card and the day's job, and
+   *  at 11.5 it read as a footnote on both. 14 is the floor this project has
+   *  settled on for anything meant to be read — the same move as `Skip` and
+   *  the 10px text links, which went to 14 and 16 for the same reason. */
   earnedText: {
     flex: 1,
     fontFamily: 'Archivo_400Regular',
-    fontSize: 11.5,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 20,
     color: palette.grey,
   },
   bands: { borderWidth: border.hair, borderColor: palette.rule, backgroundColor: palette.creamRaised },

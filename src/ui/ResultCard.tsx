@@ -17,7 +17,7 @@
  * distinction is a safety property rather than a matter of taste.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { palette, border, useReducedMotion } from '@/theme/tokens';
 import { LookPlate } from './LookPlate';
@@ -27,98 +27,238 @@ import type { YesterdayState } from '@/domain/clock';
 
 /**
  * ══════════════════════════════════════════════════════════════════════════
- *  THE ARRIVAL NUDGE
+ *  THE ARRIVAL — A BOUNCE AND A BURST
  * ══════════════════════════════════════════════════════════════════════════
  *
- * ⚠ A POP ON A CARD AT REST, NOT AN ENTRANCE, AND THAT IS THE WHOLE DESIGN.
- * Both ends of the tween are the card's correct resting state; the
- * displacement exists only in the middle.
+ * Katya, 13 Sep: "something more celebratory — confetti around it, with a
+ * slower bounce."
  *
- * The obvious build — fade and rise in from nothing — is the one this codebase
- * has already been bitten by. A JS-driven `Animated.Value` sits at its START
- * value forever when the frame loop is starved: the Claude preview pane never
- * fires `requestAnimationFrame` while it is hidden, which is what lost the
- * judging round's vote on 4 Sep and why `ui/ReactionsChart.tsx` is driven by
- * `setInterval` instead. An entrance degrades in that case to AN INVISIBLE
- * CARD — the most important thing on the screen, missing. This shape degrades
- * to "no animation", which is merely disappointing.
+ * ⚠ BOTH ENDS OF BOTH TWEENS ARE NOTHING, AND THAT IS A SAFETY PROPERTY
+ * RATHER THAN A MATTER OF TASTE. The card rests at identity at value 0 AND at
+ * value 1; every confetti piece is at opacity 0 at value 0 AND at value 1.
  *
- * A `setTimeout` backstop lands the value on rest whatever happens, the same
- * belt-and-braces `ui/LookPlate.tsx` and `ui/BottomSheet.tsx` carry. Here it
- * only matters if the loop stalls MID-tween, which would otherwise leave the
- * card a few percent oversized for the rest of the session.
+ * The reason is the frame loop. A JS-driven `Animated.Value` sits at its START
+ * value forever when rAF is starved — the Claude preview pane never fires it
+ * while hidden, which is what lost the judging round's vote on 4 Sep and why
+ * `ui/ReactionsChart.tsx` is driven by `setInterval` instead. Built the obvious
+ * way — card fading in, confetti fading out — starvation leaves an INVISIBLE
+ * CARD under a frozen shower of paper that never clears. Built this way it
+ * leaves the card exactly as it should be and no confetti at all.
+ *
+ * `setTimeout` backstops land both values on rest whatever happens, the same
+ * belt-and-braces `ui/LookPlate.tsx` and `ui/BottomSheet.tsx` carry, and a
+ * third unmounts the confetti layer so a stalled loop cannot strand it.
  *
  * ─── ONCE PER LOAD, NOT ONCE PER VISIT ─────────────────────────────────────
- * Katya asked for it "when the user arrives on Today after the loading
- * screen". A tab navigator KEEPS ITS SCREENS MOUNTED, so `useFocusEffect`
- * would replay this every time the Today tab is pressed — attention-seeking
- * furniture rather than an announcement. A module-scope flag is the right
- * scope: it survives tab switches and dies with the JS context, and since
- * nothing in this app persists, a fresh context IS an arrival from the splash.
+ * A tab navigator KEEPS ITS SCREENS MOUNTED, so `useFocusEffect` would replay
+ * this every time the Today tab is pressed — a party popper going off on every
+ * navigation. A module-scope flag is the right scope: it survives tab switches
+ * and dies with the JS context, and since nothing in this app persists, a
+ * fresh context IS an arrival from the splash.
  *
- * ⚠ Fast Refresh resets module state, so it replays on save in dev. That is
- * the flag working, not a bug.
+ * ⚠ Fast Refresh resets module state, so it replays on save in dev.
  */
 let announced = false;
 
-/** The route transition off the splash has to finish first, or the pop happens
- *  underneath it and the eye never catches it. */
+/** The route transition off the splash has to finish first, or it happens
+ *  underneath and the eye never catches it. */
 const NUDGE_DELAY_MS = 420;
-const NUDGE_MS = 700;
+/** ⟲ 700 → 1150. "A slower bounce" — and the extra time is what lets the
+ *  amplitude decay read as a bounce settling rather than as one pop. */
+const BOUNCE_MS = 1150;
+/** Longer than the bounce on purpose: the card settles and the paper is still
+ *  coming down, which is what stops it reading as one synchronised twitch. */
+const BURST_MS = 1700;
+
+/* ── the paper ───────────────────────────────────────────────────────────────
+
+   ⚠ NO NEW HUES. Four values, all already in the palette: the accent does the
+   celebrating and ink and the two greys keep it editorial rather than
+   party-shop. `accentPale` is deliberately NOT here — tokens.ts restricts it to
+   a settled, positive STATUS and calls out that it is not a general success
+   colour, and confetti is decoration, not a status.                          */
+const CONFETTI_COLOURS = [palette.accent, palette.ink, palette.rule, palette.greyDecor] as const;
+
+/**
+ * Deterministic, and generated ONCE at module scope. `Math.random` per render
+ * would reshuffle the burst on every re-render mid-flight — the pieces would
+ * teleport. A fixed seed also means what you see in review is what ships.
+ *
+ * ⚠ THE HORIZONTAL BUDGET IS FIXED AND SMALL, AND THAT IS NOT TIMIDITY. The
+ * layer spans the CARD, so `left` is a percentage of the card's width — and
+ * the card is only inset ~17px from the screen. `x` stays inside 10–90% and
+ * `dx` tops out at 34px, so the widest throw from the leftmost piece lands at
+ * roughly the card's own edge. Any further and pieces cross the viewport on
+ * web, which gives the whole page a horizontal scrollbar. It is the one thing
+ * here that can break a layout rather than just look wrong.
+ *
+ * VERTICAL IS FREE, which is why the layer is stretched past the card at both
+ * ends (see `s.confetti`) — pieces start above it and fall below it, so the
+ * burst reads as confetti AROUND the card rather than specks ON it.
+ */
+const PIECES = (() => {
+  let seed = 20260913;
+  const rnd = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
+  return Array.from({ length: 22 }, (_, i) => {
+    const dir = i % 2 === 0 ? 1 : -1;
+    return {
+      x: 10 + rnd() * 80,
+      /** Measured from the STRETCHED layer's top, so the low numbers start a
+       *  piece above the card's own edge. */
+      y: rnd() * 46,
+      w: 4 + Math.round(rnd() * 5),
+      h: 7 + Math.round(rnd() * 7),
+      colour: CONFETTI_COLOURS[i % CONFETTI_COLOURS.length]!,
+      dx: dir * (8 + rnd() * 26),
+      rise: -(20 + rnd() * 30),
+      fall: 64 + rnd() * 62,
+      spin: dir * (160 + Math.round(rnd() * 420)),
+      /** A stagger, so they do not all leave on the same frame. */
+      t0: rnd() * 0.14,
+      round: rnd() > 0.7,
+    };
+  });
+})();
+
+function Confetti({ progress }: { progress: Animated.Value }) {
+  return (
+    <View
+      style={s.confetti}
+      /* DECORATION OVER A CONTROL. The whole card is one Pressable, so a layer
+         that ate taps would kill the only route to the results screen. */
+      pointerEvents="none"
+      /* Nothing here is information. Announcing sixteen unlabelled rectangles
+         over a card a screen reader has just read out is noise. */
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
+      {PIECES.map((p, i) => {
+        /* Each piece's own clock, so the stagger costs no extra Animated
+           values — one driver, sixteen offsets. */
+        const t = progress.interpolate({
+          inputRange: [p.t0, 1],
+          outputRange: [0, 1],
+          extrapolate: 'clamp',
+        });
+        return (
+          <Animated.View
+            key={i}
+            style={[
+              s.piece,
+              { left: `${p.x}%`, top: p.y, width: p.w, height: p.h, backgroundColor: p.colour },
+              p.round ? { borderRadius: p.w } : null,
+              {
+                /* 0 AT BOTH ENDS — see the header. It fades in on the way out
+                   of the card and is gone before the tween finishes. */
+                opacity: progress.interpolate({
+                  inputRange: [0, p.t0 + 0.04, 0.62, 1],
+                  outputRange: [0, 1, 1, 0],
+                  extrapolate: 'clamp',
+                }),
+                transform: [
+                  { translateX: t.interpolate({ inputRange: [0, 1], outputRange: [0, p.dx] }) },
+                  /* Up, then down past where it started — the only part of
+                     this that has to look like gravity. */
+                  {
+                    translateY: t.interpolate({
+                      inputRange: [0, 0.32, 1],
+                      outputRange: [0, p.rise, p.fall],
+                    }),
+                  },
+                  { rotate: t.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${p.spin}deg`] }) },
+                ],
+              },
+            ]}
+          />
+        );
+      })}
+    </View>
+  );
+}
 
 function useAnnounce(active: boolean) {
-  const v = useRef(new Animated.Value(0)).current;
+  const pop = useRef(new Animated.Value(0)).current;
+  const burst = useRef(new Animated.Value(0)).current;
+  const [armed, setArmed] = useState(false);
   const reduced = useReducedMotion();
 
   useEffect(() => {
-    /* REDUCED MOTION GETS NOTHING. The pop is pure decoration over a card that
-       already reads — there is no information in it to lose, which is the test
-       tokens.ts sets for zeroing decorative motion rather than softening it. */
+    /* REDUCED MOTION GETS NEITHER. Both are pure decoration over a card that
+       already reads — there is no information in them to lose, which is the
+       test tokens.ts sets for zeroing decorative motion rather than softening
+       it. Confetti is the clearest case of that there could be. */
     if (!active || reduced || announced) return;
     announced = true;
 
-    const anim = Animated.timing(v, {
+    const bounce = Animated.timing(pop, {
       toValue: 1,
-      duration: NUDGE_MS,
+      duration: BOUNCE_MS,
+      /* LINEAR, and that is not laziness. The bounce is shaped entirely by the
+         stop values below; an eased driver would squash them unevenly in time
+         and the decay would stop reading as a decay. */
+      easing: Easing.linear,
+      useNativeDriver: true,
+    });
+    const shower = Animated.timing(burst, {
+      toValue: 1,
+      duration: BURST_MS,
       easing: Easing.out(Easing.quad),
       useNativeDriver: true,
     });
     let settle: ReturnType<typeof setTimeout> | undefined;
 
     const start = setTimeout(() => {
-      anim.start();
+      setArmed(true);
+      bounce.start();
+      shower.start();
+      /* Lands both on rest and takes the layer down — see the header. */
       settle = setTimeout(() => {
-        anim.stop();
-        v.setValue(1);
-      }, NUDGE_MS + 260);
+        bounce.stop();
+        shower.stop();
+        pop.setValue(1);
+        burst.setValue(1);
+        setArmed(false);
+      }, BURST_MS + 300);
     }, NUDGE_DELAY_MS);
 
     return () => {
       clearTimeout(start);
       if (settle) clearTimeout(settle);
-      anim.stop();
+      bounce.stop();
+      shower.stop();
     };
-  }, [active, reduced, v]);
+  }, [active, reduced, pop, burst]);
 
-  /* ONE VALUE, FOUR STOPS — a single timing that reads as a spring settling.
-     It overshoots, dips just past rest, and comes back. Scale and lift move
-     together because either alone reads as a fault: scale on its own is a
-     throb, translate on its own a twitch.
+  /* ONE VALUE, SEVEN STOPS — a single timing reading as a bounce settling.
+     The amplitude decays geometrically, which is what a real bounce does and
+     what one overshoot cannot fake. Scale and lift move together because
+     either alone reads as a fault: scale on its own is a throb, translate on
+     its own a twitch.
 
-     ⚠ 0 AND 1 ARE BOTH IDENTITY (scale 1, translateY 0). That is what makes
-     the resting state correct at either end of the tween — see above. */
-  const stops = [0, 0.22, 0.46, 0.7, 1];
+     ⚠ 0 AND 1 ARE BOTH IDENTITY (scale 1, translateY 0). */
+  const stops = [0, 0.16, 0.32, 0.48, 0.64, 0.8, 1];
   return {
-    transform: [
-      { scale: v.interpolate({ inputRange: stops, outputRange: [1, 1.045, 0.995, 1.013, 1] }) },
-      { translateY: v.interpolate({ inputRange: stops, outputRange: [0, -6, 1.5, -2, 0] }) },
-    ],
+    armed,
+    burst,
+    nudge: {
+      transform: [
+        {
+          scale: pop.interpolate({
+            inputRange: stops,
+            outputRange: [1, 1.075, 0.982, 1.036, 0.992, 1.014, 1],
+          }),
+        },
+        {
+          translateY: pop.interpolate({
+            inputRange: stops,
+            outputRange: [0, -14, 4, -7, 2, -3, 0],
+          }),
+        },
+      ],
+    },
   };
 }
 
-/** `Pressable` is not an animated component, so a plain one would ignore the
- *  interpolated transform entirely. Wrapping it in an `Animated.View` instead
- *  would work and would reindent the whole card for nothing. */
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function ResultCard({ state, onPress }: { state: YesterdayState; onPress: () => void }) {
@@ -126,7 +266,7 @@ export function ResultCard({ state, onPress }: { state: YesterdayState; onPress:
      the next line, and a hook after it is a conditional hook. This project has
      made that exact mistake once (create/index.tsx, 7 Sep, caught by eslint).
      The argument is what stops day 1 arming a nudge it never shows. */
-  const nudge = useAnnounce(state !== 'none');
+  const { nudge, burst, armed } = useAnnounce(state !== 'none');
 
   if (state === 'none') return null;
 
@@ -161,7 +301,11 @@ export function ResultCard({ state, onPress }: { state: YesterdayState; onPress:
      */
     entered: {
       tint: 't2' as const,
-      kick: 'See how you did yesterday',
+      /* ⟲ "See how you did yesterday" until 13 Sep. It said the same thing as
+         the badge two lines below it — the stutter flagged when the card
+         became an invitation. `Your results` names the thing; the badge does
+         the inviting. */
+      kick: 'Your results',
       title: r.job,
       badge: 'see how you did',
       badgeTone: 'accent' as const,
@@ -187,6 +331,10 @@ export function ResultCard({ state, onPress }: { state: YesterdayState; onPress:
 
   return (
     <AnimatedPressable onPress={onPress} style={[s.card, nudge]} accessibilityRole="button">
+      {/* INSIDE the card, and absolutely positioned — so it takes no part in
+          the row layout below and rides the bounce with the card rather than
+          floating beside it. Mounted only while it is running. */}
+      {armed ? <Confetti progress={burst} /> : null}
       <View style={{ width: 58 }}>
         {/* ⟲ A REAL PHOTOGRAPH SINCE 13 Sep, and it is THE SAME ONE the results
             screen shows next to the band (Katya's ask). This was a bare tinted
@@ -225,6 +373,19 @@ export function ResultCard({ state, onPress }: { state: YesterdayState; onPress:
 }
 
 const s = StyleSheet.create({
+  /**
+   * STRETCHED PAST THE CARD, top and bottom, so the burst surrounds it rather
+   * than sitting on it. Horizontally it stays flush with the card — see the
+   * note on `PIECES` for why that edge is the one that matters.
+   *
+   * Nothing clips it: neither this nor `s.card` sets `overflow`, so a piece
+   * that travels beyond these bounds still draws. The insets are about where
+   * pieces START, not a frame they are trapped in.
+   */
+  confetti: { position: 'absolute', left: 0, right: 0, top: -22, bottom: -34 },
+  /** A scrap of paper. Everything that varies — size, colour, roundness — is
+   *  set per piece at the call site; this is only what they share. */
+  piece: { position: 'absolute' },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
