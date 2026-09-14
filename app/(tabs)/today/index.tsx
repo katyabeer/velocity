@@ -193,8 +193,14 @@ export default function Today() {
             the +2 tokens bit and the Today's styling challenge heading"). At 2
             the kicker sat on the overnight roundel's baseline and the two acts
             read as one block — this is the boundary between yesterday and
-            today, and it is the only gap on the screen doing that job. */}
-        <Kick tone="alert" style={{ marginTop: 26 }}>
+            today, and it is the only gap on the screen doing that job.
+
+            ⚠ CONDITIONAL, AND THAT IS THE POINT: a boundary between two acts
+            should not exist when there is only one. Set flat at 26 it also
+            landed on DAY 1, which renders no Act 1 at all — so this `Kick` is
+            the first child of `Scroll` there and simply inherited a loose top,
+            26px where it had always been 2. Caught in the day-1 audit. */}
+        <Kick tone="alert" style={{ marginTop: yesterday !== 'none' ? 26 : 2 }}>
           Today&apos;s styling challenge
         </Kick>
 

@@ -48,6 +48,7 @@ import {
   REACTIONS_CAPTION,
   TIPS,
   buildClause,
+  piecesLine,
   profileLine,
   qualifyingTips,
   roomClause,
@@ -56,6 +57,7 @@ import {
   showAllPostsLink,
   showReactionsCaption,
   showTrend,
+  showWardrobeRoute,
   statCells,
   topTags,
   type YouRollup,
@@ -601,15 +603,40 @@ export default function You() {
             </>
           ) : null}
 
-          {/* ⟲ `your words` AND THE PIECES LINE BOTH CAME OFF, 13 Sep — the
-              five tags and "You own 30 pieces. Find something to go with the
-              rest →". Stats ends on MOST USED now.
+          {/* ⟲ `your words` CAME OFF EVERYWHERE, 13 Sep — the five tags under
+              the stats grid.
 
               ⚠ `topTags` is still computed in the rollup and `YOU_DAY_TWO_TAGS`
               is still a fixture; nothing renders either. They are the only
               thing in the app reading `tagHistory`, which is what Create's tag
               step writes — so deleting them would quietly make that step write
               to nothing. Left wired, unrendered. */}
+
+          {/* ⟲ THE PIECES LINE CAME OFF DAY 2 ONLY, and it took a round to get
+              there. Katya asked for "You own 30 pieces. Find something to go
+              with the rest →" to go — which was this block's DAY 2 output, but
+              the block serves every day, so removing it outright also took
+              "Nothing in your wardrobe yet." off Day 1 and Established. Caught
+              in the day-1 audit; her call was to restore it outside day 2.
+
+              The route is still conditional on owning something
+              (`showWardrobeRoute` is `piecesOwned > 0`): with an empty wardrobe
+              it pointed at the remainder of nothing. So on day 1 the line
+              appears alone until the first look is adopted, and gains its link
+              after — which is the behaviour being put back, not a new one. */}
+          {day !== 2 ? (
+            <Body style={{ marginTop: 8 }}>
+              {piecesLine(r)}
+              {showWardrobeRoute(r) ? (
+                <>
+                  {' '}
+                  <Link onPress={() => router.push('/(tabs)/magazine')}>
+                    Find something to go with the rest →
+                  </Link>
+                </>
+              ) : null}
+            </Body>
+          ) : null}
         </Sig>
 
         {/* ══ Milestones — six, fixed, all shown from day one ══

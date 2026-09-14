@@ -882,6 +882,18 @@ the missing `aria-checked` on the onboarding rails radios. Fixed once, in
 `ui/controls.tsx`; check the rendered attributes rather than the props if you
 add another dead control.
 
+**Wrapping a flex child changes which axis `flex` sizes, and nothing catches
+it.** A bar in `ui/cards.tsx`'s `Trend` carried `flex: 1` *and* an explicit
+`height: X%`. As a direct child of a `flexDirection: 'row'` container that is
+correct — the flex sizes the MAIN axis (width) and the percentage is free to
+size the cross axis. Wrapped in a slot with no `flexDirection`, the slot
+defaults to COLUMN, `flex` starts sizing HEIGHT, and it silently overrides the
+percentage: every bar filled the frame and the sparkline went flat on
+Established for one round. tsc, eslint and reading the diff all passed it. If
+you wrap a flex child, state the new parent's `flexDirection` explicitly and
+**measure the result** (`getBoundingClientRect()` on each child) rather than
+looking at it — a chart of equal bars looks like data.
+
 **`{ someProp: undefined }` does NOT reset a style property.** RN's style
 composition *drops* undefined values, so `[base, { width: undefined }]` keeps
 `base.width`. It bit twice on 4 Sep — a tooltip caret that stayed on the left and

@@ -412,7 +412,7 @@ export function Trend({
           /* One slot per period. When paired, the slot holds two bars and the
              GAP INSIDE it is tighter than the gap between slots, so the eye
              groups them as a pair rather than reading eight separate bars. */
-          <View key={i} style={paired ? s.trendSlot : { flex: 1, height: '100%', justifyContent: 'flex-end' }}>
+          <View key={i} style={s.trendSlot}>
             <View
               style={[
                 s.trendBar,
@@ -798,7 +798,24 @@ const s = StyleSheet.create({
     gap: 4,
     padding: 9,
   },
-  /** A period. Holds one bar, or two when a second series is passed. */
+  /**
+   * A period. Holds one bar, or two when a second series is passed.
+   *
+   * ⚠ `flexDirection: 'row'` IS LOAD-BEARING — it is what makes the bars have
+   * any height at all, and the single-series chart is the one that proves it.
+   *
+   * A bar carries `flex: 1` and an explicit `height: X%`. In a ROW the flex
+   * sizes the MAIN axis, which is width, leaving the percentage free to size
+   * the cross axis — which is exactly how the bars behaved before this slot
+   * existed, when they were direct children of `s.trend` (also a row). Give
+   * the slot no direction and it defaults to COLUMN, the flex starts sizing
+   * HEIGHT, and it overrides the percentage: every bar fills the frame and the
+   * sparkline goes flat. That shipped on Established for one round — invisible
+   * to tsc, to eslint and to reading it, and found only by measuring the bars.
+   *
+   * `gap` and `justifyContent` are inert with a single child, which is why one
+   * style serves both modes.
+   */
   trendSlot: {
     flex: 1,
     height: '100%',
