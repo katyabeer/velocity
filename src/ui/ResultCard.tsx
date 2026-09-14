@@ -35,11 +35,26 @@ export function ResultCard({ state, onPress }: { state: YesterdayState; onPress:
   const r = dayResult();
 
   const config = {
+    /**
+     * ⟲ THE CARD STOPPED REPORTING THE RESULT ON 13 Sep, and became an
+     * INVITATION to go and read it. Katya replaced both strings: the kicker was
+     * `Yesterday's job · 38 entered` and the badge was the band itself.
+     *
+     * The effect is that the band is revealed on the results screen and nowhere
+     * else, so the tap has something behind it. `r.band` and `r.fieldSize` are
+     * still the same fixture that screen reads — the card just no longer
+     * spoils them.
+     *
+     * ⚠ THE TWO STRINGS NOW SAY THE SAME THING, twice, on a card 73pt tall.
+     * Built exactly as asked and flagged rather than quietly reworded — see the
+     * note to Katya. The cheapest fix if it reads badly is to drop the badge:
+     * the chevron already says the card is tappable.
+     */
     entered: {
       tint: 't2' as const,
-      kick: `${r.kickPrefix} · ${r.fieldSize} entered`,
+      kick: 'See how you did yesterday',
       title: r.job,
-      badge: r.band,
+      badge: 'see how you did',
       badgeTone: 'accent' as const,
       label: '·',
     },

@@ -40,7 +40,14 @@ export type DayResult = {
   job: string;
   /** How many entered. Context for the band, never a rank. */
   fieldSize: number;
-  /** The kicker's first clause on the card. */
+  /**
+   * ⚠ NO READER SINCE 13 Sep. It was the result card's kicker ("Yesterday's
+   * job" / "Your first job"), which is now a fixed invitation — `See how you
+   * did yesterday` — because the card stopped reporting the band. Kept because
+   * it is the one string that distinguishes a first result from a later one,
+   * and that distinction comes straight back the moment the card reports
+   * anything again.
+   */
   kickPrefix: string;
   /** Band, three ways: the badge, the ladder's key, and the two-line display. */
   band: string;

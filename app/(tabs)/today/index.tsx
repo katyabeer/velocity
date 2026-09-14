@@ -189,7 +189,12 @@ export default function Today() {
             entered" in Looks — a quiet grey rule-and-label for the loudest
             thing on the screen. It is a kicker now: smaller, accented, and
             clearly a tag on the card rather than a peer of the masthead. */}
-        <Kick tone="alert" style={{ marginTop: 2 }}>
+        {/* ⟲ `marginTop` 2 → 26 (Katya, 13 Sep: "add some more space between
+            the +2 tokens bit and the Today's styling challenge heading"). At 2
+            the kicker sat on the overnight roundel's baseline and the two acts
+            read as one block — this is the boundary between yesterday and
+            today, and it is the only gap on the screen doing that job. */}
+        <Kick tone="alert" style={{ marginTop: 26 }}>
           Today&apos;s styling challenge
         </Kick>
 

@@ -44,12 +44,10 @@ import { PostRow } from '@/ui/PostRow';
 import { ReactionsChart } from '@/ui/ReactionsChart';
 import { RenderedLook } from '@/ui/RenderedLook';
 import { radius } from '@/theme/tokens';
-import { chipLabel } from '@/domain/tags';
 import {
   REACTIONS_CAPTION,
   TIPS,
   buildClause,
-  piecesLine,
   profileLine,
   qualifyingTips,
   roomClause,
@@ -58,7 +56,6 @@ import {
   showAllPostsLink,
   showReactionsCaption,
   showTrend,
-  showWardrobeRoute,
   statCells,
   topTags,
   type YouRollup,
@@ -248,7 +245,6 @@ export default function You() {
   /* ZEROS KEPT ON DAY ONE ONLY. See `statCells` in domain/you.ts — this is
      the one line that decides it, and it reopens you-brief q1. */
   const stats = statCells(r, SHOW_STREAK, { keepZeros: r.looks === 0 });
-  const words = r.topTags;
 
   const seeded = day === 2;
   const [postFilter, setPostFilter] = useState<string>('All');
@@ -348,9 +344,11 @@ export default function You() {
                 <Reach items={chips} />
               </View>
             ) : null}
-            <Body style={{ marginTop: 7 }}>
-              Built from your looks, what you take from the magazine, and what the room says back.
-            </Body>
+            {/* ⟲ "Built from your looks, what you take from the magazine, and
+                what the room says back." came off 13 Sep. It explained where
+                the sentence above came from, which is the app describing its
+                own method underneath the one line on this screen that is
+                supposed to be read as a statement about the reader. */}
           </Sig>
         ) : null}
 
@@ -383,16 +381,19 @@ export default function You() {
 
             It is the one place on You with a route out of it, because it is
             the one observation that names an action. */}
+        {/* ⟲ THE `Noticed` HEAD AND THE CTA BOTH CAME OFF, 13 Sep. The card
+            already carries its own accent kicker ("from your own looks"), so
+            the section head above it was a second label on one object — and
+            the link made an observation into an errand. ⚠ This was described
+            as "the one place on You with a route out of it"; it no longer has
+            one, and nothing on this screen does. `YOU_DAY_TWO_INSIGHT.cta` is
+            kept in the fixture, unrendered, in case the route comes back. */}
         {seeded ? (
           <Sig>
-            <SigHead>Noticed</SigHead>
-            <Card style={{ marginTop: 8, borderRadius: radius.lg, padding: 15 }}>
+            <Card style={{ borderRadius: radius.lg, padding: 15 }}>
               <Kick tone="accent">{YOU_DAY_TWO_INSIGHT.kick}</Kick>
               <Lede style={{ marginTop: 8 }}>{YOU_DAY_TWO_INSIGHT.title}</Lede>
               <Body style={{ marginTop: 8 }}>{YOU_DAY_TWO_INSIGHT.body}</Body>
-              <Link style={{ marginTop: 11 }} onPress={() => router.push('/(tabs)/magazine')}>
-                {YOU_DAY_TWO_INSIGHT.cta}
-              </Link>
             </Card>
           </Sig>
         ) : null}
@@ -477,8 +478,10 @@ export default function You() {
                       labels={YOU_DAY_TWO_SUBMISSIONS.days}
                     />
                   </View>
+                  {/* The key stays and the caption goes (13 Sep). The two
+                      swatches are what make the paired bars readable at all;
+                      the sentence under them read the chart back. */}
                   <TrendKey a="Challenges" b="Freestyle" />
-                  <Body style={{ marginTop: 8 }}>{YOU_DAY_TWO_SUBMISSIONS.caption}</Body>
                 </>
               ) : null}
 
@@ -598,33 +601,15 @@ export default function You() {
             </>
           ) : null}
 
-          {/* YOUR WORDS — your own tags, now that Create takes free text. A
-              self-portrait at no computational cost. Not clickable and not
-              filterable, here as everywhere: a tag filter is a sort, and
-              invariant 7 is sample-don't-sort. */}
-          {words.length ? (
-            <>
-              <Kick style={{ marginTop: 15 }}>your words</Kick>
-              <Body style={{ marginTop: 6 }}>{words.map(chipLabel).join('  ')}</Body>
-            </>
-          ) : null}
+          {/* ⟲ `your words` AND THE PIECES LINE BOTH CAME OFF, 13 Sep — the
+              five tags and "You own 30 pieces. Find something to go with the
+              rest →". Stats ends on MOST USED now.
 
-          {/* The route needs a rest to go with — with an empty wardrobe it was
-              pointing at the remainder of nothing. */}
-          <Body style={{ marginTop: 8 }}>
-            {piecesLine(r)}
-            {showWardrobeRoute(r) ? (
-              <>
-                {' '}
-                <Link
-                  
-                  onPress={() => router.push('/(tabs)/magazine')}
-                >
-                  Find something to go with the rest →
-                </Link>
-              </>
-            ) : null}
-          </Body>
+              ⚠ `topTags` is still computed in the rollup and `YOU_DAY_TWO_TAGS`
+              is still a fixture; nothing renders either. They are the only
+              thing in the app reading `tagHistory`, which is what Create's tag
+              step writes — so deleting them would quietly make that step write
+              to nothing. Left wired, unrendered. */}
         </Sig>
 
         {/* ══ Milestones — six, fixed, all shown from day one ══

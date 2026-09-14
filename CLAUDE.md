@@ -537,6 +537,28 @@ A fresh session will be tempted by several of these. They were tried and rejecte
 - "You won't know when each lands…" under *See upcoming challenges*. It argued
   for the tap instead of offering it, and the screen it leads to makes the
   point with the list in front of you
+- **Five explanatory lines on You**, all cut 13 Sep in one pass, and the
+  pattern is worth naming because a fresh session will want to caption things:
+  "Built from your looks, what you take from the magazine, and what the room
+  says back" (the app explaining its own method under the one line meant to be
+  read as a statement about the reader); the submissions chart's caption (it
+  read the chart back — the `TrendKey` swatches stay, because they are what
+  make paired bars legible at all); the `Noticed` section head (the card
+  already has its own accent kicker, so it was a second label on one object)
+  and that card's CTA (it turned an observation into an errand); and `your
+  words` plus the pieces line. ⚠ CONSEQUENCES: **nothing on You has a route out
+  of it now** — `Noticed` was described in its own comment as the only one —
+  and `topTags` / `YOU_DAY_TWO_TAGS` / `piecesLine` / `showWardrobeRoute` /
+  `YOU_DAY_TWO_INSIGHT.cta` all still exist with no reader. `topTags` is left
+  wired because it is the only thing in the app reading `tagHistory`, which is
+  what Create's tag step writes to
+- **The result card reporting the result.** It is an INVITATION now (Katya,
+  13 Sep): `See how you did yesterday` over the job name, with `see how you
+  did` in the badge where the band used to be. The band is revealed on the
+  results screen and nowhere else, so the tap has something behind it. ⚠ The
+  two strings say the same thing twice on a 73pt card — built as asked and
+  flagged; dropping the badge is the fix if it reads badly, since the chevron
+  already says the card is tappable
 - **The Wardrobe's "two arrived overnight" panel** (`NewBox`). Cut 13 Sep: it
   was the loudest thing on the screen and reported a fact the grid beneath it
   already carried — the arrivals wear the `NEW` outline on their own tiles and
