@@ -47,7 +47,8 @@ import { LockIcon } from './TabIcon';
 import { OwnReactionRead, ReactionCluster } from './Reactions';
 import { Hero, Tiny } from './text';
 import { isEditorial, type FeedLook } from '@/data/looks';
-import { JUDGING_LOOKS } from '@/data/looks';
+import { spreadLooks } from '@/data/looks';
+import { chipLabel, normalise } from '@/domain/tags';
 
 /** A look card: a tilted, rounded plate; tags; the reaction cluster. No longer
  *  literally edge-to-edge — quintets.css's rounded feed-image treatment needs
@@ -91,6 +92,9 @@ export function LookCard({
           {look.image ? (
             <Image source={look.image} style={s.bleedPhoto} resizeMode="cover" />
           ) : (
+            /* A LINE BREAK at the first space, deliberately — this is the big
+               ghosted word behind the bleed and two words stacked is the
+               intended shape. NOT the same call as the caption below. */
             <Text style={s.bleedGhost}>{look.tags[0]?.replace(' ', '\n')}</Text>
           )}
           <View style={s.savePieces}>
@@ -114,9 +118,21 @@ export function LookCard({
             sample-don't-sort". Free text does not aggregate either, so
             `#wedding`, `#weddingvibes` and `#bigday` were three different
             filters over one idea. They are a caption on the look. */}
+        {/* ⚠ `normalise` + `chipLabel`, NOT `t.replace(' ', '')`. That was a
+            real bug and a three-word fixture tag is what found it: a string
+            pattern replaces only the FIRST match, so 'the new job' rendered as
+            `#thenew job` — a caption with a space inside the hashtag. Day 1's
+            tags are all one or two words, so it never showed. The domain owns
+            both forms already (domain/tags.ts): `normalise` is the storage
+            form, stripped and lowercased, and `chipLabel` is the only place
+            the `#` lives.
+
+            ⚠ Importing domain/tags HERE is fine — invariant 24's prohibition
+            is on the SAMPLER, and `tests/tags.test.ts` asserts it against
+            domain/magazine.ts specifically. This is a caption. */}
         {look.tags.map((t) => (
           <Text key={t} style={s.tag}>
-            #{t.replace(' ', '')}
+            {chipLabel(normalise(t))}
           </Text>
         ))}
       </View>
@@ -225,8 +241,13 @@ export function SpreadCard({
     opacity: reveal,
     transform: [{ translateY: reveal.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }],
   };
-  const left = JUDGING_LOOKS[(index * 2) % JUDGING_LOOKS.length]!;
-  const right = JUDGING_LOOKS[(index * 2 + 1) % JUDGING_LOOKS.length]!;
+  /* `spreadLooks()`, not the judging pool. Day 2 has twelve frames shot for
+     exactly this — six pairs, which is SPREADS_PER_DAY — so the spread stops
+     showing the same photographs as the judging round two screens away. Day 1
+     has no spread set of its own and still falls back to the judging pool. */
+  const spreads = spreadLooks();
+  const left = spreads[(index * 2) % spreads.length]!;
+  const right = spreads[(index * 2 + 1) % spreads.length]!;
   /** Stand-in for a real per-look settled split (Jack's open question 5) —
    *  see shareForTierGap's doc comment in domain/magazine.ts. */
   const share = shareForTierGap(left.tier ?? 'mid', right.tier ?? 'mid');

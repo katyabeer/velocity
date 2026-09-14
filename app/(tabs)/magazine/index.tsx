@@ -41,7 +41,7 @@ import { LookCard, SpreadCapped, SpreadCard } from '@/ui/FeedCards';
 import { palette, border, space } from '@/theme/tokens';
 import { canTake } from '@/domain/economy';
 import { MAGAZINE_FILTERS, feedIsFinite, thinResultNote, trendingVisible } from '@/domain/magazine';
-import { FEED_LOOKS } from '@/data/looks';
+import { feedLooks } from '@/data/looks';
 import { garmentImage } from '@/data/catalogue';
 import { cards, spreadIsCapped, FIRST_PAGE, NEXT_PAGE, useMagazine } from '@/state/magazine';
 import { useEconomy } from '@/state/economy';
@@ -121,7 +121,8 @@ export default function Magazine() {
      a footer that says it is the end rather than inviting more. */
   const finite = feedIsFinite(filter, garments, query);
   const exhausted = finite && list.filter((c) => c.kind !== 'S').length >= pool.length;
-  const sheetLook = sheet !== null ? FEED_LOOKS[sheet % FEED_LOOKS.length]! : null;
+  const looks = feedLooks();
+  const sheetLook = sheet !== null ? looks[sheet % looks.length]! : null;
 
   /**
    * Taking a piece moves the token balance AND the inventory, together. The
@@ -237,7 +238,7 @@ export default function Magazine() {
               />
             );
           }
-          const look = FEED_LOOKS[item.lookIndex % FEED_LOOKS.length]!;
+          const look = looks[item.lookIndex % looks.length]!;
           return (
             <LookCard
               look={look}

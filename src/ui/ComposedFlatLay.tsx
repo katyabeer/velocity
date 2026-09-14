@@ -182,7 +182,18 @@ const BOX_SLACK = 1.02;
  * did before any of this, so a missing row degrades to the old picture rather
  * than to a broken one.
  */
-const aspectOf = (name: string): number => CUTOUT_ASPECT[name] ?? DEFAULT_ASPECT;
+/**
+ * ⚠ LOWERCASED, because the table's keys come from FILENAMES. The generator
+ * reads `assets/garments/garm_<kebab-name>.png` and un-kebabs it, which cannot
+ * recover capitals — so the catalogue's one capitalised name, `Le Smoking
+ * tuxedo jacket`, was the single entry in sixty that missed and fell back to
+ * DEFAULT_ASPECT. A 0.93-aspect jacket drawn as if it were 0.72 in every flat
+ * lay it appeared in, invisibly, because the fallback is a plausible number.
+ * Found 13 Sep; the alternative fix is teaching the generator the catalogue's
+ * casing, which means the generator importing the catalogue.
+ */
+const aspectOf = (name: string): number =>
+  CUTOUT_ASPECT[name] ?? CUTOUT_ASPECT[name.toLowerCase()] ?? DEFAULT_ASPECT;
 
 /**
  * The piece's equalised box in canvas units, BEFORE the tighten's growth and

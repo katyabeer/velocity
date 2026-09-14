@@ -13,7 +13,7 @@
  */
 
 import type { ImageSourcePropType } from 'react-native';
-import { categoryOf, slotOf, type Category } from '../domain/garments';
+import { categoryOf, type Category } from '../domain/garments';
 import { capsuleByKey, type CapsuleKey } from './capsules';
 
 /** How a piece arrived. Shown in the wardrobe tile. */
@@ -49,51 +49,109 @@ export function inventoryDayOne(capsule: CapsuleKey): OwnedPiece[] {
   }));
 }
 
-/** Pieces that arrive overnight on Day 2, drawn from the shared pool. */
-const DAY_TWO_ARRIVALS = [
-  'charcoal coat',
-  'derby',
-  'tote',
-  'red bag',
-  'roll neck',
-  'trench',
-  'black knit',
-] as const;
+/**
+ * ══════════════════════════════════════════════════════════════════════════
+ *  DAY 2 — THE RETURNING STATE'S WARDROBE. THIRTY PIECES, ALL REAL NAMES.
+ * ══════════════════════════════════════════════════════════════════════════
+ *
+ * Katya, 13 Sep: "lots more items in their wardrobe to reflect what they've
+ * been pinching, saving and buying through the app."
+ *
+ * ⚠ AND IT FIXES A LIVE BUG, which is the more important half. This used to be
+ * derived from `capsuleByKey(capsule).pieces` — and every capsule name is an
+ * original prototype short name (`wool coat`, `roll neck`, `red bag`). The
+ * AW26 catalogue carries NONE of them, so `garmentImage` returned undefined
+ * and day 2 drew a grey named box in every wardrobe tile, slot cell and flat
+ * lay. It was on the open-questions list as "Day 2 and Established show GREY
+ * PLACEHOLDERS, not clothes", and it undercut anything that showed a look.
+ * Written straight against the catalogue, there is nothing left to resolve:
+ * `garm_<kebab-name>.png` is an exact bijection with those sixty names.
+ *
+ *   ⚠ ESTABLISHED IS STILL BROKEN THIS WAY. `INVENTORY_ESTABLISHED` below is
+ *   twenty-six legacy names and none of them hit the catalogue either. Left
+ *   alone on purpose — it is the far-future reference state, not a state
+ *   anyone is being shown — but it is the same one-hour job if it is ever
+ *   demoed.
+ *
+ * ─── THE CAPSULE PARAMETER IS GONE ─────────────────────────────────────────
+ * This was its last caller. The capsule picker was cut on 3 Sep ("it asked a
+ * new user to choose clothes before they had seen a job"), so the argument was
+ * choosing between four fixtures nobody can pick any more.
+ *
+ * ─── WHERE THEY CAME FROM, AND WHY THE SPREAD IS UNEVEN ────────────────────
+ * The mix is the story of five days rather than a tidy split:
+ *
+ *   starter      5   the look they entered on day 1. `adoptLook` marks an
+ *                    adopted look 'starter', so this matches what the day-1
+ *                    participant's own wardrobe would say the next morning
+ *   taken       21   the magazine, paid for with tokens over four nights.
+ *                    Invariant 1 — every one of these cost a judging round
+ *   piece-brief  4   the app handed them over ("The orange coat: we are giving
+ *                    you the coat"). Not bought, not taken — invariant 16
+ *
+ * `worn` and `best` are the only per-piece history anywhere in the app, and
+ * invariant 14 keeps them OUT of the builder — the wardrobe and the result
+ * screen are the only two places they may appear. So they are worth making
+ * non-trivial: a handful of pieces carry most of the wear, which is the shape
+ * the You screen's insight then reports honestly rather than inventing.
+ *
+ * COVERS ALL FIVE SLOTS SEVERAL TIMES OVER, which the slot pickers need — a
+ * slot with one option in it is a drawer that wastes a tap.
+ */
+const WARDROBE_DAY_TWO: readonly OwnedPiece[] = (
+  [
+  /* ── the day-1 look, adopted ── */
+  { name: 'funnel neck wool coat', worn: 4, best: 'Upper quarter', provenance: 'starter' },
+  { name: 'black fine turtleneck', worn: 5, best: 'Upper quarter', provenance: 'starter' },
+  { name: 'charcoal suit trouser', worn: 3, best: 'Upper half', provenance: 'starter' },
+  { name: 'glove pump heel', worn: 3, best: 'Upper quarter', provenance: 'starter' },
+  { name: 'supersized tote', worn: 2, best: 'Upper half', provenance: 'starter' },
+
+  /* ── taken from the magazine ── */
+  { name: 'belted double breasted overcoat', worn: 2, best: 'Upper half', provenance: 'taken' },
+  { name: 'structured trench coat', worn: 1, best: 'Upper half', provenance: 'taken' },
+  { name: 'black leather biker jacket', worn: 2, best: 'Lower half', provenance: 'taken' },
+  { name: 'charcoal suit jacket', worn: 1, best: 'Upper quarter', provenance: 'taken' },
+  { name: 'suede jacket', worn: 0, best: null, provenance: 'taken' },
+  { name: 'crisp poplin shirt', worn: 3, best: 'Upper quarter', provenance: 'taken' },
+  { name: 'silk charmeuse blouse', worn: 1, best: 'Upper half', provenance: 'taken' },
+  { name: 'fair isle cable jumper', worn: 1, best: 'Lower half', provenance: 'taken' },
+  { name: 'boxy broad shoulder knit', worn: 0, best: null, provenance: 'taken' },
+  { name: 'velvet jewel tone dress', worn: 1, best: 'Top of the room', provenance: 'taken' },
+  { name: 'wide leg wool trouser', worn: 2, best: 'Upper half', provenance: 'taken' },
+  { name: 'pleated wool trouser', worn: 1, best: 'Upper half', provenance: 'taken' },
+  { name: 'dark indigo straight jean', worn: 2, best: 'Lower half', provenance: 'taken' },
+  { name: 'leather tailored skirt', worn: 0, best: null, provenance: 'taken' },
+  { name: 'charcoal check pencil skirt', worn: 1, best: 'Upper half', provenance: 'taken' },
+  { name: 'slim penny loafer', worn: 2, best: 'Upper quarter', provenance: 'taken' },
+  { name: 'chunky lug loafer', worn: 1, best: 'Upper half', provenance: 'taken' },
+  { name: 'chocolate suede boot', worn: 1, best: 'Lower half', provenance: 'taken' },
+  { name: 'east west shoulder bag', worn: 2, best: 'Upper quarter', provenance: 'taken' },
+  { name: 'maxi wrap scarf', worn: 1, best: 'Upper half', provenance: 'taken' },
+  { name: 'leather gloves', worn: 0, best: null, provenance: 'taken' },
+
+  /* ── the app gave them these ── */
+  { name: 'plaid check overcoat', worn: 0, best: null, provenance: 'piece-brief' },
+  { name: 'pointed stiletto knee boot', worn: 0, best: null, provenance: 'piece-brief' },
+
+  /* ── LAST NIGHT'S. `isNew` is the Klein outline in the wardrobe, and two of
+        them is enough to say "something arrived" without the grid looking like
+        it was all bought at once ── */
+  { name: 'Le Smoking tuxedo jacket', worn: 0, best: null, provenance: 'taken', isNew: true },
+  { name: 'jewelled evening clutch', worn: 0, best: null, provenance: 'piece-brief', isNew: true },
+  ] as const satisfies readonly Omit<OwnedPiece, 'category'>[]
+  /* `category` is DERIVED, never written. `classify()` owns the mapping from a
+     name to its slot and category, and a hand-written category here is a
+     second source of truth that silently disagrees the first time a rule
+     changes. */
+).map((p) => ({ ...p, category: categoryOf(p.name) }));
 
 /**
- * Day 2 — the same capsule with one piece worn per slot, plus three that came
- * out of last night's judging.
+ * ⚠ NO ARGUMENT ANY MORE — see the note above. Returns a fresh array because
+ * the store mutates what it is handed.
  */
-export function inventoryDayTwo(capsule: CapsuleKey): OwnedPiece[] {
-  const base = capsuleByKey(capsule).pieces;
-  const seen = new Set<string>();
-  const out: OwnedPiece[] = base.map((name) => {
-    const slot = slotOf(name);
-    const first = !seen.has(slot);
-    seen.add(slot);
-    return {
-      name,
-      category: categoryOf(name),
-      worn: first ? 1 : 0,
-      best: first ? 'Upper half' : null,
-      provenance: 'starter' as const,
-    };
-  });
-
-  DAY_TWO_ARRIVALS.filter((n) => !base.includes(n))
-    .slice(0, 3)
-    .forEach((name) =>
-      out.push({
-        name,
-        category: categoryOf(name),
-        worn: 0,
-        best: null,
-        provenance: 'taken',
-        isNew: true,
-      }),
-    );
-
-  return out;
+export function inventoryDayTwo(): OwnedPiece[] {
+  return WARDROBE_DAY_TWO.map((p) => ({ ...p }));
 }
 
 /** Established — the 26-piece sample standing in for a 96-piece wardrobe. */
@@ -178,8 +236,64 @@ export type ArchiveEntry = {
 
 export const ARCHIVE_DAY_ONE: readonly ArchiveEntry[] = [];
 
+/**
+ * SIX PAST LOOKS, and every one of them carries `pieces` — which is what turns
+ * the archive row's thumbnail into a real composed flat lay instead of the
+ * empty grey plate the old single fixture got. Job names come from
+ * `playedBriefs()` in data/challenges.ts, most recent first, so the archive,
+ * the result card and the You screen's post list are all telling one story.
+ *
+ * ⚠ ONE ROW IS A `flat` BAND, and that is a state rather than a result: a saved
+ * combination that never generated. Its thumbnail stays a flat lay even once
+ * `ui/RenderedLook` is showing worn photography everywhere else, because a worn
+ * photograph there would claim a generation that does not exist.
+ *
+ * Two of them are freestyle, which is why they read `free` — nothing settles a
+ * look nobody was briefed for, so a band would be an invention.
+ */
 export const ARCHIVE_DAY_TWO: readonly ArchiveEntry[] = [
-  { job: 'The interview', band: 'Upper half', when: 'yesterday', note: 'your first · 3 took a piece' },
+  {
+    job: 'Rain, and a long walk',
+    band: 'flat',
+    when: 'today',
+    note: '4 pieces · saved as a set',
+    pieces: ['structured trench coat', 'black fine turtleneck', 'wide leg wool trouser', 'chunky lug loafer'],
+  },
+  {
+    job: 'The autumn wedding',
+    band: 'Upper quarter',
+    when: 'yesterday',
+    note: 'your best yet · 5 took a piece',
+    pieces: ['funnel neck wool coat', 'velvet jewel tone dress', 'glove pump heel', 'east west shoulder bag'],
+  },
+  {
+    job: 'Freestyle',
+    band: 'free',
+    when: '2 days ago',
+    note: 'no brief · 27 reactions',
+    pieces: ['black leather biker jacket', 'black fine turtleneck', 'charcoal suit trouser', 'pointed stiletto knee boot', 'maxi wrap scarf'],
+  },
+  {
+    job: 'The airport',
+    band: 'Upper half',
+    when: '2 days ago',
+    note: '3 took a piece',
+    pieces: ['belted double breasted overcoat', 'fair isle cable jumper', 'dark indigo straight jean', 'chocolate suede boot', 'supersized tote'],
+  },
+  {
+    job: 'One bold piece',
+    band: 'Lower half',
+    when: '3 days ago',
+    note: 'went for sharp, read as busy',
+    pieces: ['plaid check overcoat', 'silk charmeuse blouse', 'leather tailored skirt', 'glove pump heel', 'jewelled evening clutch'],
+  },
+  {
+    job: 'Monochrome',
+    band: 'Upper half',
+    when: '4 days ago',
+    note: 'your first · 2 took a piece',
+    pieces: ['charcoal suit jacket', 'black fine turtleneck', 'charcoal suit trouser', 'slim penny loafer', 'supersized tote'],
+  },
 ];
 
 export const ARCHIVE_ESTABLISHED: readonly ArchiveEntry[] = [

@@ -590,15 +590,20 @@ Search for `⚠` to find every one. All are Katya's or Jack's call, not yours.
 | `today/rendering.tsx` | **THREE VERBS FOR ONE THING ON ONE SCREEN** — the ribbon step says GENERATE, the heading says "we're BUILDING your look", and Katya's new body (7 Sep) says "we're CREATING your look". The 4 Sep ruling is that every user-visible string says *generate*. The body also restates the heading, so dropping its first clause fixes both at once. One line; her copy, so her call |
 | `today/challenges.tsx` | **"pinch the right items" is on screen** (Katya's copy, 7 Sep). Invariant 18 holds that the currency is TOKENS, "never keeps or pinches", because the naming is a regulatory position — the prototype's `S.pinch` was renamed for it and "pinches earned" is on the do-not-re-propose list. The sentence does not call a token a pinch, so it is not the letter of the invariant; it does put the word back as the VERB for acquiring a garment, where the app says TAKE everywhere else. One word fixes it. Jack should see it |
 | `today/challenges.tsx` (the bottom hint) | the gap signal — "you are thin on tailoring and you own one pair of decent shoes" — is a HARDCODED FIXTURE, wired to no inventory, and it now sits below the fold under the new subheading, which says the same thing honestly. Katya asked to "remove the rest of the copy" from a screenshot that did not reach it, so it was kept. Say if it goes: the header comment calls it "the whole mechanism", but a fake personalised read is worse than none |
-| `ui/RenderedLook.tsx` | **THERE IS NO DAY-2 ASSET SET.** Katya asked for "one of the day 2 looks from the asset library"; `assets/looks/` holds one folder, `d1` — 14 judging and 14 magazine photographs, nothing else ever delivered. The stand-ins come from the magazine set, led by `look_d1_mag_06` because `data/looks.ts` already flags that fixture as `mine`. Say if a day-2 set exists and this should point at it |
+| ~~`ui/RenderedLook.tsx`~~ | ✔ **CLOSED 13 Sep** — Katya delivered `assets/looks/d2` (27) and `assets/looks/spreads` (12), resized to d1's 675×900. There are two stand-in pools now, day 1's led by `look_d1_mag_06` and day 2's by `look_d3_mag_01`, each being the frame its own feed flags as `mine`. **Neither pool draws from the judging set** — those are tonight's field, and your own generation reappearing as a plate in the round you judge reads as a leak |
 | `ui/RenderedLook.tsx`, `casting.tsx` | showing every finished look as worn photography **leans on Jack's open question 2** (render on a body vs flat lay) in the direction `casting.tsx` already assumes. Not settled: the flat lay still exists, a14 still toggles to it, and one line puts it back |
-| `data/inventory.ts`, `data/capsules.ts` | **Day 2 and Established show GREY PLACEHOLDERS, not clothes.** Their fixtures use the original prototype's short names (`wool coat`, `roll neck`, `red bag`) and the catalogue has none of them — `garmentImage` returns undefined, so every flat lay, slot strip and wardrobe tile falls back to a named box. Day 1 is fine because it draws from `cataloguePool`. Pre-existing, and it undercuts anything that shows a look on those days |
-| `data/challenges.ts` (`YESTERDAYS_BRIEF`) | "The interview" is hardcoded in four other places (`ui/ResultCard.tsx` ×3, `today/result.tsx`, both archive fixtures). They should collapse onto the constant |
+| `data/inventory.ts`, `data/capsules.ts` | ⟲ **HALF FIXED 13 Sep.** Day 2's fixture is now thirty real catalogue names, and `seed()` in state/wardrobe.ts attaches `garmentImage` to seeded pieces — which the fixtures never did, so real names alone would still have drawn grey boxes. **`INVENTORY_ESTABLISHED` is still twenty-six legacy names** (`wool coat`, `roll neck`, `red bag`) that the catalogue does not carry, so day 3 still shows named boxes in every flat lay, slot cell and wardrobe tile. Left alone because it is the far-future reference rather than a state anyone is shown; the same hour's work if it is ever demoed. `tests/capsules.test.ts` now asserts every day-2 name has a cutout on disk |
+| ~~`data/challenges.ts` (`YESTERDAYS_BRIEF`)~~ | ✔ **CLOSED 13 Sep.** All five copies collapsed onto the constant — `ui/ResultCard.tsx` and `today/result.tsx` both read `dayResult()` in the new `data/results.ts`, and the archive fixtures name the job they actually played. `shortBriefName` sits beside it because the pool name cannot be set in a 26px headline |
 | everywhere | **"render" is "generate" in COPY ONLY.** Katya, 4 Sep. Every user-visible string says generate; the code still says render throughout — `domain/renders.ts`, `RENDER_DELAY_MS`, `rerenderVerdict`, the `rendering` route and state, `RenderStrip`. Renaming the internals is a large, purely mechanical diff and it was not asked for. Say if you want it, because the split will confuse a fresh session |
 | `onboarding/first-challenge.tsx`, `app/(tabs)/today/index.tsx` | o7's card says **today's brief** (Katya's mockup) and the Today heading says **Today's styling challenge** — two words for one thing on consecutive screens. Built to the mockup; pick one |
 | `app/create/index.tsx`, `app/create/posted.tsx` | **a17 HAS ONE ENTRY POINT LEFT.** The generate step's link and its footer both routed to `create/posted`; on 7 Sep they became a `SubmissionSheet` drawer and a Back-to-Wardrobe button, so a17 is now reachable ONLY by leaving and returning through the Wardrobe banner. Not deleted, because that banner still opens it. Say whether the drawer is meant to replace it |
 | `src/ui/text.tsx` (`Link`) | **a `Link` renders as a bare `<div>`** — no `role`, no `tabindex` (measured 7 Sep). So the app's text links are unreachable by keyboard and unannounced to a screen reader, in the eight places where they are often the only route to a screen. Same class as the `accessibilityState` gap; pre-existing, not introduced by any one change |
 | `config/app.ts` | the name. Now **Editorial.** (3 Sep), after *quintets.*, after the *Velocity* rejection. STILL no availability or trademark checks on any candidate, and "Editorial" is a common noun in this exact category — the most contested of the three so far |
+| `data/results.ts` (`DAY_ONE`) | **Katya 4** — day 1's `closeCallsBadge` says "6 of 7 close calls" while `JUDGING_QUOTA` is **five** pairs. Preserved verbatim because day 1 is signed off, and unreachable there anyway (`yesterday: 'none'` returns null before a state is picked). Day 2's is written coherently. Say if day 1's should be brought into line |
+| `today/challenges.tsx` (`GAP_READ`) | ⟲ the gap read is STILL a hardcoded fixture wired to no inventory, and it is now TWO of them. Day 1's ("thin on tailoring, one pair of decent shoes") became flatly false on a thirty-piece wardrobe holding eight coats and five pairs of shoes, so day 2 has its own — checkable against `WARDROBE_DAY_TWO`, but still written rather than counted. The standing note says a fake personalised read is worse than none; it is now a fake read that has to be maintained per day. One block to delete |
+| `today/judging.tsx` | the black strip reads **"job 2 of 2 · entry closed 8pm"**, hardcoded, on every day. It does not parse on day 1 (a first-ever job is not the second of two) and does not parse on day 5 either. Pre-existing and shipped in the signed-off Day 1 build, so it was left alone — but it is the one string in the day's flow that claims a count it cannot know |
+| `app/(tabs)/you/index.tsx` (`buildWords`) | **Katya 5** — day 1 and Established share `['quiet', 'structured']`, which on day 1 describes an account that has built nothing. Unreachable rather than wrong on screen (`SENTENCE_MIN_LOOKS` is 3 and one day allows two looks), so it was not touched. Day 2 has its own words |
+| `data/challenges.ts`, `data/you.ts`, `data/inventory.ts` | **THE RETURNING STATE IS FOUR FIXTURES THAT MUST AGREE.** `playedBriefs()` names the jobs; `ARCHIVE_DAY_TWO`, `YOU_DAY_TWO_POSTS` and `dayResult()` all restate them, and `YOU_DAY_TWO_REACTIONS` must sum to the rollup's `reactionsReceived` or the You screen shows two different totals one scroll apart. Nothing enforces any of it. The test suite covers the wardrobe's names and slots only |
 
 ---
 
@@ -725,22 +730,47 @@ participant cannot build a look at all.
 
 ## Test states
 
-There is no HUD. The seed state is one constant: `ACTIVE_DAY` in
-`src/config/testState.ts`. Change it, save, Fast Refresh reboots into that state.
+There is no HUD. The seed state is one constant: `SEED_DAY` in
+`src/config/testState.ts` (read by `ACTIVE_DAY`). Change it, save, Fast Refresh
+reboots into that state. **On web, `?day=1` / `?day=2` / `?day=3` overrides it
+for one load** — added 13 Sep so both demo states can be checked on the
+deployed URL without a commit.
 
-| | Day 1 | Day 2 | Established |
+| | Day 1 | Day 2 · **the returning state** | Established |
 |---|---|---|---|
 | onboarding | yes, from slide 1 | skipped | skipped |
-| yesterday's result | **absent entirely** | first result | as before |
-| wardrobe | **0**, then the 3–6 you enter | 11 | 96 |
-| looks archive | empty | 1 | 9 |
+| `dayNumber` | 1 | **5** | 124 |
+| tonight's job | the autumn wedding | **the new job** (office) | the autumn wedding |
+| yesterday's result | **absent entirely** | the wedding · **Upper quarter** · 38 | as before |
+| wardrobe | **0**, then the 4–6 you enter | **30**, real catalogue names | 96 (legacy names, grey) |
+| looks archive | empty | **6**, all with piece lists | 9 |
 | tokens at start | 0 | 2 | 2 |
 | overnight roundel | hidden | shown | shown |
-| You sections | milestones only | posts · stats · milestones | all five |
+| photography | `assets/looks/d1` | **`d2` + `spreads`, no d1 frame** | d1 |
+| milestones | none | **filed · borrowed · upperQuarter** | filed · borrowed · weekStraight |
+| You sections | milestones only | all of them | all five |
 
 **Day 1 has no result act at all** — absent, not an empty state, so the job card leads.
 The overnight roundel is hidden because a zero there would be a lie. The shuffled
 *try these* rail is hidden because a nudge drawn from eight visible things is noise.
+
+## ⚠ DAY 2 IS THE SECOND SITTING, NOT THE SECOND EVENING (13 Sep)
+
+The prototype is shown to Frame 23 twice — Day 1, then the **same URL** the next
+day. Nothing persists, so the second sitting is a different SEED and the switch
+is one line. **Day 1 must stay byte-for-byte intact**; check it with `?day=1`
+before shipping anything.
+
+Slot 2 was repurposed rather than a fourth day added: `DayConfig` is a union of
+the three literal shapes, so **a key added to one day must be added to all
+three**, and a fourth member would force a third answer out of every
+`day === 2` / `day >= 3` gate in the app. Established is untouched.
+
+What moved with it: `data/challenges.ts` (the open job, `playedBriefs`,
+`upcomingChallenges`, `shortBriefName`), `data/looks.ts` (a second complete
+39-frame set behind `feedLooks()` / `judgingLooks()` / `spreadLooks()`),
+`data/results.ts` (**new** — yesterday's result, which used to be written twice
+in full), `data/inventory.ts`, `data/you.ts`.
 
 ---
 

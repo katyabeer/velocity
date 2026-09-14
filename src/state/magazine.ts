@@ -28,7 +28,7 @@ import {
 } from '@/domain/magazine';
 import { nextHeld, type ReactionValue } from '@/domain/reactions';
 import type { Category } from '@/domain/garments';
-import { FEED_LOOKS } from '@/data/looks';
+import { feedLooks } from '@/data/looks';
 
 export type FeedCard =
   | { index: number; kind: 'H' | 'U'; lookIndex: number }
@@ -68,7 +68,8 @@ type MagazineState = {
    *  See `matchesQuery` in domain/magazine.ts for why. */
   query: string;
   searchOpen: boolean;
-  /** Indices into FEED_LOOKS that pass the current filters, sampled. */
+  /** Indices into the day's feed pool (`feedLooks()`) that pass the current
+   *  filters, sampled. */
   pool: readonly number[];
   /** Bumped on every filter change, so the same set comes back in a new
    *  order. */
@@ -124,7 +125,7 @@ const repool = (next: {
     ...blank,
     ...next,
     seed,
-    pool: filteredPool(FEED_LOOKS, next.filter, next.garments, next.query, seed),
+    pool: filteredPool(feedLooks(), next.filter, next.garments, next.query, seed),
   };
 };
 
@@ -133,7 +134,7 @@ const INITIAL_SEED = 1;
 export const useMagazine = create<MagazineState>((set) => ({
   ...blank,
   seed: INITIAL_SEED,
-  pool: filteredPool(FEED_LOOKS, 'All', [], '', INITIAL_SEED),
+  pool: filteredPool(feedLooks(), 'All', [], '', INITIAL_SEED),
 
   /**
    * Spread numbers are allocated from the LAID-OUT SLOTS, not from `kindAt`.
@@ -146,7 +147,7 @@ export const useMagazine = create<MagazineState>((set) => ({
   extend: (by) =>
     set((s) => {
       const length = s.length + by;
-      const slots = feedSlots(FEED_LOOKS, s.pool, s.filter, length);
+      const slots = feedSlots(feedLooks(), s.pool, s.filter, length);
       const spreadIndex = { ...s.spreadIndex };
       let spreadsServed = s.spreadsServed;
       slots.forEach((slot, i) => {
@@ -213,7 +214,7 @@ export const NEXT_PAGE = PAGE;
 /**
  * Build the descriptor list the FlatList renders.
  *
- * Every look card carries a `lookIndex` INTO FEED_LOOKS, resolved through the
+ * Every look card carries a `lookIndex` INTO `feedLooks()`, resolved through the
  * filtered pool — so a card can only ever show something that passed the
  * filters. Before 4 Sep this was `lookIndex: i`, which is why the rail changed
  * nothing.
@@ -224,7 +225,7 @@ export function cards(state: {
   pool: readonly number[];
   filter: MagazineFilter;
 }): FeedCard[] {
-  const slots = feedSlots(FEED_LOOKS, state.pool, state.filter, state.length);
+  const slots = feedSlots(feedLooks(), state.pool, state.filter, state.length);
   return slots.map((slot, i) =>
     slot.kind === 'S'
       ? { index: i, kind: 'S' as const, spreadNumber: state.spreadIndex[i] ?? 0 }

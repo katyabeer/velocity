@@ -23,8 +23,8 @@ import { Button } from '@/ui/controls';
 import { BandLadder, Card, Stat } from '@/ui/cards';
 import { LookPlate } from '@/ui/LookPlate';
 import { JUDGING_QUOTA } from '@/domain/economy';
-import { useSession } from '@/state/session';
-import { JUDGING_LOOKS } from '@/data/looks';
+import { judgingLooks } from '@/data/looks';
+import { dayResult } from '@/data/results';
 
 /**
  * REAL PHOTOGRAPHS, not the grey plates (Katya, 4 Sep). Both were `LookPlate`
@@ -38,11 +38,16 @@ import { JUDGING_LOOKS } from '@/data/looks';
  *   ⚠ Both are FIXTURES. There is no per-look settled record (Jack's open
  *   question 5), so nothing here is your actual entry.
  */
-const YOUR_LOOK = JUDGING_LOOKS[3]!;
-const THE_WINNER = JUDGING_LOOKS.find((l) => l.tier === 'strong')!;
+const POOL = judgingLooks();
+const YOUR_LOOK = POOL[3]!;
+const THE_WINNER = POOL.find((l) => l.tier === 'strong')!;
 
 export default function Result() {
-  const day = useSession((s) => s.day);
+  /* ⚠ ONE FIXTURE, SHARED WITH THE CARD THAT OPENS THIS SCREEN. Every number
+     and sentence below used to be written here AND again in ui/ResultCard.tsx,
+     with nothing keeping the summary and the detail of one result in step. See
+     data/results.ts. */
+  const r = dayResult();
 
   return (
     <Screen>
@@ -59,7 +64,7 @@ export default function Result() {
             underneath — "upper half" of what — so it belongs with the title
             rather than in the chrome. */}
         <Tiny style={{ marginTop: 6 }}>
-          {day >= 3 ? 'The interview' : 'Your first job'} · 41 entered
+          {r.job} · {r.fieldSize} entered
         </Tiny>
 
         {/* THE PHOTOGRAPH SITS RIGHT OF THE TEXT (Katya, 4 Sep), and it is a
@@ -70,12 +75,9 @@ export default function Result() {
           <View style={{ flex: 1 }}>
             <Kick>you placed</Kick>
             <H2 size={30} style={{ marginTop: 6 }}>
-              {'Upper\nhalf'}
+              {r.bandLines}
             </H2>
-            <Body style={{ marginTop: 7 }}>
-              Above the middle of people who started around when you did. Never a number — 20
-              comparisons can&apos;t carry one.
-            </Body>
+            <Body style={{ marginTop: 7 }}>{r.bandNote}</Body>
           </View>
           <View style={{ width: 116 }}>
             <LookPlate
@@ -90,7 +92,7 @@ export default function Result() {
 
         <Kick style={{ marginTop: 16 }}>the bands</Kick>
         <View style={{ marginTop: 6 }}>
-          <BandLadder active="upperHalf" />
+          <BandLadder active={r.bandKey} />
         </View>
         <Body style={{ marginTop: 7 }}>
           Five bands, always relative to people who started when you did.
@@ -103,10 +105,7 @@ export default function Result() {
             your own entry. */}
         <View style={{ flexDirection: 'row', gap: 12, marginTop: 8, alignItems: 'flex-start' }}>
           <View style={{ flex: 1 }}>
-            <Body>
-              Four of your five pieces were identical to the winner&apos;s. The bag did it — theirs
-              was red, yours was the tote.
-            </Body>
+            <Body>{r.beatYou}</Body>
             <Link
               style={{ marginTop: 8 }}
               onPress={() => router.push('/(tabs)/magazine')}
@@ -128,14 +127,14 @@ export default function Result() {
         <Kick style={{ marginTop: 17 }}>your calls</Kick>
         <Card style={{ marginTop: 8 }}>
           <View style={{ flexDirection: 'row', gap: 12, alignItems: 'baseline' }}>
-            <Num size={38}>{Math.min(3, JUDGING_QUOTA)}</Num>
+            <Num size={38}>{Math.min(r.callsAhead, JUDGING_QUOTA)}</Num>
             <Body style={{ flex: 1 }}>
               of the {JUDGING_QUOTA} pairs you judged, you picked the look that finished ahead.
             </Body>
           </View>
           <View style={{ marginTop: 10 }}>
-            <Stat label="On the three closest pairs" value="2 of 3" />
-            <Stat label="The look that won the room" value="You backed it" last />
+            <Stat label="On the three closest pairs" value={r.closestPairs} />
+            <Stat label="The look that won the room" value={r.backedTheWinner} last />
           </View>
         </Card>
 

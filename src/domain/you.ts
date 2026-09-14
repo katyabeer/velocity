@@ -374,8 +374,30 @@ export type TipRole = (typeof TIPS)[number]['role'];
  * it is HELD until a second one qualifies. It is not dropped: it comes back
  * the moment there is something beside it.
  */
-export function qualifyingTips(r: YouRollup): TipKey[] {
-  const passing = TIPS.filter((t) => t.qualifies(r));
+export function qualifyingTips(
+  r: YouRollup,
+  /**
+   * ⚠ IS `Noticed` ON THE SCREEN? If it is, the `wardrobe` tip is suppressed,
+   * because the two are THE SAME OBSERVATION — and that is visible in this
+   * file: the tip's own note calls it "cheap, counting your own data", which
+   * is word for word how the `Noticed` card was specified ("counting the
+   * user's own wardrobe, no cohort maths, no vote history").
+   *
+   * Found 13 Sep, when the returning state first cleared `looks >= 10` and
+   * put both on screen at once: "Three pieces are doing the work" in an accent
+   * card, and "Six pieces are doing all the work" in the panel directly
+   * beneath it. Nothing had ever rendered them together before, because the
+   * only state with `Noticed` had two looks.
+   *
+   * `Noticed` is the one that survives, for two reasons: it carries the
+   * section's only route out (a link to the magazine), and it states a number
+   * read off the actual wardrobe rather than a fixture.
+   */
+  { noticedShowing = false }: { noticedShowing?: boolean } = {},
+): TipKey[] {
+  const passing = TIPS.filter(
+    (t) => t.qualifies(r) && !(noticedShowing && t.key === 'wardrobe'),
+  );
   const negatives = passing.filter((t) => t.role === 'Weakness');
   if (passing.length === negatives.length) return [];
   return passing.map((t) => t.key);

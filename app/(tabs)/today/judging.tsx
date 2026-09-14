@@ -27,7 +27,7 @@ import { Bar, Button } from '@/ui/controls';
 import { LookPair, type PickSide } from '@/ui/LookPlate';
 import { Body } from '@/ui/text';
 import { palette } from '@/theme/tokens';
-import { JUDGING_LOOKS } from '@/data/looks';
+import { judgingLooks } from '@/data/looks';
 import { TONIGHTS_BRIEF } from '@/data/challenges';
 import { useEconomy } from '@/state/economy';
 
@@ -41,9 +41,10 @@ export default function Judging() {
    *  the same exit — see the header note in ui/LookPlate.tsx. */
   const [leaving, setLeaving] = useState<PickSide | null>(null);
 
-  const i = (callsCast * 2) % JUDGING_LOOKS.length;
-  const left = JUDGING_LOOKS[i]!;
-  const right = JUDGING_LOOKS[(i + 1) % JUDGING_LOOKS.length]!;
+  const pool = judgingLooks();
+  const i = (callsCast * 2) % pool.length;
+  const left = pool[i]!;
+  const right = pool[(i + 1) % pool.length]!;
 
   /** The call only lands once the plate has left. Casting on touch would swap
    *  in the next pair mid-flight, so you would watch the wrong look fly away. */

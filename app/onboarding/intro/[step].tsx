@@ -104,6 +104,7 @@ import { palette, border, radius, rotation, useReducedMotion } from '@/theme/tok
 import { PlusIcon } from '@/ui/TabIcon';
 import { garment } from '@/data/catalogue';
 import { FEED_LOOKS, JUDGING_LOOKS, isEditorial, type FeedLook } from '@/data/looks';
+import { chipLabel, normalise } from '@/domain/tags';
 import {
   JUDGING_QUOTA,
   TOKENS_PER_JUDGING_ROUND,
@@ -487,7 +488,11 @@ function FeedCard({
             clickable, not filterable, and must never reach the feed sampler.
             On a still slide that is free — do not make it a Pressable. */}
         <Text style={s.ftag} numberOfLines={1}>
-          #{look.tags[0]?.replace(' ', '') ?? ''}
+          {/* Same first-space-only slip as the feed caption carried until
+              13 Sep; the domain owns both forms (domain/tags.ts). Day 1's
+              tags are one or two words, so nothing showed here — fixed for
+              symmetry rather than for a visible bug. */}
+          {look.tags[0] ? chipLabel(normalise(look.tags[0])) : ''}
         </Text>
         {/* The positive count only, and only when there is one. There is no
             reaction cluster on this slide and no negative anywhere near it —

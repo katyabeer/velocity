@@ -30,7 +30,6 @@ import {
   type OwnedPiece,
 } from '@/data/inventory';
 import { garmentImage } from '@/data/catalogue';
-import type { CapsuleKey } from '@/data/capsules';
 
 export type WardrobeView = 'pieces' | 'looks' | 'saved';
 
@@ -57,20 +56,32 @@ type WardrobeState = {
   /** The entered look becomes yours to keep. Idempotent, because the screen
    *  that calls it can be remounted. */
   adoptLook: (names: readonly string[]) => void;
-  hydrate: (day: TestDay, capsule: CapsuleKey) => void;
+  hydrate: (day: TestDay) => void;
 };
 
-const seed = (day: TestDay, capsule: CapsuleKey) => {
+const seed = (day: TestDay) => {
   const cfg = dayConfig(day);
   /* Day 1 is EMPTY on purpose — not a thin wardrobe, none at all. The
      first-run builder draws on the catalogue, so nothing is blocked, and the
      first entry fills this via adoptLook. Do not re-seed it with a capsule. */
   const pieces =
-    day === 1 ? [] : day === 2 ? inventoryDayTwo(capsule) : [...INVENTORY_ESTABLISHED];
+    day === 1 ? [] : day === 2 ? inventoryDayTwo() : [...INVENTORY_ESTABLISHED];
   const archive =
     day === 1 ? ARCHIVE_DAY_ONE : day === 2 ? ARCHIVE_DAY_TWO : ARCHIVE_ESTABLISHED;
   return {
-    pieces,
+    /**
+     * ⚠ THE PHOTOGRAPH IS ATTACHED HERE, NOT IN THE FIXTURE, and it has to be:
+     * `data/inventory.ts` cannot import `data/catalogue.ts`, because the
+     * catalogue `require()`s sixty PNGs and `tests/capsules.test.ts` imports
+     * the fixtures under the plain-Node runner, which cannot load them. Same
+     * reason `data/looks.ts` is a separate file.
+     *
+     * Without this the fixtures render a grey named box even when every name
+     * is a real one — which is half of why day 2 had no clothes on it. `add`
+     * and `adoptLook` below already did their own `garmentImage` call; the
+     * seeded pieces were the ones that never got it.
+     */
+    pieces: pieces.map((p) => ({ ...p, image: p.image ?? garmentImage(p.name) })),
     archive: [...archive],
     count: day >= 3 ? cfg.wardrobeCount : pieces.length,
     cap: WARDROBE_CAP,
@@ -78,7 +89,7 @@ const seed = (day: TestDay, capsule: CapsuleKey) => {
 };
 
 export const useWardrobe = create<WardrobeState>((set) => ({
-  ...seed(ACTIVE_DAY, 'quiet'),
+  ...seed(ACTIVE_DAY),
   view: 'pieces',
   filter: 'All',
 
@@ -139,7 +150,14 @@ export const useWardrobe = create<WardrobeState>((set) => ({
       };
     }),
 
-  hydrate: (day, capsule) => set({ ...seed(day, capsule), view: 'pieces', filter: 'All' }),
+  /**
+   * ⚠ NOTHING CALLS THIS. Kept because it is the one piece of machinery a
+   * runtime day switch would need — the stores only seed at boot, so changing
+   * `ACTIVE_DAY` without a reload leaves this one stale. The `?day=` URL
+   * override sidesteps it by BEING a reload, and switching between the two
+   * sittings is a push. Lost its `capsule` argument with `inventoryDayTwo`.
+   */
+  hydrate: (day) => set({ ...seed(day), view: 'pieces', filter: 'All' }),
 }));
 
 /** Pieces grouped by category, respecting the active filter. For the grid. */

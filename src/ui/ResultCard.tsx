@@ -14,42 +14,47 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { palette, border } from '@/theme/tokens';
 import { LookPlate } from './LookPlate';
+import { dayResult } from '@/data/results';
 import type { YesterdayState } from '@/domain/clock';
-import type { TestDay } from '@/config/testState';
 
-export function ResultCard({
-  state,
-  day,
-  onPress,
-}: {
-  state: YesterdayState;
-  day: TestDay;
-  onPress: () => void;
-}) {
+export function ResultCard({ state, onPress }: { state: YesterdayState; onPress: () => void }) {
   if (state === 'none') return null;
+
+  /**
+   * ⚠ EVERY LITERAL THAT USED TO BE HERE NOW LIVES IN data/results.ts, and the
+   * screen this card opens (`today/result.tsx`) reads the same fixture. They
+   * are the summary and the detail of one result, so they always had to agree
+   * and nothing made them — the job name alone was written three times in this
+   * file and a fourth time over there.
+   *
+   * `day` came off the props with it: the only thing it decided was whether the
+   * kicker said "your first job" or "yesterday's job", which is a property of
+   * the result rather than of the day number.
+   */
+  const r = dayResult();
 
   const config = {
     entered: {
       tint: 't2' as const,
-      kick: day >= 3 ? "Yesterday's job · 41 entered" : 'Your first job · 41 entered',
-      title: 'The interview',
-      badge: 'Upper half',
+      kick: `${r.kickPrefix} · ${r.fieldSize} entered`,
+      title: r.job,
+      badge: r.band,
       badgeTone: 'accent' as const,
       label: '·',
     },
     'judged-only': {
       tint: 't4' as const,
       kick: 'Yesterday · you judged only',
-      title: 'The interview',
-      badge: '6 of 7 close calls',
+      title: r.job,
+      badge: r.closeCallsBadge,
       badgeTone: 'dim' as const,
       label: '?',
     },
     missed: {
       tint: 't1' as const,
       kick: 'Yesterday · you missed it',
-      title: 'The interview',
-      badge: 'Won by a red bag',
+      title: r.job,
+      badge: r.wonBy,
       badgeTone: 'alert' as const,
       label: 'Won',
     },

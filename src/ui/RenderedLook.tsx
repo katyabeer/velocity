@@ -28,14 +28,21 @@
  * list of sources, `index` picking between them. When Jack's pipeline exists,
  * this takes a URI and nothing else moves.
  *
- * ⚠ THERE IS NO DAY-2 ASSET SET. Katya asked for "one of the day 2 looks from
- * the asset library" — `assets/looks/` contains ONE folder, `d1`, holding 14
- * judging photographs and 14 magazine ones. Nothing else was ever delivered.
- * These are drawn from the magazine set, and `look_d1_mag_06` leads because
- * `data/looks.ts` already flags that exact fixture as `mine` — it is the app's
- * designated "your own look", so it is the one photograph in the library that
- * is already meant to be the user's. Say if a day-2 set exists somewhere and
- * this should point at it instead.
+ * ⟲ THERE IS A DAY-2 ASSET SET NOW (13 Sep), so this went from one pool to
+ * two. It used to say there wasn't: `assets/looks/` held only `d1`, and the
+ * stand-ins were its magazine frames led by `look_d1_mag_06` because
+ * `data/looks.ts` flags that fixture as `mine`.
+ *
+ * Katya, 13 Sep: "Use a different to Day 1 placeholder for their submissions."
+ * The returning state's pool leads with `look_d3_mag_01` for the same reason —
+ * it is the frame `FEED_LOOKS_DAY_TWO` flags as `mine`, so it is the one
+ * photograph in that library already meant to be the user's.
+ *
+ * ⚠ BOTH POOLS DRAW FROM THE MAGAZINE AND EDITORIAL SETS, NEVER THE JUDGING
+ * ONE, and that is deliberate: the judging frames are TONIGHT'S FIELD. A
+ * photograph shown as your own finished generation and then again as a plate in
+ * the round you are asked to judge reads as the app having leaked your entry
+ * into the pairs.
  *
  * ⚠ AND IT LEANS ON JACK'S OPEN QUESTION 2, which is render-on-a-body vs flat
  * lay. Showing every finished look as worn photography answers it in practice,
@@ -48,19 +55,32 @@
 import { Image, StyleSheet, View, type ImageSourcePropType, type ViewStyle } from 'react-native';
 import { LookWatermark } from './LookWatermark';
 import { palette, border, radius } from '@/theme/tokens';
+import { ACTIVE_DAY } from '@/config/testState';
 
 /**
  * The stand-in photography. Ordered, so a caller with several looks to show
  * (the wardrobe's archive) gets different pictures down the list rather than
  * the same one nine times.
  */
-const RENDERED: readonly ImageSourcePropType[] = [
+const RENDERED_DAY_ONE: readonly ImageSourcePropType[] = [
   require('../../assets/looks/d1/look_d1_mag_06.jpg'),
   require('../../assets/looks/d1/look_d1_mag_09.jpg'),
   require('../../assets/looks/d1/look_d1_mag_12.jpg'),
   require('../../assets/looks/d1/look_d1_mag_04.jpg'),
   require('../../assets/looks/d1/look_d1_mag_13.jpg'),
 ];
+
+/** The returning state's. Led by the frame flagged `mine` in that day's feed. */
+const RENDERED_DAY_TWO: readonly ImageSourcePropType[] = [
+  require('../../assets/looks/d2/look_d3_mag_01.jpg'),
+  require('../../assets/looks/d2/look_d2_mag_04.jpg'),
+  require('../../assets/looks/d2/look_d2_mag_07.jpg'),
+  require('../../assets/looks/d2/look_d2_beat_02.jpg'),
+  require('../../assets/looks/d2/look_d2_mag_02.jpg'),
+];
+
+const RENDERED: readonly ImageSourcePropType[] =
+  ACTIVE_DAY === 2 ? RENDERED_DAY_TWO : RENDERED_DAY_ONE;
 
 export function RenderedLook({
   /** Which of the stand-ins. Defaults to 0 — the fixture flagged as yours. */

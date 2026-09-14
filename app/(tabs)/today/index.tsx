@@ -163,7 +163,7 @@ export default function Today() {
         {/* ── ACT 1 · yesterday. Absent entirely on day one. ── */}
         {yesterday !== 'none' ? (
           <>
-            <ResultCard state={yesterday} day={day} onPress={() => router.push('/(tabs)/today/result')} />
+            <ResultCard state={yesterday} onPress={() => router.push('/(tabs)/today/result')} />
             {cfg.showOvernightRoundel ? (
               <View style={{ marginTop: 15 }}>
                 <EarnedRow count={overnight} />

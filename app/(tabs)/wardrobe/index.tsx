@@ -16,7 +16,7 @@
  */
 
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Foot, Gap, LogoBlock, Screen, Scroll, SectionHead } from '@/ui/layout';
 import { Body, Tiny, Kick, B } from '@/ui/text';
@@ -55,6 +55,8 @@ export default function Wardrobe() {
    *  should not survive navigating away mid-question. */
   const [pendingDrop, setPendingDrop] = useState<string | null>(null);
 
+  /** What landed since yesterday — the `isNew` pieces, counted. */
+  const arrivals = w.pieces.filter((p) => p.isNew).length;
   const groups = groupByCategory(w.pieces, w.filter);
   const populatedCategories = CATEGORIES.filter((c) => w.pieces.some((p) => p.category === c));
 
@@ -98,12 +100,17 @@ export default function Wardrobe() {
         {/* ══ PIECES ══ */}
         {w.view === 'pieces' ? (
           <>
-            {day === 2 ? (
+            {/* ⚠ COUNTED, NOT WRITTEN. The kick and the body both said "three"
+                against `isNew` in the day-2 fixture — which was three then and
+                is two now, so the card was announcing an arrival that was not
+                in the grid below it. The fixture is free to change; the copy
+                reads off it. */}
+            {day === 2 && arrivals > 0 ? (
               <View style={{ marginTop: 12 }}>
                 <NewBox
-                  kick="three arrived overnight"
+                  kick={`${numberWord(arrivals)} arrived overnight`}
                   title={`${w.count} pieces.`}
-                  body="Three came out of last night's judging. Nothing you own can ever leave."
+                  body={`${numberWord(arrivals, true)} came out of last night's judging. Nothing you own can ever leave.`}
                 />
               </View>
             ) : null}
@@ -137,8 +144,19 @@ export default function Wardrobe() {
                 <View style={s.rail}>
                   {w.pieces.slice(0, 5).map((p) => (
                     <View key={p.name} style={s.railCard}>
+                      {/* ⚠ THE PHOTOGRAPH, when there is one. This drew the
+                          first word of the name in ghosted type on a grey
+                          ground for every card — which was correct while the
+                          day-2 fixture was legacy names with no cutout
+                          (data/inventory.ts), and became five grey boxes in a
+                          rail of clothes the moment the names were real. The
+                          ghost is still the fallback, not the default. */}
                       <View style={s.railThumb}>
-                        <Text style={s.railThumbLabel}>{p.name.split(' ')[0]}</Text>
+                        {p.image ? (
+                          <Image source={p.image} style={s.railThumbImg} resizeMode="contain" />
+                        ) : (
+                          <Text style={s.railThumbLabel}>{p.name.split(' ')[0]}</Text>
+                        )}
                       </View>
                       <Text style={s.railName}>{p.name}</Text>
                     </View>
@@ -335,6 +353,19 @@ export default function Wardrobe() {
   );
 }
 
+/**
+ * "two", not "2". The overnight card is a sentence, and a numeral mid-sentence
+ * in a card of prose reads as a stat. Only small counts need words — a
+ * wardrobe cannot take more than a handful of arrivals in one night — so
+ * anything past six falls back to the numeral rather than pretending to be a
+ * general-purpose number speller.
+ */
+const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six'] as const;
+const numberWord = (n: number, capitalised = false): string => {
+  const w = WORDS[n] ?? String(n);
+  return capitalised ? w.charAt(0).toUpperCase() + w.slice(1) : w;
+};
+
 const s = StyleSheet.create({
   /** No alert hue survives the v3 collapse — ink border, sunk ground. */
   full: {
@@ -361,6 +392,7 @@ const s = StyleSheet.create({
     backgroundColor: palette.creamSunk,
   },
   railThumb: { height: 52, alignItems: 'center', justifyContent: 'center' },
+  railThumbImg: { width: '100%', height: '100%' },
   railThumbLabel: {
     fontFamily: 'BigShouldersDisplay_900Black',
     fontSize: 15,

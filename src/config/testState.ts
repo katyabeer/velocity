@@ -11,18 +11,80 @@
  * Change ACTIVE_DAY, save, and Fast Refresh reboots the app into that state.
  *
  *   1  brand new       onboarding from slide 1, EMPTY wardrobe, no result act
- *   2  returning       skips onboarding, first result in, 11 pieces, 2 tokens
+ *   2  returning       FIVE DAYS IN — see below. Skips onboarding, yesterday's
+ *                      result is their best yet, ~30 pieces, 6 looks, 3 badges
  *   3  established     skips onboarding, 96 pieces, 9 looks, all five You sections
  *
  * If you want in-session switching back for a moderated session, add it as a
  * dev-only overlay gated on __DEV__ — not as a panel beside the phone.
+ *
+ * ════════════════════════════════════════════════════════════════════════
+ *  ⚠ DAY 2 IS THE SECOND SITTING, AND IT IS NOT "THE NEXT EVENING"
+ * ════════════════════════════════════════════════════════════════════════
+ *
+ * Katya, 13 Sep. The prototype is shown to Frame 23 twice: Day 1 first, then
+ * the SAME URL the following day, "to see what the future of the app may look
+ * like". Nothing in this app persists — no AsyncStorage, no `persist`, no
+ * localStorage — so the second sitting is a different SEED, not a different
+ * app, and the switch is the one line below.
+ *
+ * Slot 2 was repurposed rather than a fourth added. It was already the fixture
+ * lane (`seeded = day === 2` on You, `inventoryDayTwo`, `ARCHIVE_DAY_TWO`,
+ * `YOU_DAY_TWO_*`), and `DayConfig` is a UNION of these three literal shapes,
+ * so a fourth member would have forced a third answer out of every
+ * `day === 2` / `day >= 3` gate in the app rather than just new fixtures.
+ *
+ *   ⚠ ADD A KEY TO ONE DAY AND YOU MUST ADD IT TO ALL THREE. `DayConfig` is
+ *   `(typeof DAY_CONFIG)[TestDay]`, so a key missing from any member is a
+ *   compile error at every read.
+ *
+ * WHAT MOVED WITH IT, all in their own files:
+ *   · tonight's job is the OFFICE, not the wedding — the returning user played
+ *     the wedding on day 1, so it cannot still be open (data/challenges.ts)
+ *   · a second complete photography set, 39 frames, no `d1` frame anywhere in
+ *     the day-2 magazine (data/looks.ts)
+ *   · yesterday's result is one band higher, in one fixture (data/results.ts)
+ *   · ~30 wardrobe pieces in REAL CATALOGUE NAMES (data/inventory.ts)
+ *
+ * ESTABLISHED (day 3) IS UNTOUCHED and stays the far-future reference.
  */
 
 import type { Phase } from '@/domain/clock';
+import type { MilestoneKey } from '@/domain/bands';
 
 export type TestDay = 1 | 2 | 3;
 
-export const ACTIVE_DAY: TestDay = 1;
+/** What the build ships in. ONE LINE IS THE SWITCH between the two sittings. */
+const SEED_DAY: TestDay = 1;
+
+/**
+ * ⚠ WEB-ONLY PREVIEW OVERRIDE — `?day=1`, `?day=2`, `?day=3`.
+ *
+ * So both sittings can be checked on the deployed URL without a commit, and so
+ * Day 1 can be proven unchanged after any work on Day 2. `SEED_DAY` is still
+ * what a bare URL serves.
+ *
+ * IT HAS TO LIVE HERE AND NOWHERE ELSE. Several modules compute day-dependent
+ * constants at MODULE SCOPE — `YOUR_LOOK` in today/result.tsx, `RENDERED` in
+ * ui/RenderedLook.tsx, `CHALLENGES` in data/challenges.ts — so the day has to
+ * be settled before any of them evaluate. This file imports two types and
+ * nothing else, which makes it the first thing initialised.
+ *
+ * Parsed by hand rather than with `URLSearchParams`, which is not reliably
+ * present on native. `window` IS defined in React Native (it aliases `global`),
+ * so the guard is on `location`, not on `window`.
+ *
+ * NOT `process.env`: there is none anywhere in src/, app/ or scripts/, and the
+ * Vercel build would not supply one.
+ */
+function dayFromUrl(): TestDay | null {
+  if (typeof window === 'undefined' || typeof window.location?.search !== 'string') return null;
+  const m = /[?&]day=([123])(?:&|$)/.exec(window.location.search);
+  if (!m) return null;
+  return Number(m[1]) as TestDay;
+}
+
+export const ACTIVE_DAY: TestDay = dayFromUrl() ?? SEED_DAY;
 
 /** What each day seeds. Mirrors the table in HANDOVER-v2.md §11 exactly. */
 export const DAY_CONFIG = {
@@ -81,21 +143,52 @@ export const DAY_CONFIG = {
      *   day 2        posts · stats · milestones
      *   established  all five
      */
-    milestonesEarned: 0,
+    /**
+     * NONE EARNED. Was `milestonesEarned: 0`, a COUNT — see the note on day 2's
+     * list for why that could not survive. An empty list renders identically.
+     */
+    milestones: [] as readonly MilestoneKey[],
   },
   2: {
     dayName: 'Thursday',
-    subtitle: 'Your first result is in',
-    dayNumber: 2,
+    /** Points at the result card directly above it, which is the one thing on
+     *  this screen that has changed since the first sitting. */
+    subtitle: 'Your best placing yet',
+    /**
+     * FIVE, not two. The story is "a few days in": yesterday's result landed,
+     * the wardrobe has been accumulating, and You has enough history to show a
+     * pattern rather than a first data point. Two days cannot carry any of it.
+     */
+    dayNumber: 5,
+    /** Unchanged, and deliberately. Invariant 1 is the whole economy — a big
+     *  token float on the demo state quietly says clothes are free. */
     startingTokens: 2,
     overnightTokens: 2,
     entryGrant: 0,
     onboarding: false,
     yesterday: 'entered',
-    wardrobeCount: 11,
+    /** Authored in `inventoryDayTwo`, and `seed()` counts the real pieces for
+     *  this day rather than reading this. Kept accurate so the table is true. */
+    wardrobeCount: 30,
     showOvernightRoundel: true,
     showTryTheseRail: true,
-    milestonesEarned: 2,
+    /**
+     * ⚠ KEYS, NOT A COUNT, AND THAT IS THE POINT OF THE CHANGE.
+     *
+     * `Milestones` used to take a number and tick `i < earned` — a POSITIONAL
+     * PREFIX. Katya asked to "unlock a few" on a five-day-old account, and a
+     * prefix of three or more necessarily ticks `Week straight · 7 days
+     * running`, which that account has not done. Worse, it made `Good eye`
+     * unreachable without `Week straight` for anyone, ever.
+     *
+     * These three are the ones five days can honestly carry: they entered
+     * (`filed`), someone took a piece (`borrowed`), and yesterday placed in the
+     * top 25% (`upperQuarter` — see data/results.ts, which is where that band
+     * is stated). `weekStraight` is visibly NOT ticked at five days, and
+     * `goodEye` / `tenHands` are both close but short, which is what a badge
+     * row is for.
+     */
+    milestones: ['filed', 'borrowed', 'upperQuarter'] as readonly MilestoneKey[],
   },
   3: {
     dayName: 'Thursday',
@@ -109,7 +202,8 @@ export const DAY_CONFIG = {
     wardrobeCount: 96,
     showOvernightRoundel: true,
     showTryTheseRail: true,
-    milestonesEarned: 3,
+    /** The same three the count used to produce for this day, spelled out. */
+    milestones: ['filed', 'borrowed', 'weekStraight'] as readonly MilestoneKey[],
   },
 } as const;
 

@@ -24,11 +24,20 @@ import { PageTitle, Body, Tiny, B } from '@/ui/text';
 import { Button } from '@/ui/controls';
 import { LockIcon } from '@/ui/TabIcon';
 import { palette, border } from '@/theme/tokens';
-import { CHALLENGES } from '@/data/challenges';
+import { upcomingChallenges } from '@/data/challenges';
+import { ACTIVE_DAY } from '@/config/testState';
 import { useEconomy, tokenLabel } from '@/state/economy';
+
+/** See the note at the call site. Per-day because the day-1 sentence is false
+ *  on a thirty-piece wardrobe. */
+const GAP_READ =
+  ACTIVE_DAY === 2
+    ? 'Looking at that lot, you are eight coats deep and down to three tops.'
+    : 'Looking at that lot, you are thin on tailoring and you own one pair of decent shoes.';
 
 export default function Challenges() {
   const balance = useEconomy((s) => s.balance);
+  const upcoming = upcomingChallenges();
 
   return (
     <Screen>
@@ -66,9 +75,15 @@ export default function Challenges() {
           {'One a day. In no particular order.\nKnowing what’s coming may help you pinch the right items from the magazine.'}
         </Body>
 
+        {/* ⚠ `upcomingChallenges()`, NOT `CHALLENGES`. The screen is titled
+            UPCOMING, and on the returning state five of these are already
+            behind you — so the unfiltered pool listed the autumn wedding as
+            something coming up on the same evening the result card above
+            reports how it went. Day 1 is unaffected: nothing is played there,
+            so it still gets all fourteen. See data/challenges.ts. */}
         <View style={{ marginTop: 16 }}>
-          {CHALLENGES.map((c, i) => (
-            <View key={c.name} style={[s.row, i === CHALLENGES.length - 1 && { borderBottomWidth: 0 }]}>
+          {upcoming.map((c, i) => (
+            <View key={c.name} style={[s.row, i === upcoming.length - 1 && { borderBottomWidth: 0 }]}>
               <View style={s.icon}>
                 <LockIcon open={!!c.open} />
               </View>
@@ -81,8 +96,19 @@ export default function Challenges() {
           ))}
         </View>
 
+        {/* ⚠ STILL A HARDCODED READ, wired to no inventory — the open question
+            on this file says so, and that a fake personalised read is worse
+            than none. It is now per-day, because the day-1 sentence became
+            FLATLY FALSE on the returning state: "you own one pair of decent
+            shoes" against a wardrobe holding five, and "thin on tailoring"
+            against eight coats and three tailored jackets.
+
+            The day-2 sentence is at least checkable against
+            `WARDROBE_DAY_TWO` — eight Outerwear, three Tops — which is the
+            most this can be until it reads the real wardrobe. If you want it
+            to go instead of being maintained, say so; it is one block. */}
         <Tiny style={s.hint}>
-          Looking at that lot, you are thin on tailoring and you own one pair of decent shoes.{' '}
+          {GAP_READ}{' '}
           {balance > 0 ? (
             <>
               <B>{tokenLabel(balance)}</B> to spend if you want to fix that.

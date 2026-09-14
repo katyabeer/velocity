@@ -38,7 +38,7 @@ import { router } from 'expo-router';
 import { Gap, LogoBlock, Screen, Scroll, Sig } from '@/ui/layout';
 import { SigHead, Hero, Lede, Body, Tiny, Kick, B, Link } from '@/ui/text';
 import { Button, ChipRow } from '@/ui/controls';
-import { Card, Milestones, Reach, Roundel, StatGrid, Trend } from '@/ui/cards';
+import { Card, Milestones, Reach, Roundel, StatGrid, Trend, TrendKey } from '@/ui/cards';
 import { ConfirmSheet } from '@/ui/ConfirmSheet';
 import { PostRow } from '@/ui/PostRow';
 import { ReactionsChart } from '@/ui/ReactionsChart';
@@ -70,6 +70,8 @@ import {
   YOU_DAY_TWO_INSIGHT,
   YOU_DAY_TWO_POSTS,
   YOU_DAY_TWO_REACTIONS,
+  YOU_DAY_TWO_REACTIONS_TOTAL,
+  YOU_DAY_TWO_SUBMISSIONS,
   YOU_DAY_TWO_TAGS,
 } from '@/data/you';
 import { dayConfig } from '@/config/testState';
@@ -122,7 +124,15 @@ function useRollup(): YouRollup {
    * this screen moves, which is the case that matters for the walkthrough.
    */
   const seeded = day === 2;
-  const looks = mature ? 118 : seeded ? YOU_DAY_TWO_POSTS.length : archive.length;
+  /**
+   * ⟲ TEN, NOT `YOU_DAY_TWO_POSTS.length`. The post list below shows six, but
+   * `looks` is the whole body of work and it is READ BY THE THRESHOLDS — see
+   * `TIPS` in domain/you.ts, which gates the `Just for you` section on
+   * looks >= 10. Six looks and that section is silently absent, which is the
+   * most expensive thing on the page not appearing because a fixture was
+   * picked by feel. Six rows is what a list shows before `All 10 posts →`.
+   */
+  const looks = mature ? 118 : seeded ? 10 : archive.length;
 
   return {
     looks,
@@ -131,30 +141,50 @@ function useRollup(): YouRollup {
     looksSettled: mature
       ? 74
       : seeded
-        ? 2
+        ? 10
         : archive.filter((a) => a.band !== 'live' && a.band !== 'free').length,
     piecesOwned: count,
-    piecesTaken: mature ? 31 : seeded ? 4 : held.length,
-    distinctTakers: mature ? 6 : seeded ? 1 : 0,
-    jobsEntered: mature ? 74 : seeded ? 2 : entered ? 1 : 0,
-    freestylePosts: mature ? 44 : seeded ? 1 : archive.filter((a) => a.band === 'free').length,
-    judgingRounds: mature ? 96 : seeded ? 3 : roundComplete ? 1 : 0,
-    streakDays: mature ? 9 : seeded ? 3 : 0,
-    /* The reaction totals the chart and the counting number both read. Keep
-       them and YOU_DAY_TWO_REACTIONS in step — the series sums to 6. */
-    reactionsReceived: mature ? 212 : seeded ? 6 : 0,
-    distinctReactors: mature ? 88 : seeded ? 5 : 0,
+    piecesTaken: mature ? 31 : seeded ? 12 : held.length,
+    /* EIGHT, which is two short of the `tenHands` milestone — so that badge
+       reads as nearly-there rather than as arbitrary. See `milestones` in
+       config/testState.ts. */
+    distinctTakers: mature ? 6 : seeded ? 8 : 0,
+    jobsEntered: mature ? 74 : seeded ? 5 : entered ? 1 : 0,
+    freestylePosts: mature ? 44 : seeded ? 5 : archive.filter((a) => a.band === 'free').length,
+    judgingRounds: mature ? 96 : seeded ? 7 : roundComplete ? 1 : 0,
+    streakDays: mature ? 9 : seeded ? 5 : 0,
+    /* ⚠ SUMMED FROM THE SERIES, not written. The chart's own header counts
+       the series and the Stats grid prints this stat, one scroll apart on the
+       same screen — so a literal here is a contradiction waiting for someone
+       to edit the array. See data/you.ts. */
+    reactionsReceived: mature ? 212 : seeded ? YOU_DAY_TWO_REACTIONS_TOTAL : 0,
+    distinctReactors: mature ? 88 : seeded ? 19 : 0,
     /* FROM THE REACTION VOCABULARY (AC 11). It used to be the word `brave`,
        which is in neither vocabulary — the old register list — so the screen
        could say "you build quiet and the room reads you as sharp" out of a
        vocabulary containing neither word. */
-    /* Day 2 has been read twice `fresh` and once `bold`, so the modal read is
-       `fresh` — the sentence says what the room said MOST, not last. */
+    /* Day 2's six posts read `fresh` twice and `iconic`, `bold`, `creative`
+       once each, so the modal read is `fresh` — the sentence says what the
+       room said MOST, not last. Check YOU_DAY_TWO_POSTS if you change it. */
     modalRead: mature ? 'bold' : seeded ? 'fresh' : null,
-    /* YOUR OWN construction words, not the room's. AC 11 constrains words
-       describing how the room read you; these describe what you build, so they
-       are free to stay. */
-    buildWords: ['quiet', 'structured'],
+    /**
+     * YOUR OWN construction words, not the room's. AC 11 constrains the words
+     * describing how the room read you; these describe what you BUILD, so they
+     * are free of the reaction vocabulary.
+     *
+     * Day 2's are its own now — Katya, 13 Sep: "the summary about them needs
+     * to change and talk about their style choices". They are read off
+     * `WARDROBE_DAY_TWO`, which is charcoal, black and tailoring almost all the
+     * way through, and they agree with that state's top tags.
+     *
+     * ⚠ DAY 1 STILL SHARES ESTABLISHED'S WORDS, and on day 1 they are a lie —
+     * "you build quiet and structured" from an account that has built nothing.
+     * It is unreachable rather than wrong on screen: `SENTENCE_MIN_LOOKS` is 3
+     * and one day allows at most two looks, so the sentence never renders
+     * there. Left alone because fixing it is a change to a signed-off state
+     * for no visible gain. Katya's call.
+     */
+    buildWords: seeded ? ['tailored', 'dark', 'quiet'] : ['quiet', 'structured'],
     /* Real tags typed this session rank ALONGSIDE Established's fixture
        history rather than replacing it, so the section still responds to what
        you do. Days 1 and 2 are entirely real. */
@@ -165,6 +195,17 @@ function useRollup(): YouRollup {
           ? [...tagHistory, ...YOU_DAY_TWO_TAGS]
           : tagHistory,
     ),
+    /**
+     * Feeds the sentence's chip row (`sentenceChips` takes the first two) and
+     * nothing else. Day 2's are the three highest `worn` counts in
+     * `WARDROBE_DAY_TWO` — real names, real numbers — which is what lets the
+     * chips and the `Noticed` insight name the same pieces instead of two
+     * different sets of clothes on one screen.
+     *
+     * ⚠ Established's four are legacy prototype names (`black knit`, `grey
+     * trouser`) that the catalogue does not carry. Harmless here because the
+     * chips are text, but it is the same rot as its wardrobe fixture.
+     */
     mostUsedPieces: mature
       ? [
           { value: '9', label: 'black knit' },
@@ -172,8 +213,17 @@ function useRollup(): YouRollup {
           { value: '6', label: 'wool coat' },
           { value: '5', label: 'red bag' },
         ]
-      : [],
-    closeCallsJudged: mature ? 61 : seeded ? 3 : 0,
+      : seeded
+        ? [
+            { value: '5', label: 'fine turtleneck' },
+            { value: '4', label: 'funnel neck coat' },
+            { value: '3', label: 'poplin shirt' },
+          ]
+        : [],
+    /* TWENTY-ONE, one past the `closeCallsJudged >= 20` threshold that opens
+       the Weakness tip — and `qualifyingTips` drops a lone Weakness, so all
+       three thresholds have to clear together or none of them show. */
+    closeCallsJudged: mature ? 61 : seeded ? 21 : 0,
   };
 }
 
@@ -186,7 +236,9 @@ export default function You() {
   const balance = useEconomy((s) => s.balance);
   const r = useRollup();
 
-  const tips = qualifyingTips(r);
+  /* `Noticed` renders on day 2, and it is the same observation as the
+     `wardrobe` tip — see the note on `qualifyingTips`. */
+  const tips = qualifyingTips(r, { noticedShowing: day === 2 });
   const chips = sentenceChips(r);
   const read = roomClause(r.modalRead);
   /* ZEROS KEPT ON DAY ONE ONLY. See `statCells` in domain/you.ts — this is
@@ -330,7 +382,7 @@ export default function You() {
                   label={t.role}
                   tone={t.role === 'Strength' ? 'accent' : t.role === 'Weakness' ? 'alert' : 'plain'}
                   title={t.title}
-                  body={TIP_BODIES[t.key]}
+                  body={(seeded ? TIP_BODIES_DAY_TWO : TIP_BODIES_ESTABLISHED)[t.key]}
                 />
               ))}
             </View>
@@ -372,9 +424,43 @@ export default function You() {
                 ))}
               </View>
 
-              {/* Why there is no trend line, said once. Two settled results
-                  is a point and a point; `TREND_MIN_SETTLED` is five. */}
-              <Tiny style={{ marginTop: 10 }}>No trend line yet — that needs five settled results.</Tiny>
+              {/* ══ HOW THEIR SUBMISSIONS ARE PERFORMING ══
+                  Katya, 13 Sep: "Show a graph for how their own submissions
+                  (via Challenges and Create freestyle) are performing."
+
+                  ⟲ THIS SLOT USED TO HOLD AN APOLOGY — "No trend line yet,
+                  that needs five settled results" — because two settled
+                  results is a point and a point. Ten clears
+                  `TREND_MIN_SETTLED`, so the line is real and the apology
+                  goes rather than sitting above the thing it says is missing.
+
+                  TWO SERIES, and the legend is what makes them readable: a
+                  brief entry is judged against a brief and a free post is not
+                  judged at all, so one blended bar would have answered a
+                  different question. See `Trend` in ui/cards.tsx. */}
+              {showTrend(r) ? (
+                <>
+                  <View style={{ marginTop: 12 }}>
+                    <Trend
+                      values={YOU_DAY_TWO_SUBMISSIONS.challenge}
+                      second={YOU_DAY_TWO_SUBMISSIONS.freestyle}
+                      labels={YOU_DAY_TWO_SUBMISSIONS.days}
+                    />
+                  </View>
+                  <TrendKey a="Challenges" b="Freestyle" />
+                  <Body style={{ marginTop: 8 }}>{YOU_DAY_TWO_SUBMISSIONS.caption}</Body>
+                </>
+              ) : null}
+
+              {/* The route to the rest of them. The Looks archive in the
+                  Wardrobe is where a post list actually lives — this section
+                  is a summary of it, and six rows of ten is the point at
+                  which that needs saying. */}
+              {showAllPostsLink(r) ? (
+                <Link style={{ marginTop: 11 }} onPress={() => router.push('/(tabs)/wardrobe')}>
+                  All {r.looks} looks →
+                </Link>
+              ) : null}
             </>
           ) : day >= 3 ? (
             <>
@@ -517,16 +603,16 @@ export default function You() {
         <Sig last>
           <SigHead>Milestones</SigHead>
           <View style={{ marginTop: 9 }}>
-            <Milestones earned={cfg.milestonesEarned} />
+            <Milestones earned={cfg.milestones} />
           </View>
           {/* The count reads back, so the line moves with the ticks rather
               than needing a case per day. Day 2 earns two now (Filed and
               Borrowed — see her mock's day 3), which is what broke the old
               `=== 1` special case. */}
           <Body style={{ marginTop: 9 }}>
-            {cfg.milestonesEarned === 0
+            {cfg.milestones.length === 0
               ? "Six, and that's all there are. No levels, no leaderboard."
-              : `${cfg.milestonesEarned} of six. That is all there are — no levels, no leaderboard.`}
+              : `${cfg.milestones.length} of six. That is all there are — no levels, no leaderboard.`}
           </Body>
         </Sig>
 
@@ -566,7 +652,14 @@ export default function You() {
 
 /** The post filters. `All` first, then the two categories day 2 actually has
  *  — a filter for a band nobody has placed in would be a dead chip. */
-const POST_FILTERS = ['All', 'Upper half', 'Freestyle'] as const;
+/**
+ * ⚠ THESE MUST MATCH THE BANDS THE POSTS ACTUALLY CARRY, or a chip filters to
+ * nothing. `Upper quarter` joined when the returning state's result moved a
+ * band up (data/results.ts); `Lower half` is deliberately offered too — the
+ * room did not like one of their looks and hiding that is the product
+ * flattering, which is the one thing the result screen is careful not to do.
+ */
+const POST_FILTERS = ['All', 'Upper quarter', 'Upper half', 'Lower half', 'Freestyle'] as const;
 
 /** Established's three most recent, as bands rather than as a mock post list:
  *  this branch shows a strip of pictures, not the day-2 row list. */
@@ -578,10 +671,29 @@ const ESTABLISHED_POSTS = [
 
 /** The tip copy, keyed off the pool in domain/you.ts. Kept out of the domain
  *  module because that one owns the thresholds, not the prose. */
-const TIP_BODIES: Record<(typeof TIPS)[number]['key'], string> = {
+/**
+ * ⚠ THE BODIES CARRY NUMBERS, SO THEY ARE PER-DAY.
+ *
+ * These were written for Established — 14 looks, 20 close calls — and until
+ * 13 Sep that was the only state where any tip qualified. The returning state
+ * clears all three thresholds too, and it has 10 looks and 21 close calls, so
+ * Established's figures would have contradicted the Stats grid three sections
+ * further down the same screen.
+ *
+ * `wardrobe` has no day-2 entry because it is suppressed there — `Noticed`
+ * says it instead. Keep every figure below in step with `useRollup`.
+ */
+const TIP_BODIES_ESTABLISHED: Record<(typeof TIPS)[number]['key'], string> = {
   wardrobe:
     'The same six turn up in 11 of your last 14 looks. Eleven things you own have never been worn.',
   loudPiece:
     'Your three best results each had exactly one statement piece. When you spread the volume across two, you place lower.',
   eye: 'When the room split on something bold, you picked the safer one 7 times out of 10. Your eye is sharper on quiet pairs.',
+};
+
+const TIP_BODIES_DAY_TWO: Record<(typeof TIPS)[number]['key'], string> = {
+  wardrobe: '',
+  loudPiece:
+    'Your two best results each had exactly one statement piece. The look that placed lowest had three competing for attention.',
+  eye: 'When the room split on something bold, you picked the safer one 6 times out of 9. Your eye is sharper on quiet pairs.',
 };

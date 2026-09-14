@@ -4,8 +4,8 @@
  */
 
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import { palette, border, space } from '@/theme/tokens';
-import { BANDS, MILESTONES, type BandKey } from '@/domain/bands';
+import { palette, border, radius, space } from '@/theme/tokens';
+import { BANDS, MILESTONES, type BandKey, type MilestoneKey } from '@/domain/bands';
 import type { JobStep } from '@/domain/today';
 import { Kick, Tiny } from './text';
 
@@ -245,12 +245,25 @@ export function BandLadder({ active }: { active: BandKey }) {
   );
 }
 
-/** Milestones — six, fixed, and that is all there are. */
-export function Milestones({ earned }: { earned: number }) {
+/**
+ * Milestones — six, fixed, and that is all there are (invariant 12).
+ *
+ * ⚠ IT TAKES THE EARNED KEYS, NOT A COUNT. It used to be `earned: number` and
+ * `i < earned`, which could only ever tick a POSITIONAL PREFIX of the list —
+ * so three badges meant `filed · borrowed · weekStraight` and nothing else,
+ * and `Good eye` was unreachable by anyone who had not first run seven days
+ * straight. That is not a display limitation, it is a model that says these
+ * six are a ladder when `MILESTONES` in domain/bands.ts is explicit that they
+ * are not ("no levels, no XP, no leaderboard" — six independent facts).
+ *
+ * Changed 13 Sep for the returning-user state, which needed to tick
+ * `upperQuarter` at five days in without claiming a week's streak.
+ */
+export function Milestones({ earned }: { earned: readonly MilestoneKey[] }) {
   return (
     <View style={s.miles}>
-      {MILESTONES.map((m, i) => {
-        const got = i < earned;
+      {MILESTONES.map((m) => {
+        const got = earned.includes(m.key);
         return (
           <View key={m.key} style={[s.mile, got && s.mileOn]}>
             <Text style={[s.mileMark, got && { borderColor: palette.accentEdge, color: palette.ink }]}>
@@ -346,26 +359,103 @@ export function Reach({ items }: { items: readonly { value: string; label: strin
   );
 }
 
-/** `.trend` — the nine-job sparkline. Bars, not a line; no axis, no numbers. */
-export function Trend({ values }: { values: readonly number[] }) {
-  const max = Math.max(...values, 1);
+/**
+ * `.trend` — the sparkline. Bars, not a line; no axis, no numbers.
+ *
+ * ─── TWO MODES, AND THE ONE-SERIES MODE IS UNCHANGED ───────────────────────
+ * With `values` alone it is what it always was: one bar per job, self-
+ * normalising, the last four accented to mark "recently". Established reads it
+ * that way and nothing about it moved.
+ *
+ * ⟲ `second` WAS ADDED 13 Sep. Katya: "Show a graph for how their own
+ * submissions (via Challenges and Create freestyle) are performing." Those are
+ * two different things — one is judged against a brief and the other is not —
+ * so blending them into one bar would have answered a question she did not
+ * ask. Pass `second` and each slot holds a PAIR: the brief entry and the
+ * freestyle post from the same day, side by side.
+ *
+ * ⚠ THE TWO SERIES SHARE ONE MAXIMUM, which is the only way the pair is
+ * comparable. Normalising each to its own peak would draw a quiet freestyle day
+ * exactly as tall as a strong brief day.
+ *
+ * ⚠ AND THE NUMBERS ARE NOT A SCORE. Same rule as the reactions chart: no
+ * y-axis, no figures, because invariant 6 is named bands and a bar chart of
+ * placings with numbers up the side is the leaderboard invariant 12 forbids.
+ * The caption is where meaning goes.
+ */
+export function Trend({
+  values,
+  second,
+  labels,
+}: {
+  values: readonly number[];
+  /** The second series, same length. Omit for the original single-series read. */
+  second?: readonly number[];
+  /** Optional ticks under the bars. Same length again. */
+  labels?: readonly string[];
+}) {
+  const max = Math.max(...values, ...(second ?? []), 1);
+  const paired = second !== undefined;
+
   return (
-    <View style={s.trend}>
-      {values.map((v, i) => (
-        <View
-          key={i}
-          style={[
-            s.trendBar,
-            { height: `${(v / max) * 100}%` },
-            /** accent fill needs its ink edge on a light ground — see tokens.ts */
-            i >= values.length - 4 && {
-              backgroundColor: palette.accent,
-              borderWidth: border.hair,
-              borderColor: palette.accentEdge,
-            },
-          ]}
-        />
-      ))}
+    <View>
+      <View style={s.trend}>
+        {values.map((v, i) => (
+          /* One slot per period. When paired, the slot holds two bars and the
+             GAP INSIDE it is tighter than the gap between slots, so the eye
+             groups them as a pair rather than reading eight separate bars. */
+          <View key={i} style={paired ? s.trendSlot : { flex: 1, height: '100%', justifyContent: 'flex-end' }}>
+            <View
+              style={[
+                s.trendBar,
+                { height: `${(v / max) * 100}%` },
+                /** accent fill needs its ink edge on a light ground — see tokens.ts */
+                (paired || i >= values.length - 4) && {
+                  backgroundColor: palette.accent,
+                  borderWidth: border.hair,
+                  borderColor: palette.accentEdge,
+                },
+              ]}
+            />
+            {paired ? (
+              <View
+                style={[
+                  s.trendBar,
+                  s.trendBarAlt,
+                  { height: `${((second[i] ?? 0) / max) * 100}%` },
+                ]}
+              />
+            ) : null}
+          </View>
+        ))}
+      </View>
+
+      {labels ? (
+        <View style={s.trendAxis}>
+          {labels.map((l, i) => (
+            <Text key={i} style={s.trendTick} numberOfLines={1}>
+              {l}
+            </Text>
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+/** The pair's key. Two swatches and two words — it has to be said somewhere,
+ *  and a legend is cheaper than captioning every bar. */
+export function TrendKey({ a, b }: { a: string; b: string }) {
+  return (
+    <View style={s.trendKey}>
+      <View style={s.trendKeyItem}>
+        <View style={[s.trendSwatch, { backgroundColor: palette.accent, borderColor: palette.accentEdge }]} />
+        <Text style={s.trendKeyLabel}>{a}</Text>
+      </View>
+      <View style={s.trendKeyItem}>
+        <View style={[s.trendSwatch, { backgroundColor: palette.creamSunk, borderColor: palette.rule }]} />
+        <Text style={s.trendKeyLabel}>{b}</Text>
+      </View>
     </View>
   );
 }
@@ -700,6 +790,38 @@ const s = StyleSheet.create({
     gap: 4,
     padding: 9,
   },
+  /** A period. Holds one bar, or two when a second series is passed. */
+  trendSlot: {
+    flex: 1,
+    height: '100%',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    gap: 1.5,
+  },
   trendBar: { flex: 1, backgroundColor: palette.creamSunk },
+  /** Freestyle. Sunk cream with a rule outline — it is the SAME KIND of thing
+   *  as the accented bar beside it, so it takes a border rather than being a
+   *  flat fill, which at 3pt wide would have read as a gap. */
+  trendBarAlt: { borderWidth: border.hair, borderColor: palette.rule },
+  trendAxis: { flexDirection: 'row', gap: 4, marginTop: 5, paddingHorizontal: 9 },
+  trendTick: {
+    flex: 1,
+    fontFamily: 'DMMono_500Medium',
+    fontSize: 8.5,
+    letterSpacing: 0.6,
+    textAlign: 'center',
+    color: palette.greyMute,
+  },
+  trendKey: { flexDirection: 'row', gap: 14, marginTop: 8 },
+  trendKeyItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  trendSwatch: { width: 9, height: 9, borderWidth: border.hair, borderRadius: radius.xs },
+  trendKeyLabel: {
+    fontFamily: 'Archivo_700Bold',
+    fontSize: 8.5,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: palette.greyMute,
+  },
   emptyBody: { fontFamily: 'Archivo_400Regular', fontSize: 12.5, lineHeight: 20, color: palette.grey, marginTop: 5 },
 });
