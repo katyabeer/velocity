@@ -100,6 +100,26 @@ function dayFromUrl(): TestDay | null {
 
 export const ACTIVE_DAY: TestDay = dayFromUrl() ?? SEED_DAY;
 
+/**
+ * ⚠ THE IN-APP DAY SWITCH — and it is the HUD coming back, so it is worth
+ * being explicit about.
+ *
+ * The header above says the prototype's Day 1 / Day 2 / Established panel was
+ * "deliberately NOT ported: it sat next to the prototype and a participant
+ * would read it", and recommends that any in-session switching be "a dev-only
+ * overlay gated on __DEV__". Katya asked for a visible one on 14 Sep, because
+ * the AUDIENCE changed: Frame 23 need both states in one client review and
+ * they already know it is a prototype.
+ *
+ * ⚠ SET THIS TO FALSE BEFORE ANY MODERATED PARTICIPANT SESSION. A control that
+ * says the app has "days" tells someone that what they are looking at is
+ * staged, which is the whole reason the panel was cut in the first place.
+ *
+ * It is web-only in practice — see ui/DaySwitch.tsx, which needs a real page
+ * load to re-seed and renders nothing without `window.location`.
+ */
+export const SHOW_DAY_SWITCH = true;
+
 /** What each day seeds. Mirrors the table in HANDOVER-v2.md §11 exactly. */
 export const DAY_CONFIG = {
   1: {

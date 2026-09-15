@@ -54,6 +54,7 @@ import { LockIcon } from '@/ui/TabIcon';
 import { ResultCard } from '@/ui/ResultCard';
 import { RenderStrip } from '@/ui/RenderStrip';
 import { SubmissionSheet } from '@/ui/SubmissionSheet';
+import { DaySwitch } from '@/ui/DaySwitch';
 import { palette, border, radius } from '@/theme/tokens';
 import { FORCE_RESULTS_READY, dayConfig } from '@/config/testState';
 import { TONIGHTS_BRIEF, nextChallenge, REVEAL_NEXT_BRIEF } from '@/data/challenges';
@@ -343,6 +344,14 @@ export default function Today() {
             See upcoming challenges →
           </Link>
         </Pressable>
+
+        {/* ⚠ A PROTOTYPE CONTROL, NOT PRODUCT CHROME, and it is the HUD this
+            project deliberately did not port — see the header of
+            ui/DaySwitch.tsx for why it is back and
+            `SHOW_DAY_SWITCH` in config/testState.ts for the one line that
+            hides it again. It sits last on the screen, under a rule, so the
+            page still ends on the challenges link. */}
+        <DaySwitch />
 
         <Gap />
       </Scroll>

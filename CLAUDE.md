@@ -173,7 +173,12 @@ A fresh session will be tempted by several of these. They were tried and rejecte
 - "15 is the lowest toll that settles" — wrong, 14 gives 1.07×
 - A judging round as 20 looks — it is **10 pairs**
 - Boxed, filled step ribbons — they read as rows of buttons; now flat rules
-- In-phone design annotations — they cannot be in front of a participant
+- In-phone design annotations — they cannot be in front of a participant.
+  ⟲ **PARTIALLY REVERSED 14 Sep** by `ui/DaySwitch.tsx`, the day-1/day-2+
+  switch at the foot of Today. The reasoning above still stands for a
+  PARTICIPANT and the control is one flag from gone (`SHOW_DAY_SWITCH`); what
+  changed is that the prototype's current audience is a client who already
+  knows it is a prototype and needs to see both states in one sitting
 - A Continue button under the sign-up methods. Cut 3 Sep: the three methods
   *are* the progression, and a fourth control could not know which you meant
 - Pre-filling the handle field with `katya.b`. It read as "we already know who
@@ -828,6 +833,20 @@ There is no HUD. The seed state is one constant: `SEED_DAY` in
 reboots into that state. **On web, `?day=1` / `?day=2` / `?day=3` overrides it
 for one load** — added 13 Sep so both demo states can be checked on the
 deployed URL without a commit.
+
+⚠ **THERE IS AN IN-APP DAY SWITCH NOW** (14 Sep) — `ui/DaySwitch.tsx`, at the
+foot of Today, reading `PROTOTYPE · Day 1 / Day 2+`. **It is the HUD this
+project deliberately did not port**, and it is back because the audience
+changed: Frame 23 need both states in one client review. `SHOW_DAY_SWITCH` in
+`config/testState.ts` is the one line that hides it — **set it to false before
+any moderated participant session**, because a control saying the app has
+"days" tells someone what they are looking at is staged.
+
+It works by **reloading to `/?day=N`**, and it has to: `ACTIVE_DAY` is a build
+constant and half the app freezes day-dependent values at MODULE SCOPE off it
+(`YOUR_LOOK`, `RENDERED`, `CHALLENGES`, `TONIGHTS_BRIEF`, `PIECES`). A setter
+would leave a half-switched app — day 2's wardrobe under day 1's challenge,
+with no error. Web only; it renders nothing without `window.location`.
 
 ⚠ **`SEED_DAY` IS `2`.** The default inverted on 13 Sep (Katya: *"I need the
 user to load the app and immediately see the day 2+ experience. Hide away day 1
